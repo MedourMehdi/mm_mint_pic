@@ -5,8 +5,8 @@ mm_mint_pic is an images viewer/re-scaler and can export them to different file 
 
 ![Product Name Screen Shot][product-screenshot]
 <div style="text-align: justify">
-mm_mint_pic is designed to display images in modern Freemint formats in GEM windows.
-It also lets you transform images by scaling or rotating them.
+mm_mint_pic is designed to display modern formats images in GEM windows.
+It lets you transform images by scaling or rotating them.
 It works in 1bpp, 4bpp (no screen cropping yet) and 8bpp planar modes, as well as 16bpp, 24bpp and 32bpp for large screen configurations.
 Note that the best performance is achieved in 32bpp mode.
 TIFF and HEIF containers are supported.
@@ -32,7 +32,7 @@ No shared library or module is required to run it.
 * LibWebp
 * LibJpeg
 
-You should found them here: https://tho-otto.de/crossmint.php or you can read https://www.atari-forum.com/viewforum.php?f=70&sid=3d5a35722383f636d46de67fa33c5b57 if you want to rebuild them.
+You should found most of these libraries here: https://tho-otto.de/crossmint.php or you can read https://www.atari-forum.com/viewforum.php?f=70&sid=3d5a35722383f636d46de67fa33c5b57 if you want to rebuild them.
 
 ### Installing
 
