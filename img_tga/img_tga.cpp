@@ -124,10 +124,11 @@ void _st_Read_TGA(int16_t this_win_handle, boolean file_process)
                 }
             }
         }     
-
+        
+        mfdb_update_bpp(&this_win->wi_original_mfdb, (int8_t*)destination_buffer, width, height, nb_components_32bits << 3);
         this_win->total_length_w = this_win->wi_original_mfdb.fd_w;
         this_win->total_length_h = this_win->wi_original_mfdb.fd_h;
-        mfdb_update_bpp(&this_win->wi_original_mfdb, (int8_t*)destination_buffer, width, height, nb_components_32bits << 3);
+
 
         if(file_process == FALSE){
             mem_free(this_win->wi_data->original_buffer);
