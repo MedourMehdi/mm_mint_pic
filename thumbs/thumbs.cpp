@@ -61,8 +61,8 @@ struct_thumbs* st_Thumb_Alloc(int16_t thumbs_nb, int16_t slave_win_handle, int16
     this_win_thumb->thumb_w_Item = (this_win_thumb->padx << 1 ) + this_win_thumb->thumb_w_size;
     this_win_thumb->thumb_h_Item = (this_win_thumb->pady << 1 ) + this_win_thumb->thumb_h_size;
 
-    this_win_thumb->thumbs_rows = thumbs_nb;
     this_win_thumb->thumbs_cols = 1;
+    this_win_thumb->thumbs_rows = thumbs_nb;
 
     this_win_thumb->thumbs_list_array = (struct_st_thumbs_list*)mem_alloc((this_win_thumb->thumbs_nb) * sizeof(struct_st_thumbs_list));
 
@@ -76,6 +76,8 @@ struct_thumbs* st_Thumb_Alloc(int16_t thumbs_nb, int16_t slave_win_handle, int16
 
     this_win_thumb->thumb_background_mfdb = st_Init_Outline_MFDB(this_win_thumb, this_win_thumb->thumb_background_color);
     this_win_thumb->thumb_selected_mfdb = st_Init_Outline_MFDB(this_win_thumb, this_win_thumb->thumb_selected_color);
+
+    this_win_thumb->thumbs_selected_nb = NIL;
 
     return this_win_thumb;
 
@@ -146,8 +148,6 @@ MFDB* st_Outline_MFDB(struct_thumbs *this_win_thumb, u_int16_t thumb_idx){
 
     MFDB* this_mfdb = this_win_thumb->thumbs_list_array[thumb_idx].thumb_mfdb;
 
-    // u_int16_t width = this_win_thumb->thumb_w_size; 
-    // u_int16_t height = this_win_thumb->thumb_h_size;
     u_int16_t width =  this_mfdb->fd_w + this_win_thumb->padx; 
     u_int16_t height = this_mfdb->fd_h + this_win_thumb->pady;    
     int16_t width_stride = MFDB_STRIDE(width) - width;
@@ -200,7 +200,7 @@ void st_Handle_Click_Thumbnail(struct_window *this_win, int16_t mouse_x, int16_t
             struct_window* dest_win;
             this_win->wi_data->img.img_id = this_thumb_struct->thumbs_list_array[i].thumb_id;
             this_win->wi_data->img.img_index = this_thumb_struct->thumbs_list_array[i].thumb_index;
-
+            this_thumb_struct->thumbs_selected_nb = this_thumb_struct->thumbs_list_array[i].thumb_index;
             this_win->wi_thumb->open_win_func(this_win->wi_data->path);
             
             st_Start_Window_Process(this_win);
@@ -239,12 +239,17 @@ void* st_Thumb_MFDB_Update(void *p_param){
             int16_t w_nItems = ( this_win_thumb->thumb_w_Item * (this_win_thumb->thumbs_nb) ) + this_win_thumb->padx << 1;
             int16_t h_nItems = ( this_win_thumb->thumb_h_Item * (this_win_thumb->thumbs_nb) ) + this_win_thumb->pady << 1;
 
-            u_int8_t* destination_buffer = st_ScreenBuffer_Alloc_bpp(w_nItems, h_nItems, screen_workstation_bits_per_pixel);
-            
-            if(this_win_thumb->wi_original_thumbs_mfdb != NULL){
-                mfdb_free(this_win_thumb->wi_original_thumbs_mfdb);
+            if(this_win_thumb->thumbs_selected_nb < 0){
+                u_int8_t* destination_buffer = st_ScreenBuffer_Alloc_bpp(w_nItems, h_nItems, screen_workstation_bits_per_pixel);
+
+                if(this_win_thumb->wi_original_thumbs_mfdb != NULL){
+                    mfdb_free(this_win_thumb->wi_original_thumbs_mfdb);
+                }
+                this_win_thumb->wi_original_thumbs_mfdb = mfdb_alloc_bpp((int8_t*)destination_buffer, w_nItems, h_nItems, screen_workstation_bits_per_pixel);
+                if(screen_workstation_bits_per_pixel > 16){
+                    st_MFDB_Fill(this_win_thumb->wi_original_thumbs_mfdb, 0xCCCCCCCC);
+                }
             }
-            this_win_thumb->wi_original_thumbs_mfdb = mfdb_alloc_bpp((int8_t*)destination_buffer, w_nItems, h_nItems, screen_workstation_bits_per_pixel);
 
             int16_t xy[8];
 
@@ -255,6 +260,10 @@ void* st_Thumb_MFDB_Update(void *p_param){
                     for ( int16_t k = 0; k < nb_total_cols; k++) {
                         if( i == this_win_thumb->thumbs_nb ){
                             break;
+                        }
+                        if(this_win_thumb->thumbs_selected_nb > NIL && this_win_thumb->thumbs_selected_nb != this_win_thumb->thumbs_list_array[i].thumb_index){
+                            i++;
+                            continue;
                         }
                         if(this_win_thumb->master_win_handle > 0){
                             if(get_win_thumb_slave_by_image_id(this_win_thumb->master_win_handle, this_win_thumb->thumbs_list_array[i].thumb_id) != NULL){
@@ -268,7 +277,7 @@ void* st_Thumb_MFDB_Update(void *p_param){
                         thumb_xy[0] = (this_win_thumb->thumb_w_Item * k) + this_win_thumb->padx;
                         thumb_xy[1] = (this_win_thumb->thumb_h_Item * j) + this_win_thumb->pady;
                         st_Thumb_Win_PXY_Update(&this_win_thumb->thumbs_list_array[i], thumb_xy[0], thumb_xy[1]);
-
+                        // printf("i %d - thumbs_list_array->thumb_mfdb->fd_w %d\n", i, this_win_thumb->thumbs_list_array[i].thumb_mfdb->fd_w);
                         MFDB* thumb_mfdb = st_Outline_MFDB(this_win_thumb, i);
                         xy[2] = thumb_mfdb->fd_w; 
                         xy[3] = thumb_mfdb->fd_h - 1;
@@ -276,25 +285,18 @@ void* st_Thumb_MFDB_Update(void *p_param){
                         xy[5] = this_win_thumb->thumbs_list_array[i].thumb_win_pxy[1]; 
                         xy[6] = this_win_thumb->thumbs_list_array[i].thumb_win_pxy[2] + this_win_thumb->padx; 
                         xy[7] = this_win_thumb->thumbs_list_array[i].thumb_win_pxy[3] + this_win_thumb->pady; 
-                        
+                        // printf("i %d x%d y%d w%d h%d\n",i, xy[4], xy[5], xy[6], xy[7]);
                         vro_cpyfm(st_vdi_handle, S_ONLY, xy, thumb_mfdb, this_win_thumb->wi_original_thumbs_mfdb);
 
                         mfdb_free(thumb_mfdb);
 
-                        // xy[2] = this_win_thumb->thumbs_list_array[i].thumb_mfdb->fd_w - 1; 
-                        // xy[3] = this_win_thumb->thumbs_list_array[i].thumb_mfdb->fd_h - 1;
-                        // xy[4] = this_win_thumb->thumbs_list_array[i].thumb_win_pxy[0]; 
-                        // xy[5] = this_win_thumb->thumbs_list_array[i].thumb_win_pxy[1]; 
-                        // xy[6] = this_win_thumb->thumbs_list_array[i].thumb_win_pxy[2] + this_win_thumb->padx; 
-                        // xy[7] = this_win_thumb->thumbs_list_array[i].thumb_win_pxy[3] + this_win_thumb->pady; 
-
-                        // vro_cpyfm(st_vdi_handle, S_ONLY, xy, this_win_thumb->thumbs_list_array[i].thumb_mfdb, this_win_thumb->wi_original_thumbs_mfdb);               
                         i++;
                     }
                 }
             }
             this_win_thumb->thumbs_rows = nb_total_rows;
             this_win_thumb->thumbs_cols = nb_total_cols;
+            this_win_thumb->thumbs_selected_nb = NIL;
         }
         this_win_thumb->thumbs_area_refresh = FALSE;
 

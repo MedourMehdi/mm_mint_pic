@@ -261,9 +261,10 @@ int16_t close_window( int16_t this_win_handle ){
 			if(this_win->wi_data->thumbnail_slave == TRUE){
 				if(this_win->wi_thumb != NULL){
 					struct_window* this_win_master = detect_window(this_win->wi_thumb->master_win_handle);
-					this_win->wi_data->img.img_id = -2;
+					this_win->wi_data->img.img_id = NIL;
 					if(this_win_master != NULL){
 						wind_set(this_win_master->wi_handle,WF_TOP,0,0,0,0);
+						this_win_master->wi_thumb->thumbs_selected_nb = this_win->wi_data->img.img_index;
 						this_win_master->wi_thumb->thumbs_area_refresh = TRUE;
 						st_Start_Window_Process(this_win_master);
 						this_win_master->refresh_win(this_win_master->wi_handle);
