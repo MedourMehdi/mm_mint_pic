@@ -157,6 +157,9 @@ void zview_Dither_RGB_to_8bits(uint8_t* src_ptr, uint8_t* dst_ptr, int16_t width
     uint32_t totalPixels = mul_3_fast(width * height);
 	int16_t err[3] = { 0, 0, 0 };
 	int8_t *dth = (int8_t*)Mxalloc(totalPixels, 3);
+	if(dth == NULL){
+		printf("Not enough memory\n");
+	}
 	memset(dth, 0, totalPixels);
     uint32_t i = 0;
     while(i < totalPixels){
