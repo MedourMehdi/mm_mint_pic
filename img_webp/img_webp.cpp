@@ -116,7 +116,6 @@ void _st_Read_WEBP(int16_t this_win_handle, boolean file_process)
             st_form_alert(FORM_EXCLAM, alert_message);
         } else {
             mfdb_update_bpp(&this_win->wi_original_mfdb, (int8_t*)destination_buffer, width, height, nb_components_32bits << 3);
-            st_MFDB_Fill(&this_win->wi_original_mfdb, 0XFFFFFFFF);
             WebPDecodeARGBInto((uint8_t*)data, data_size, destination_buffer, (MFDB_STRIDE(width) * height) << 2, MFDB_STRIDE(width) << 2);
             this_win->total_length_w = this_win->wi_original_mfdb.fd_w;
             this_win->total_length_h = this_win->wi_original_mfdb.fd_h;
@@ -168,50 +167,3 @@ clean:
     st_Progress_Bar_Finish(wi_progress_bar);        
     return ;
 }
-
-/*
-
-static int iwwebp_write_main(struct iwwebpwritecontext *wctx)
-{
-	struct iw_image *img;
-	size_t ret;
-	uint8_t *cmpr_webp_data = NULL;
-	int retval=0;
-	double quality;
-
-	img = wctx->img;
-
-	quality = iw_get_value_dbl(wctx->ctx,IW_VAL_WEBP_QUALITY);
-	if(quality<0.0) {
-		quality=80.0; // Default quality.
-	}
-
-	switch(img->imgtype) {
-	case IW_IMGTYPE_GRAY:
-		// IW requires encoders to support grayscale, but WebP doesn't (?)
-		// support it. So, convert grayscale images to RGB.
-		iwwebp_gray_to_rgb(wctx); // Allocates RGB image at wctx->tmppixels.
-		if(!wctx->tmppixels) goto done;
-		ret = WebPEncodeRGB(wctx->tmppixels, img->width, img->height, 3*img->width, (float)quality, &cmpr_webp_data);
-		break;
-	case IW_IMGTYPE_RGB:
-		ret = WebPEncodeRGB(img->pixels, img->width, img->height, (int)img->bpr, (float)quality, &cmpr_webp_data);
-		break;
-	default:
-		iw_seterror(wctx->ctx,iwwebp_get_string(wctx->ctx,iws_webp_enc_bad_imgtype),img->imgtype);
-		goto done;
-	}
-
-	if(ret<1 || !cmpr_webp_data) {
-		goto done;
-	}
-	iwwebp_write(wctx, cmpr_webp_data, ret);
-	retval=1;
-
-done:
-	if(cmpr_webp_data) free(cmpr_webp_data);
-	if(wctx->tmppixels) iw_free(wctx->tmppixels);
-	return 1;
-}
-
-*/

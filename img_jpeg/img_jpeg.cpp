@@ -203,7 +203,7 @@ void _st_Read_JPEG (int16_t this_win_handle,  boolean file_process){
             mem_free(this_win->wi_original_mfdb.fd_addr);
         }        
         mfdb_update_bpp(&this_win->wi_original_mfdb, (int8_t*)ARGB_Buffer, width, height, nb_components_32bits << 3);
-        st_MFDB_Fill(&this_win->wi_original_mfdb, 0XFFFFFFFF);
+
         u_int32_t index = 0, j = 0, x, y;
 
         for(y = 0; y < height; y++){
