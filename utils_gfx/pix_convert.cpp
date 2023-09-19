@@ -632,7 +632,7 @@ MFDB* st_MFDB32_To_MFDB4bpp(MFDB* MFDB32){
     }else{
         st_Progress_Bar_Signal(global_progress_bar, 30, (int8_t*)"Floyd dithering");
         makeDitherFSRgb3bpp((u_int8_t*)MFDB24->fd_addr, MFDB24->fd_w, MFDB24->fd_h);
-        st_Progress_Bar_Signal(global_progress_bar, 60, (int8_t*)"RGB to 8bits indexed image");
+        st_Progress_Bar_Signal(global_progress_bar, 60, (int8_t*)"RGB to 8bits indexed image (may be long)");
         classic_RGB_to_8bits_Indexed((uint8_t*)MFDB24->fd_addr, (uint8_t*)dst_8bpp->fd_addr, MFDB24->fd_w, MFDB24->fd_h);
     }
 
@@ -643,7 +643,7 @@ MFDB* st_MFDB32_To_MFDB4bpp(MFDB* MFDB32){
     mfdb_free(dst_8bpp);
 
     st_Progress_Bar_Step_Done(global_progress_bar);
-    
+    st_Progress_Bar_Finish(global_progress_bar);
 
     return dst_4bpp;
 }
