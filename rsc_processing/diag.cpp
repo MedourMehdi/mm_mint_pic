@@ -8,6 +8,7 @@
 #include "../img_webp/img_webp.h"
 #include "../img_jpeg/img_jpeg.h"
 #include "../img_tiff/img_tiff.h"
+#include "../img_bmp/img_bmp.h"
 
 typedef struct {
     char        export_path[256];
@@ -21,9 +22,6 @@ typedef struct {
     u_int8_t    *export_data;
     void        *(*export_function)(void*);
 } struct_export;
-
-
- /*  Resource C-Header-file v1.95 for ResourceMaster v2.06&up by ARDISOFT  */
 
 #define DiagResize 0  /* form/dial */
 #define DiagResize_diagboxresize 0  /* BOX in tree DiagResize */
@@ -47,13 +45,14 @@ typedef struct {
 #define DiagExport_ButtonBrowse 4  /* BUTTON in tree DiagExport */
 #define DiagExport_CancelBtEx 5  /* BUTTON in tree DiagExport */
 #define DiagExport_OkBtnEx 6  /* BUTTON in tree DiagExport */
-#define DiagExport_exportbutton 7  /* BUTTON in tree DiagExport */
+#define DiagExport_exportbutton 7  /* BOX in tree DiagExport */
 #define DiagExport_chk_png 8  /* BUTTON in tree DiagExport */
 #define DiagExport_chk_jpeg 9  /* BUTTON in tree DiagExport */
 #define DiagExport_chk_tiff 10  /* BUTTON in tree DiagExport */
 #define DiagExport_chk_webp 11  /* BUTTON in tree DiagExport */
 #define DiagExport_chk_heif 12  /* BUTTON in tree DiagExport */
 #define DiagExport_chk_mfd 13  /* BUTTON in tree DiagExport */
+#define DiagExport_chk_bmp 15  /* BUTTON in tree DiagExport */
 #define DiagExport_TextInfo1 14  /* TEXT in tree DiagExport */
 
 #define DiagInfo 2  /* form/dial */
@@ -63,14 +62,13 @@ typedef struct {
 #define DiagInfo_AuthorInfo 7  /* TEXT in tree DiagInfo */
 #define DiagInfo_HiddenInfo 8  /* TEXT in tree DiagInfo */
 
-
-
 void* st_Image_Export_To_PNG(void* p_param);
 void* st_Image_Export_To_HEIF(void* p_param);
 void* st_Image_Export_To_TIFF(void* p_param);
 void* st_Image_Export_To_WEBP(void* p_param);
 void* st_Image_Export_To_JPEG(void* p_param);
 void* st_Image_Export_To_MFD(void* p_param);
+void* st_Image_Export_To_BMP(void* p_param);
 
 boolean st_Set_Export(void* (*export_function)(void*), const char* this_extention, OBJECT* this_ftext_to_uptdate);
 void st_Update_Comments(int16_t this_win_form_handle, void* p_param, OBJECT* this_ftext_to_uptdate, uint16_t bpp, const char* format );
@@ -214,7 +212,11 @@ fo_bnxtobj	New current object, or 0 if the next object has the status HIDDEN or 
                 form_button(tree, DiagExport_chk_mfd, 1, 0);
                 st_Set_Export(&st_Image_Export_To_MFD, ".mfd", &obj_gui_ftext_filepath);
                 st_Update_Comments(this_win_form_handle, (void*)&this_export, &obj_gui_ftext_info, screen_workstation_bits_per_pixel, "MFD");
-            } else{
+            } else if(strcasecmp(this_export.export_extension, ".bmp") == 0 || strcasecmp(this_export.export_extension, ".BMP") == 0){
+                form_button(tree, DiagExport_chk_bmp, 1, 0);
+                st_Set_Export(&st_Image_Export_To_BMP, this_export.export_extension, &obj_gui_ftext_filepath);
+                st_Update_Comments(this_win_form_handle, (void*)&this_export, &obj_gui_ftext_info, 24, "BMP");                          
+            } else {
                 printf("Unknown %s extension", this_export.export_extension);
             }
             break;
@@ -246,6 +248,12 @@ fo_bnxtobj	New current object, or 0 if the next object has the status HIDDEN or 
             }
             st_Update_Comments(this_win_form_handle, (void*)&this_export, &obj_gui_ftext_info, 24, "TIFF");
             break;
+        case DiagExport_chk_bmp:
+            if(st_Set_Export(&st_Image_Export_To_BMP, ".bmp", &obj_gui_ftext_filepath)){
+                objc_draw( tree, 0, MAX_DEPTH, obj_pxy_filepath[0] , obj_pxy_filepath[1], obj_pxy_filepath[2], obj_pxy_filepath[3] );
+            }
+            st_Update_Comments(this_win_form_handle, (void*)&this_export, &obj_gui_ftext_info, 24, "BMP");
+            break;            
         case DiagExport_chk_mfd:
             if(st_Set_Export(&st_Image_Export_To_MFD, ".mfd", &obj_gui_ftext_filepath)){
                 objc_draw( tree, 0, MAX_DEPTH, obj_pxy_filepath[0] , obj_pxy_filepath[1], obj_pxy_filepath[2], obj_pxy_filepath[3] );
@@ -313,6 +321,33 @@ void* st_Image_Export_To_HEIF(void* p_param){
     }
     st_Write_HEIF(raw_data, my_export->export_width, my_export->export_height, my_export->export_path);
     form_alert(1, "[1][Export HEIF done][Okay]");
+    return NULL;
+}
+
+void* st_Image_Export_To_BMP(void* p_param){
+    struct_export* my_export = (struct_export*)p_param;
+
+    u_int8_t* raw_data = my_export->export_data;
+
+    switch (my_export->export_components)
+    {
+    case 4: /* 32 bits per pixels */
+        break;
+    default:
+        sprintf(alert_message,"Error\nnb_components are %d", my_export->export_components);
+        st_form_alert(FORM_EXCLAM, alert_message);
+        return NULL;
+        break;
+    }
+
+    if(st_FileExistsAccess(my_export->export_path) == 1){
+        sprintf(alert_message,"File exist\nDo you want to erase it?");
+        if(st_form_alert_choice(FORM_STOP, alert_message) == 1){
+            return NULL;
+        }
+    }
+    st_Write_BMP(raw_data, my_export->export_width, my_export->export_height, my_export->export_path);
+    form_alert(1, "[1][Export BMP done][Okay]");
     return NULL;
 }
 
