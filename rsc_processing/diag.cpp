@@ -9,6 +9,7 @@
 #include "../img_jpeg/img_jpeg.h"
 #include "../img_tiff/img_tiff.h"
 #include "../img_bmp/img_bmp.h"
+#include "../img_tga/img_tga.h"
 
 typedef struct {
     char        export_path[256];
@@ -53,6 +54,7 @@ typedef struct {
 #define DiagExport_chk_heif 12  /* BUTTON in tree DiagExport */
 #define DiagExport_chk_mfd 13  /* BUTTON in tree DiagExport */
 #define DiagExport_chk_bmp 15  /* BUTTON in tree DiagExport */
+#define DiagExport_chk_tga 16  /* BUTTON in tree DiagExport */
 #define DiagExport_TextInfo1 14  /* TEXT in tree DiagExport */
 
 #define DiagInfo 2  /* form/dial */
@@ -62,6 +64,7 @@ typedef struct {
 #define DiagInfo_AuthorInfo 7  /* TEXT in tree DiagInfo */
 #define DiagInfo_HiddenInfo 8  /* TEXT in tree DiagInfo */
 
+
 void* st_Image_Export_To_PNG(void* p_param);
 void* st_Image_Export_To_HEIF(void* p_param);
 void* st_Image_Export_To_TIFF(void* p_param);
@@ -69,6 +72,7 @@ void* st_Image_Export_To_WEBP(void* p_param);
 void* st_Image_Export_To_JPEG(void* p_param);
 void* st_Image_Export_To_MFD(void* p_param);
 void* st_Image_Export_To_BMP(void* p_param);
+void* st_Image_Export_To_TGA(void* p_param);
 
 boolean st_Set_Export(void* (*export_function)(void*), const char* this_extention, OBJECT* this_ftext_to_uptdate);
 void st_Update_Comments(int16_t this_win_form_handle, void* p_param, OBJECT* this_ftext_to_uptdate, uint16_t bpp, const char* format );
@@ -216,6 +220,10 @@ fo_bnxtobj	New current object, or 0 if the next object has the status HIDDEN or 
                 form_button(tree, DiagExport_chk_bmp, 1, 0);
                 st_Set_Export(&st_Image_Export_To_BMP, this_export.export_extension, &obj_gui_ftext_filepath);
                 st_Update_Comments(this_win_form_handle, (void*)&this_export, &obj_gui_ftext_info, 24, "BMP");                          
+            } else if(strcasecmp(this_export.export_extension, ".tga") == 0 || strcasecmp(this_export.export_extension, ".TGA") == 0){
+                form_button(tree, DiagExport_chk_tga, 1, 0);
+                st_Set_Export(&st_Image_Export_To_TGA, this_export.export_extension, &obj_gui_ftext_filepath);
+                st_Update_Comments(this_win_form_handle, (void*)&this_export, &obj_gui_ftext_info, 24, "TGA");                          
             } else {
                 printf("Unknown %s extension", this_export.export_extension);
             }
@@ -253,7 +261,13 @@ fo_bnxtobj	New current object, or 0 if the next object has the status HIDDEN or 
                 objc_draw( tree, 0, MAX_DEPTH, obj_pxy_filepath[0] , obj_pxy_filepath[1], obj_pxy_filepath[2], obj_pxy_filepath[3] );
             }
             st_Update_Comments(this_win_form_handle, (void*)&this_export, &obj_gui_ftext_info, 24, "BMP");
-            break;            
+            break;
+        case DiagExport_chk_tga:
+            if(st_Set_Export(&st_Image_Export_To_TGA, ".tga", &obj_gui_ftext_filepath)){
+                objc_draw( tree, 0, MAX_DEPTH, obj_pxy_filepath[0] , obj_pxy_filepath[1], obj_pxy_filepath[2], obj_pxy_filepath[3] );
+            }
+            st_Update_Comments(this_win_form_handle, (void*)&this_export, &obj_gui_ftext_info, 24, "TGA");
+            break;                  
         case DiagExport_chk_mfd:
             if(st_Set_Export(&st_Image_Export_To_MFD, ".mfd", &obj_gui_ftext_filepath)){
                 objc_draw( tree, 0, MAX_DEPTH, obj_pxy_filepath[0] , obj_pxy_filepath[1], obj_pxy_filepath[2], obj_pxy_filepath[3] );
@@ -348,6 +362,48 @@ void* st_Image_Export_To_BMP(void* p_param){
     }
     st_Write_BMP(raw_data, my_export->export_width, my_export->export_height, my_export->export_path);
     form_alert(1, "[1][Export BMP done][Okay]");
+    return NULL;
+}
+
+void* st_Image_Export_To_TGA(void* p_param){
+    struct_export* my_export = (struct_export*)p_param;
+
+    int16_t nb_components = my_export->export_components, nb_components_32bits = 4;
+
+    u_int8_t* raw_data = my_export->export_data;
+    u_int8_t* dst_buffer = NULL;
+
+    MFDB* rgb888_mfdb = NULL;
+    MFDB* rgb8888_mfdb = NULL;
+
+    switch (nb_components)
+    {
+    case 4: /* 32 bits per pixels */
+        rgb8888_mfdb = mfdb_alloc_bpp((int8_t*)my_export->export_data, my_export->export_width, my_export->export_height, nb_components_32bits << 3);
+        rgb888_mfdb = st_MFDB32_To_MFDB24(rgb8888_mfdb);
+        rgb8888_mfdb->fd_addr = NULL;
+        raw_data = (u_int8_t*)rgb888_mfdb->fd_addr;
+        break;
+    default:
+        sprintf(alert_message,"Error\nnb_components are %d", nb_components);
+        st_form_alert(FORM_EXCLAM, alert_message);
+        return NULL;
+        break;
+    }
+    if(st_FileExistsAccess(my_export->export_path) == 1){
+        sprintf(alert_message,"File exist\nDo you want to erase it?");
+        if(st_form_alert_choice(FORM_STOP, alert_message) == 1){
+            return NULL;
+        }
+    }
+    st_Write_TGA(raw_data, my_export->export_width, my_export->export_height, my_export->export_path);
+    form_alert(1, "[1][Export TGA done][Okay]");
+    if(rgb8888_mfdb != NULL){
+        mfdb_free(rgb8888_mfdb);
+    }
+    if(rgb888_mfdb != NULL){
+        mfdb_free(rgb888_mfdb);
+    }
     return NULL;
 }
 

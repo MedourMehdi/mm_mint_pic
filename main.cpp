@@ -14,6 +14,7 @@
 #include "img_jpeg/img_jpeg.h"
 #include "img_tiff/img_tiff.h"
 #include "img_bmp/img_bmp.h"
+#include "img_tga/img_tga.h"
 
 #include "png_ico/png_ico.h"
 
@@ -838,6 +839,8 @@ bool new_win_img(const char *new_file){
 					st_Init_TIFF(&win_struct_array[i]);
 				} else if (check_ext(file_extension, "BMP")){
 					st_Init_BMP(&win_struct_array[i]);
+				} else if (check_ext(file_extension, "TGA")){
+					st_Init_TGA(&win_struct_array[i]);
 				}
 
 				else {
