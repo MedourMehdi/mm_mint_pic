@@ -293,35 +293,23 @@ boolean st_Set_Export(void* (*export_function)(void*), const char* this_extentio
 void* st_Image_Export_To_HEIF(void* p_param){
     struct_export* my_export = (struct_export*)p_param;
 
-    int16_t nb_components = my_export->export_components, nb_components_24bits = 3, nb_components_32bits = 4;
-
     u_int8_t* raw_data = my_export->export_data;
-    u_int8_t* dst_buffer = NULL;
 
-    MFDB* rgb888_mfdb = NULL;
-    MFDB* rgb8888_mfdb = NULL;
-    MFDB* rgb565_mfdb = NULL;
-
-    switch (nb_components)
+    switch (my_export->export_components)
     {
     case 4: /* 32 bits per pixels */
         break;
-    case 3: /* 24 bits per pixels */
-        dst_buffer = st_ScreenBuffer_Alloc_bpp(my_export->export_width, my_export->export_height, nb_components_32bits << 3);
-        rgb888_mfdb = mfdb_alloc_bpp((int8_t*)my_export->export_data, my_export->export_width, my_export->export_height, nb_components << 3);
-        rgb8888_mfdb = mfdb_alloc_bpp((int8_t*)dst_buffer, my_export->export_width, my_export->export_height, nb_components_32bits << 3);
-        st_Convert_RGB888_to_ARGB(rgb888_mfdb,rgb8888_mfdb);
-        raw_data = (u_int8_t*)rgb8888_mfdb->fd_addr;
-        break;
-    case 2: /* 16 bits per pixels */
-        dst_buffer = st_ScreenBuffer_Alloc_bpp(my_export->export_width, my_export->export_height, nb_components_32bits << 3);
-        rgb8888_mfdb = mfdb_alloc_bpp((int8_t*)dst_buffer, my_export->export_width, my_export->export_height, nb_components_32bits << 3);
-        rgb565_mfdb = mfdb_alloc_bpp((int8_t*)my_export->export_data, my_export->export_width, my_export->export_height, nb_components << 3);
-        st_Convert_RGB565_to_ARGB(rgb565_mfdb, rgb8888_mfdb);
-        raw_data = (u_int8_t*)rgb8888_mfdb->fd_addr;
-        break;
     default:
+        sprintf(alert_message,"Error\nnb_components are %d", my_export->export_components);
+        st_form_alert(FORM_EXCLAM, alert_message);
+        return NULL;    
         break;
+    }
+    if(st_FileExistsAccess(my_export->export_path) == 1){
+        sprintf(alert_message,"File exist\nDo you want to erase it?");
+        if(st_form_alert_choice(FORM_STOP, alert_message) == 1){
+            return NULL;
+        }
     }
     st_Write_HEIF(raw_data, my_export->export_width, my_export->export_height, my_export->export_path);
     form_alert(1, "[1][Export HEIF done][Okay]");
@@ -335,9 +323,6 @@ void* st_Image_Export_To_PNG(void* p_param){
     int16_t png_color_type, png_color_filter;
 
     u_int8_t* raw_data = my_export->export_data;
-    u_int8_t* dst_buffer = NULL;
-    MFDB* rgb888_mfdb = NULL;
-    MFDB* rgb565_mfdb = NULL;
 
     channel = nb_components;
 
@@ -348,48 +333,34 @@ void* st_Image_Export_To_PNG(void* p_param){
         png_color_type = PNG_COLOR_TYPE_RGB_ALPHA;
         png_color_filter = PNG_TRANSFORM_SWAP_ALPHA; /* Aranym FVdi 32bpp is ARGB */
         break;
-    case 3: /* 24 bits per pixels */
-        bits_per_component = 8;
-        png_color_type = PNG_COLOR_TYPE_RGB;
-        png_color_filter = 0;
-        break;
-    case 2: /* 16 bits per pixels */
-        dst_buffer = st_ScreenBuffer_Alloc_bpp(my_export->export_width, my_export->export_height, nb_components_24bits << 3);
-        rgb888_mfdb = mfdb_alloc_bpp((int8_t*)dst_buffer, my_export->export_width, my_export->export_height, nb_components_24bits << 3);
-        rgb565_mfdb = mfdb_alloc_bpp((int8_t*)my_export->export_data, my_export->export_width, my_export->export_height, nb_components << 3);
-        st_Convert_RGB565_to_RGB888(rgb565_mfdb, rgb888_mfdb);
-        raw_data = (u_int8_t*)rgb888_mfdb->fd_addr;
-        channel = nb_components_24bits;
-        bits_per_component = 8;
-        png_color_type = PNG_COLOR_TYPE_RGB;
-        png_color_filter = 0;
-        break;
     default:
+        sprintf(alert_message,"Error\nnb_components are %d", nb_components);
+        st_form_alert(FORM_EXCLAM, alert_message);
+        return NULL;
         break;
     }
+    if(st_FileExistsAccess(my_export->export_path) == 1){
+        sprintf(alert_message,"File exist\nDo you want to erase it?");
+        if(st_form_alert_choice(FORM_STOP, alert_message) == 1){
+            return NULL;
+        }
+    }    
     st_Save_PNG(my_export->export_path,my_export->export_width, my_export->export_height, bits_per_component, png_color_type, raw_data, ( channel * MFDB_STRIDE(my_export->export_width) ), png_color_filter);
-    if(rgb888_mfdb != NULL){mfdb_free(rgb888_mfdb);}
-    if(rgb565_mfdb != NULL){mem_free(rgb565_mfdb);}
+
     form_alert(1, "[1][Export PNG done][Okay]");
     return NULL;
-/*
-  png_set_IHDR (pngStruct, pngInfo, width, height, bit_depth,
-                PNG_COLOR_TYPE_GRAY,          PNG_INTERLACE_NONE,  
-                PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
-*/
 }
 
 void* st_Image_Export_To_TIFF(void* p_param){
     struct_export* my_export = (struct_export*)p_param;
 
-    int16_t nb_components = my_export->export_components, nb_components_24bits = 3, nb_components_32bits = 4;
+    int16_t nb_components = my_export->export_components, nb_components_32bits = 4;
 
     u_int8_t* raw_data = my_export->export_data;
     u_int8_t* dst_buffer = NULL;
 
     MFDB* rgb888_mfdb = NULL;
     MFDB* rgb8888_mfdb = NULL;
-    MFDB* rgb565_mfdb = NULL;
 
     switch (nb_components)
     {
@@ -399,18 +370,17 @@ void* st_Image_Export_To_TIFF(void* p_param){
         rgb8888_mfdb->fd_addr = NULL;
         raw_data = (u_int8_t*)rgb888_mfdb->fd_addr;
         break;
-    case 3: /* 24 bits per pixels */
-        break;
-    case 2: /* 16 bits per pixels */
-        dst_buffer = st_ScreenBuffer_Alloc_bpp(my_export->export_width, my_export->export_height, nb_components_32bits << 3);
-        rgb8888_mfdb = mfdb_alloc_bpp((int8_t*)dst_buffer, my_export->export_width, my_export->export_height, nb_components_32bits << 3);
-        rgb565_mfdb = mfdb_alloc_bpp((int8_t*)my_export->export_data, my_export->export_width, my_export->export_height, nb_components << 3);
-        st_Convert_RGB565_to_RGB888(rgb565_mfdb, rgb888_mfdb);
-        rgb565_mfdb->fd_addr = NULL;
-        raw_data = (u_int8_t*)rgb888_mfdb->fd_addr;
-        break;
     default:
+        sprintf(alert_message,"Error\nnb_components are %d", nb_components);
+        st_form_alert(FORM_EXCLAM, alert_message);
+        return NULL;
         break;
+    }
+    if(st_FileExistsAccess(my_export->export_path) == 1){
+        sprintf(alert_message,"File exist\nDo you want to erase it?");
+        if(st_form_alert_choice(FORM_STOP, alert_message) == 1){
+            return NULL;
+        }
     }
     st_Write_TIFF(raw_data, my_export->export_width, my_export->export_height, my_export->export_path);
     form_alert(1, "[1][Export TIFF done][Okay]");
@@ -420,45 +390,40 @@ void* st_Image_Export_To_TIFF(void* p_param){
     if(rgb888_mfdb != NULL){
         mfdb_free(rgb888_mfdb);
     }
-    if(rgb565_mfdb != NULL){
-        mfdb_free(rgb565_mfdb);
-    }
     return NULL;
 }
 
 void* st_Image_Export_To_WEBP(void* p_param){
     struct_export* my_export = (struct_export*)p_param;
 
-    int16_t nb_components = my_export->export_components, nb_components_24bits = 3, nb_components_32bits = 4;
+    int16_t nb_components = my_export->export_components, nb_components_32bits = 4;
 
     u_int8_t* raw_data = my_export->export_data;
     u_int8_t* dst_buffer = NULL;
 
     MFDB* rgb888_mfdb = NULL;
     MFDB* rgb8888_mfdb = NULL;
-    MFDB* rgb565_mfdb = NULL;
 
     switch (nb_components)
     {
     case 4: /* 32 bits per pixels */
         rgb8888_mfdb = mfdb_alloc_bpp((int8_t*)my_export->export_data, my_export->export_width, my_export->export_height, nb_components_32bits << 3);
         rgb888_mfdb = st_MFDB32_To_MFDB24(rgb8888_mfdb);
-        rgb8888_mfdb->fd_addr = NULL;
-        raw_data = (u_int8_t*)rgb888_mfdb->fd_addr;
-        break;
-    case 3: /* 24 bits per pixels */
-        break;
-    case 2: /* 16 bits per pixels */
-        dst_buffer = st_ScreenBuffer_Alloc_bpp(my_export->export_width, my_export->export_height, nb_components_32bits << 3);
-        rgb8888_mfdb = mfdb_alloc_bpp((int8_t*)dst_buffer, my_export->export_width, my_export->export_height, nb_components_32bits << 3);
-        rgb565_mfdb = mfdb_alloc_bpp((int8_t*)my_export->export_data, my_export->export_width, my_export->export_height, nb_components << 3);
-        st_Convert_RGB565_to_RGB888(rgb565_mfdb, rgb888_mfdb);
-        rgb565_mfdb->fd_addr = NULL;
+        rgb8888_mfdb->fd_addr = NULL; /* To be safe when we use mfdb_free */
         raw_data = (u_int8_t*)rgb888_mfdb->fd_addr;
         break;
     default:
+        sprintf(alert_message,"Error\nnb_components are %d", nb_components);
+        st_form_alert(FORM_EXCLAM, alert_message);
+        return NULL;
         break;
     }
+    if(st_FileExistsAccess(my_export->export_path) == 1){
+        sprintf(alert_message,"File exist\nDo you want to erase it?");
+        if(st_form_alert_choice(FORM_STOP, alert_message) == 1){
+            return NULL;
+        }
+    }    
     st_Write_WEBP(raw_data, my_export->export_width, my_export->export_height, my_export->export_path);
     form_alert(1, "[1][Export WEBP done][Okay]");
     if(rgb8888_mfdb != NULL){
@@ -466,9 +431,6 @@ void* st_Image_Export_To_WEBP(void* p_param){
     }
     if(rgb888_mfdb != NULL){
         mfdb_free(rgb888_mfdb);
-    }
-    if(rgb565_mfdb != NULL){
-        mfdb_free(rgb565_mfdb);
     }
     return NULL;
 }
@@ -535,14 +497,12 @@ void* st_Image_Export_To_MFD(void* p_param){
 void* st_Image_Export_To_JPEG(void* p_param){
     struct_export* my_export = (struct_export*)p_param;
 
-    int16_t nb_components = my_export->export_components, nb_components_24bits = 3, nb_components_32bits = 4;
+    int16_t nb_components = my_export->export_components, nb_components_32bits = 4;
 
     u_int8_t* raw_data = my_export->export_data;
-    u_int8_t* dst_buffer = NULL;
 
     MFDB* rgb888_mfdb = NULL;
     MFDB* rgb8888_mfdb = NULL;
-    MFDB* rgb565_mfdb = NULL;
 
     switch (nb_components)
     {
@@ -552,19 +512,18 @@ void* st_Image_Export_To_JPEG(void* p_param){
         rgb8888_mfdb->fd_addr = NULL;
         raw_data = (u_int8_t*)rgb888_mfdb->fd_addr;
         break;
-    case 3: /* 24 bits per pixels */
-        break;
-    case 2: /* 16 bits per pixels */
-        dst_buffer = st_ScreenBuffer_Alloc_bpp(my_export->export_width, my_export->export_height, nb_components_32bits << 3);
-        rgb8888_mfdb = mfdb_alloc_bpp((int8_t*)dst_buffer, my_export->export_width, my_export->export_height, nb_components_32bits << 3);
-        rgb565_mfdb = mfdb_alloc_bpp((int8_t*)my_export->export_data, my_export->export_width, my_export->export_height, nb_components << 3);
-        st_Convert_RGB565_to_RGB888(rgb565_mfdb, rgb888_mfdb);
-        rgb565_mfdb->fd_addr = NULL;
-        raw_data = (u_int8_t*)rgb888_mfdb->fd_addr;
-        break;
     default:
+        sprintf(alert_message,"Error\nnb_components are %d", nb_components);
+        st_form_alert(FORM_EXCLAM, alert_message);
+        return NULL;
         break;
     }
+    if(st_FileExistsAccess(my_export->export_path) == 1){
+        sprintf(alert_message,"File exist\nDo you want to erase it?");
+        if(st_form_alert_choice(FORM_STOP, alert_message) == 1){
+            return NULL;
+        }
+    }    
     st_Write_JPEG(raw_data, my_export->export_width, my_export->export_height, my_export->export_path);
     form_alert(1, "[1][Export JPEG done][Okay]");
     if(rgb8888_mfdb != NULL){
@@ -572,9 +531,6 @@ void* st_Image_Export_To_JPEG(void* p_param){
     }
     if(rgb888_mfdb != NULL){
         mfdb_free(rgb888_mfdb);
-    }
-    if(rgb565_mfdb != NULL){
-        mfdb_free(rgb565_mfdb);
     }
     return NULL;
 }
