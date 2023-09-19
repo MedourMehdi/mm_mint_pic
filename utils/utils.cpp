@@ -315,6 +315,10 @@ u_int8_t* st_ScreenBuffer_Alloc_bpp(int16_t width, int16_t height, int16_t bpp){
     }
     u_int8_t* destination_buffer;
 	destination_buffer = (u_int8_t*)mem_alloc(destination_size_in_bytes);
+    if(destination_buffer == NULL){
+        sprintf(alert_message, "Can't allocate %dbytes", destination_size_in_bytes);
+        st_form_alert(FORM_STOP, alert_message);
+    }
     if(screen_workstation_format < 2){
         memset(destination_buffer, 0x00, destination_size_in_bytes);
     } else {
