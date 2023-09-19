@@ -439,12 +439,12 @@ void st_Rotate_ARGB( MFDB* wi_original_mfdb, MFDB* wi_rendered_mfdb, int16_t deg
 }
 
 MFDB* st_MFDB32_To_MFDB16(MFDB* MFDB32){
-    int8_t* dst_buffer = (int8_t*)mem_alloc((MFDB32->fd_w * MFDB32->fd_h) << 1);
-    MFDB* dst_rgb565 = mfdb_alloc_bpp(dst_buffer, MFDB32->fd_w, MFDB32->fd_h, 16);
+    u_int8_t* dst_buffer = st_ScreenBuffer_Alloc_bpp(MFDB32->fd_w, MFDB32->fd_h, 16);
+    MFDB* MFDB16 = mfdb_alloc_bpp((int8_t*)dst_buffer, MFDB32->fd_w, MFDB32->fd_h, 16);
+    // printf("===> MFDB32 W %d / MFDB16 W%d\n", MFDB32->fd_w, MFDB16->fd_w);
+    st_Convert_ARGB_to_RGB565(MFDB32, MFDB16);
 
-    st_Convert_ARGB_to_RGB565(MFDB32, dst_rgb565);
-
-    return dst_rgb565;
+    return MFDB16;
 }
 
 /* 24BPP */
