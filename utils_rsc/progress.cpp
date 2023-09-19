@@ -21,9 +21,11 @@ void objc_xywh(OBJECT *tree, int16_t obj, GRECT *p);
 
 struct_progress_bar* st_Progress_Bar_Alloc_Enable(){
     struct_progress_bar* progress_bar = (struct_progress_bar*)Mxalloc(sizeof(struct_progress_bar), 3);
-	progress_bar->progress_bar_enabled = TRUE;
-    progress_bar->progress_bar_in_use = FALSE;
-    progress_bar->progress_bar_locked = FALSE;
+	progress_bar->progress_bar_enabled = true;
+    progress_bar->progress_bar_in_use = false;
+    progress_bar->progress_bar_locked = false;
+    progress_bar->initial_nb_functions = 0;
+    progress_bar->current_nb_functions = 0;    
     return progress_bar;
 }
 
@@ -31,56 +33,52 @@ void st_Progress_Bar_Destroy(struct_progress_bar* progress_bar){
     Mfree(progress_bar);
 }
 
-void st_Progress_Bar_Lock(struct_progress_bar* progress_bar, int16_t nb_functions){
+void st_Progress_Bar_Add_Step(struct_progress_bar* progress_bar){
     if(progress_bar != NULL){
-        if(progress_bar->progress_bar_enabled == TRUE){
-            progress_bar->progress_bar_locked = TRUE;
-            progress_bar->initial_nb_functions = nb_functions;
-            progress_bar->current_nb_functions = nb_functions;
+        if(progress_bar->progress_bar_enabled == true){
+            progress_bar->progress_bar_locked = true;
+            progress_bar->initial_nb_functions += 1;
+            progress_bar->current_nb_functions += 1;
         }
     }
 }
 
-void st_Progress_Bar_Unlock(struct_progress_bar* progress_bar){
+void st_Progress_Bar_Step_Done(struct_progress_bar* progress_bar){
     if(progress_bar != NULL){
-        if(progress_bar->progress_bar_enabled == TRUE){
-            progress_bar->progress_bar_locked = FALSE;
-            progress_bar->initial_nb_functions = 0;
-            progress_bar->current_nb_functions = 0;
+        if(progress_bar->progress_bar_enabled == true){
+            progress_bar->initial_nb_functions -= 1;
+            progress_bar->current_nb_functions -= 1;
+            if(!progress_bar->current_nb_functions){
+                progress_bar->progress_bar_locked = false;
+            }
         }
     }
 }
 
 void st_Progress_Bar_Init(struct_progress_bar* progress_bar, int8_t *title){
     if(progress_bar != NULL){
-        if(progress_bar->progress_bar_enabled == TRUE){
+        if(progress_bar->progress_bar_enabled == true && progress_bar->progress_bar_in_use != true){
             if(rsrc_load(".\\rsc\\progress.rsc") == 0){
                 form_alert(1, "[1][st_Progress_Bar_Init -> RSC Error][Okay]");
-            }
-            if(progress_bar->progress_bar_enabled == TRUE && progress_bar->progress_bar_in_use != TRUE){
-                
-                progress_bar->progress_bar_in_use = TRUE;
-                progress_bar->current_value = 0;
-                progress_bar->max_value = 100;
-                beg_prog(&progress_bar->form_rect);
-                set_prog(progress_bar->current_value, progress_bar->max_value);
-                set_text(PROTITLE, title);
-            }
+            }   
+            progress_bar->progress_bar_in_use = true;
+            progress_bar->current_value = 0;
+            progress_bar->max_value = 100;
+            beg_prog(&progress_bar->form_rect);
+        }
+        if(progress_bar->progress_bar_enabled == true){
+            set_prog(progress_bar->current_value, progress_bar->max_value);
+            set_text(PROTITLE, title);
         }
     }
 }
 
 void st_Progress_Bar_Signal(struct_progress_bar* progress_bar, int16_t current_value, int8_t *progress_txt){
     if(progress_bar != NULL){
-        if(progress_bar->progress_bar_in_use == TRUE && progress_bar->progress_bar_enabled == TRUE){
-            progress_bar->current_value = current_value;
+        if(progress_bar->progress_bar_in_use == true && progress_bar->progress_bar_enabled == true){
+            
             if( progress_bar->initial_nb_functions ){
-
-                progress_bar->current_value /= progress_bar->initial_nb_functions;
-                progress_bar->current_value += (progress_bar->max_value / progress_bar->initial_nb_functions) * ( progress_bar->initial_nb_functions - progress_bar->current_nb_functions);
-                if(current_value == progress_bar->max_value){
-                    progress_bar->current_nb_functions -= 1;
-                }
+                progress_bar->current_value += ( (progress_bar->max_value - progress_bar->current_value) * current_value ) / 100;
             }
 
             set_text(PLINE, progress_txt);
@@ -91,10 +89,10 @@ void st_Progress_Bar_Signal(struct_progress_bar* progress_bar, int16_t current_v
 
 void st_Progress_Bar_Finish(struct_progress_bar* progress_bar){
     if(progress_bar != NULL){
-        if(progress_bar->progress_bar_enabled == TRUE && progress_bar->progress_bar_locked != TRUE){
+        if(progress_bar->progress_bar_enabled == true && progress_bar->progress_bar_locked != true){
             progress_bar->current_value = 1;
             end_prog(&progress_bar->form_rect);
-            progress_bar->progress_bar_in_use = FALSE;
+            progress_bar->progress_bar_in_use = false;
             rsrc_free();
         }
     }

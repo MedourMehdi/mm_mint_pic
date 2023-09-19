@@ -2,6 +2,7 @@
 
 #include "utils_gfx/pix_convert.h"
 #include "utils/utils.h"
+#include "utils_rsc/progress.h"
 
 void st_Handle_FX(struct_window *this_win);
 
@@ -98,6 +99,8 @@ boolean st_Set_Renderer(struct_window *this_win){
             break;                                                    
         default:
             this_win->render_win = NULL;
+            sprintf(alert_message, "st_Set_Renderer error: screen_workstation_bits_per_pixel == %d\n", screen_workstation_bits_per_pixel);
+            st_form_alert(FORM_EXCLAM, alert_message);            
             ret = false;
             break;
     }
@@ -107,9 +110,8 @@ boolean st_Set_Renderer(struct_window *this_win){
 void st_Handle_FX(struct_window *this_win){
     if(this_win->wi_data->fx_requested == TRUE){
 
-        struct_progress_bar* wi_progress_bar = st_Progress_Bar_Alloc_Enable();
-        st_Progress_Bar_Lock(wi_progress_bar, 1);
-        st_Progress_Bar_Init(wi_progress_bar, (int8_t*)"Applying modifications");
+        st_Progress_Bar_Add_Step(this_win->wi_progress_bar);
+        st_Progress_Bar_Init(this_win->wi_progress_bar, (int8_t*)"Applying modifications");
 
         /**/
         MFDB *dst_mfdb = &this_win->wi_buffer_mfdb;
@@ -125,13 +127,13 @@ void st_Handle_FX(struct_window *this_win){
 
         /**/
         if(this_win->wi_data->img.rotate_degree !=0){
-            st_Progress_Bar_Signal(wi_progress_bar, 50, (int8_t*)"Image Rotation");
+            st_Progress_Bar_Signal(this_win->wi_progress_bar, 50, (int8_t*)"Image Rotation");
             st_Rotate_ARGB(fx_mfdb, dst_mfdb, this_win->wi_data->img.rotate_degree);
             mfdb_duplicate(dst_mfdb, fx_mfdb);
         }
 
         if(this_win->wi_data->img.scaled_pourcentage != 0){
-            st_Progress_Bar_Signal(wi_progress_bar, 50, (int8_t*)"Image Rescale");
+            st_Progress_Bar_Signal(this_win->wi_progress_bar, 50, (int8_t*)"Image Rescale");
             st_Rescale_ARGB(fx_mfdb, dst_mfdb, this_win->wi_data->img.scaled_width, this_win->wi_data->img.scaled_height);
             mfdb_duplicate(dst_mfdb, fx_mfdb);
         }          
@@ -143,8 +145,8 @@ void st_Handle_FX(struct_window *this_win){
         this_win->wi_data->fx_requested = FALSE;
         this_win->wi_data->fx_on = TRUE;
 
-        st_Progress_Bar_Unlock(wi_progress_bar);
-        st_Progress_Bar_Finish(wi_progress_bar);
+        st_Progress_Bar_Step_Done(this_win->wi_progress_bar);
+        st_Progress_Bar_Finish(this_win->wi_progress_bar);
 
     }
 }

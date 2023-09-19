@@ -13,10 +13,7 @@ void st_Init_WEBP(struct_window *this_win){
 	this_win->refresh_win = st_Win_Print_WEBP;
     this_win->wi_to_work_in_mfdb = &this_win->wi_original_mfdb;
     /* Progress Bar Stuff */
-    this_win->wi_progress_bar = (struct_progress_bar*)mem_alloc(sizeof(struct_progress_bar));
-    this_win->wi_progress_bar->progress_bar_enabled = TRUE;
-    this_win->wi_progress_bar->progress_bar_in_use = FALSE;
-    this_win->wi_progress_bar->progress_bar_locked = FALSE;
+    this_win->wi_progress_bar = global_progress_bar;
     if(!st_Set_Renderer(this_win)){
         sprintf(alert_message, "screen_format: %d\nscreen_bits_per_pixel: %d", screen_workstation_format, screen_workstation_bits_per_pixel);
         st_form_alert(FORM_STOP, alert_message);
@@ -49,7 +46,7 @@ void _st_Read_WEBP(int16_t this_win_handle, boolean file_process)
         return;
     }
     if(this_win->wi_data->wi_original_modified == FALSE){
-        st_Progress_Bar_Lock(this_win->wi_progress_bar, 1);
+        st_Progress_Bar_Add_Step(this_win->wi_progress_bar);
         st_Progress_Bar_Init(this_win->wi_progress_bar, (int8_t*)"WEBP DECODING");
         st_Progress_Bar_Signal(this_win->wi_progress_bar, 15, (int8_t*)"Init");
 
@@ -126,7 +123,7 @@ void _st_Read_WEBP(int16_t this_win_handle, boolean file_process)
             mem_free(data);
         }
         st_Progress_Bar_Signal(this_win->wi_progress_bar, 100, (int8_t*)"Finished");
-        st_Progress_Bar_Unlock(this_win->wi_progress_bar);
+        st_Progress_Bar_Step_Done(this_win->wi_progress_bar);
         st_Progress_Bar_Finish(this_win->wi_progress_bar);
     }
 }
@@ -138,14 +135,13 @@ void st_Write_WEBP(u_int8_t* src_buffer, int width, int height, const char* file
 
     int16_t ret_value = 0;
 
-    struct_progress_bar* wi_progress_bar = st_Progress_Bar_Alloc_Enable();
-    st_Progress_Bar_Lock(wi_progress_bar, 1);
-    st_Progress_Bar_Init(wi_progress_bar, (int8_t*)"WEBP EXPORT START");
-    st_Progress_Bar_Signal(wi_progress_bar, 35, (int8_t*)"WebP image encoding");
+    st_Progress_Bar_Add_Step(global_progress_bar);
+    st_Progress_Bar_Init(global_progress_bar, (int8_t*)"WEBP EXPORT START");
+    st_Progress_Bar_Signal(global_progress_bar, 35, (int8_t*)"WebP image encoding");
 
     size_t output_size = WebPEncodeRGB(src_buffer, width, height, MFDB_STRIDE(width) * nb_components24b, quality, &destination_buffer);
 
-    st_Progress_Bar_Signal(wi_progress_bar, 75, (int8_t*)"Saving image file");
+    st_Progress_Bar_Signal(global_progress_bar, 75, (int8_t*)"Saving image file");
     FILE *fp;
 	if((fp = fopen(filename,"wb")) == NULL){
 		sprintf(alert_message, "Unable to open %s for writing", filename);
@@ -162,8 +158,8 @@ void st_Write_WEBP(u_int8_t* src_buffer, int width, int height, const char* file
 		fclose(fp);
 	}
 clean:        
-    st_Progress_Bar_Signal(wi_progress_bar, 100, (int8_t*)"Finished");
-    st_Progress_Bar_Unlock(wi_progress_bar);
-    st_Progress_Bar_Finish(wi_progress_bar);        
+    st_Progress_Bar_Signal(global_progress_bar, 100, (int8_t*)"Finished");
+    st_Progress_Bar_Step_Done(global_progress_bar);
+    st_Progress_Bar_Finish(global_progress_bar);        
     return ;
 }

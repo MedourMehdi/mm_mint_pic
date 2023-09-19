@@ -18,6 +18,7 @@
 
 #include "png_ico/png_ico.h"
 
+#include "utils_rsc/progress.h"
 #include "utils_rsc/winform.h"
 #include "rsc_processing/diag.h"
 #include "thumbs/thumbs.h"
@@ -79,6 +80,8 @@ int16_t	clock_unit = 5;
 u_int32_t time_start;
 u_int32_t time_end;
 u_int32_t duration;
+
+struct_progress_bar *global_progress_bar;
 
 void *event_loop( void *result);
 void* exec_eventloop(void* p_param);
@@ -352,10 +355,13 @@ int main(int argc, char *argv[]){
     if(!init_app()){
 		goto quit;
 	}
+	
+	global_progress_bar = st_Progress_Bar_Alloc_Enable();
+
 	if(!st_Ico_PNG_Init(control_bar_list)){
 		goto quit;
 	}
-	
+
 	if (argc > 1){
 		for(int16_t i = 1; i < argc; i++) {
 				strcat(this_file, argv[i]);
@@ -376,6 +382,8 @@ int main(int argc, char *argv[]){
 
 close_ico_png:
 	st_Ico_PNG_Release(control_bar_list);
+
+	st_Progress_Bar_Finish(global_progress_bar);
 
 quit:
 	mem_free(this_file);

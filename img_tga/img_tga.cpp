@@ -12,11 +12,8 @@ void st_Init_TGA(struct_window *this_win){
 	this_win->refresh_win = st_Win_Print_TGA;
     this_win->wi_to_work_in_mfdb = &this_win->wi_original_mfdb;
     /* Progress Bar Stuff */
-    this_win->wi_progress_bar = (struct_progress_bar*)mem_alloc(sizeof(struct_progress_bar));
-    this_win->wi_progress_bar->progress_bar_enabled = TRUE;
-    this_win->wi_progress_bar->progress_bar_in_use = FALSE;
-    this_win->wi_progress_bar->progress_bar_locked = FALSE;
-    // this_win->prefers_file_instead_mem = FALSE; /* If FALSE the original file will be copied to memory and available in this_win->wi_data->original_buffer */
+    this_win->wi_progress_bar = global_progress_bar;
+    this_win->prefers_file_instead_mem = TRUE; /* If FALSE the original file will be copied to memory and available in this_win->wi_data->original_buffer */
     if(!st_Set_Renderer(this_win)){
         sprintf(alert_message, "screen_format: %d\nscreen_bits_per_pixel: %d", screen_workstation_format, screen_workstation_bits_per_pixel);
         st_form_alert(FORM_STOP, alert_message);
@@ -50,7 +47,7 @@ void _st_Read_TGA(int16_t this_win_handle, boolean file_process)
         return;
     }
     if(this_win->wi_data->wi_original_modified == FALSE){
-        st_Progress_Bar_Lock(this_win->wi_progress_bar, 1);
+        st_Progress_Bar_Add_Step(this_win->wi_progress_bar);
         st_Progress_Bar_Init(this_win->wi_progress_bar, (int8_t*)"TGA READING");
         st_Progress_Bar_Signal(this_win->wi_progress_bar, 15, (int8_t*)"Init");
 
@@ -61,20 +58,10 @@ void _st_Read_TGA(int16_t this_win_handle, boolean file_process)
 
         if(file_process == TRUE){
             error_code = tga_load(&data, &info, image_name);
-            printf("file processing %s\n", this_win->wi_data->path);
             if(error_code != TGA_NO_ERROR){
-                printf("Opening file error\n");
+            sprintf(alert_message, "%s\ncan't be opened\n", image_name);
+            st_form_alert(FORM_EXCLAM, alert_message); 
             }
-        } else {
-            printf("To Do");
-            return;
-        }
-
-        if (error_code == TGA_NO_ERROR) {
-            printf("Width: %d, ", tga_get_image_width(info));
-            printf("Height: %d\n", tga_get_image_height(info));
-            printf("Pixel format: %d\n", tga_get_pixel_format(info));
-            printf("Pixel size: %d\n", tga_get_bytes_per_pixel(info));
         }
 
         int16_t nb_components_32bits = 4;
@@ -150,7 +137,7 @@ void _st_Read_TGA(int16_t this_win_handle, boolean file_process)
         this_win->wi_data->wi_original_modified = TRUE;
 
         st_Progress_Bar_Signal(this_win->wi_progress_bar, 100, (int8_t*)"Finished");
-        st_Progress_Bar_Unlock(this_win->wi_progress_bar);
+        st_Progress_Bar_Step_Done(this_win->wi_progress_bar);
         st_Progress_Bar_Finish(this_win->wi_progress_bar);
     }
 }
@@ -160,10 +147,9 @@ void st_Write_TGA(u_int8_t* src_buffer, int width, int height, const char* filen
     int16_t nb_components24b = 3;
     u_int8_t *destination_buffer = NULL;
 
-    struct_progress_bar* wi_progress_bar = st_Progress_Bar_Alloc_Enable();
-    st_Progress_Bar_Lock(wi_progress_bar, 1);
-    st_Progress_Bar_Init(wi_progress_bar, (int8_t*)"TGA EXPORT START");
-    st_Progress_Bar_Signal(wi_progress_bar, 35, (int8_t*)"TGA image encoding");
+    st_Progress_Bar_Add_Step(global_progress_bar);
+    st_Progress_Bar_Init(global_progress_bar, (int8_t*)"TGA EXPORT START");
+    st_Progress_Bar_Signal(global_progress_bar, 35, (int8_t*)"TGA image encoding");
 
     uint8_t *data;
     tga_info *info;
@@ -188,53 +174,18 @@ void st_Write_TGA(u_int8_t* src_buffer, int width, int height, const char* filen
             }
         }        
         error_code = tga_save_from_info(data, info, filename);
-        if (error_code == TGA_NO_ERROR) {
-            printf("Image saved successfully\n");
-        } else {
-            printf("Image save failed\n");
+        if (error_code != TGA_NO_ERROR) {
+            form_alert(1, "[1][Image save failed][Okay]"); 
         }
 
         tga_free_data(data);
         tga_free_info(info);
     }
 
-    st_Progress_Bar_Signal(wi_progress_bar, 75, (int8_t*)"Saving image file");
+    st_Progress_Bar_Signal(global_progress_bar, 75, (int8_t*)"Saving image file");
   
-    st_Progress_Bar_Signal(wi_progress_bar, 100, (int8_t*)"Finished");
-    st_Progress_Bar_Unlock(wi_progress_bar);
-    st_Progress_Bar_Finish(wi_progress_bar);        
+    st_Progress_Bar_Signal(global_progress_bar, 100, (int8_t*)"Finished");
+    st_Progress_Bar_Step_Done(global_progress_bar);
+    st_Progress_Bar_Finish(global_progress_bar);        
 
 }
-
-// void make_header(TGA *src, TGA *dest)
-// {
-// 	dest->hdr.id_len 	= src->hdr.id_len;
-// 	dest->hdr.map_t		= src->hdr.map_t;
-// 	dest->hdr.img_t 	= src->hdr.img_t;
-// 	dest->hdr.map_first 	= src->hdr.map_first;
-// 	dest->hdr.map_entry 	= src->hdr.map_entry;
-// 	dest->hdr.map_len	= src->hdr.map_len;
-// 	dest->hdr.x 		= src->hdr.x;
-// 	dest->hdr.y 		= src->hdr.y;
-// 	dest->hdr.width 	= src->hdr.width;
-// 	dest->hdr.height 	= src->hdr.height;
-// 	dest->hdr.depth 	= src->hdr.depth;
-// 	dest->hdr.vert 	        = src->hdr.vert;
-// 	dest->hdr.horz          = src->hdr.horz;
-// 	dest->hdr.alpha         = src->hdr.alpha;
-// }
-
-u_int16_t get_word(const u_int8_t *p)
-{
-/*
-* Picked and adapted from IrfanView Atari ST picture format routines
-* 2006 Hans Wessels
-* Placed in Public Domain 20061124
-*/
-	u_int16_t res;
-	res = *p++;
-	res <<= 8;
-	res += *p;
-	return res;
-}
-

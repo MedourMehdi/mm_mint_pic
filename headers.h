@@ -6,15 +6,21 @@
 #include <string.h>
 #include <ctype.h>
 
+#ifndef MINT_HEADERS
+#define MINT_HEADERS
 #include <mint/osbind.h>
 #include <mint/mintbind.h>
 // #include <mint/cookie.h>
+#endif
 
 #include <unistd.h>
 #include <sys/stat.h> /* type defined here */
 
+#ifndef GEM_HEADERS
+#define GEM_HEADERS
 #include <gem.h>
 #include <gemx.h>
+#endif
 
 #ifndef int32_t
 #define int32_t long

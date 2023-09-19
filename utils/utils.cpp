@@ -92,10 +92,8 @@ boolean check_ext(const char *ext1, const char *ext2){
 		stringtoupper((char *)ext2);
 	}
 	if(strcmp(ext1, ext2) == 0){
-		// printf("Match TRUE %s %s", ext1, ext2);
 		return TRUE;
 	} else {
-		// printf("Match FALSE %s %s", ext1, ext2);
 		return FALSE;
 	}
 }

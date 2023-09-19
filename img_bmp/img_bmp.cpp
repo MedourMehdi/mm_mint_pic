@@ -12,10 +12,7 @@ void st_Init_BMP(struct_window *this_win){
 	this_win->refresh_win = st_Win_Print_BMP;
     this_win->wi_to_work_in_mfdb = &this_win->wi_original_mfdb;
     /* Progress Bar Stuff */
-    this_win->wi_progress_bar = (struct_progress_bar*)mem_alloc(sizeof(struct_progress_bar));
-    this_win->wi_progress_bar->progress_bar_enabled = TRUE;
-    this_win->wi_progress_bar->progress_bar_in_use = FALSE;
-    this_win->wi_progress_bar->progress_bar_locked = FALSE;
+    this_win->wi_progress_bar = global_progress_bar;
     this_win->prefers_file_instead_mem = FALSE; /* If FALSE the original file will be copied to memory and available in this_win->wi_data->original_buffer */
     if(!st_Set_Renderer(this_win)){
         sprintf(alert_message, "screen_format: %d\nscreen_bits_per_pixel: %d", screen_workstation_format, screen_workstation_bits_per_pixel);
@@ -49,7 +46,7 @@ void _st_Read_BMP(int16_t this_win_handle, boolean file_process)
         return;
     }
     if(this_win->wi_data->wi_original_modified == FALSE){
-        st_Progress_Bar_Lock(this_win->wi_progress_bar, 1);
+        st_Progress_Bar_Add_Step(this_win->wi_progress_bar);
         st_Progress_Bar_Init(this_win->wi_progress_bar, (int8_t*)"BMP READING");
         st_Progress_Bar_Signal(this_win->wi_progress_bar, 15, (int8_t*)"Init");
 
@@ -57,9 +54,9 @@ void _st_Read_BMP(int16_t this_win_handle, boolean file_process)
         if(file_process == TRUE){
             /* QDBMP seems broken for reading file */
             img = BMP_ReadFile(this_win->wi_data->path);
-            printf("file processing %s\n", this_win->wi_data->path);
             if(img == NULL){
-                printf("img == NULL\n");
+                sprintf(alert_message, "Reading file error\n%s", this_win->wi_data->path);
+                st_form_alert(FORM_EXCLAM, alert_message);
             }
         } else {
             img = BMP_ReadBuffer((char *)this_win->wi_data->original_buffer);
@@ -82,9 +79,9 @@ void _st_Read_BMP(int16_t this_win_handle, boolean file_process)
         u_int8_t* destination_buffer = st_ScreenBuffer_Alloc_bpp(width, height, nb_components_32bits << 3);
         if(destination_buffer == NULL){
             sprintf(alert_message, "Out Of Mem Error\nAsked for %doctets", width * height * nb_components_32bits);
-            st_form_alert(FORM_EXCLAM, alert_message);
+            st_form_alert(FORM_STOP, alert_message);
+            return;
         } else {
-            printf("depth %d w%d h%d\n", depth, width, height);
             for (y = 0; y < height; y++)
             {
                 for (x = 0; x < width; x++)
@@ -119,7 +116,7 @@ void _st_Read_BMP(int16_t this_win_handle, boolean file_process)
         }
 
         st_Progress_Bar_Signal(this_win->wi_progress_bar, 100, (int8_t*)"Finished");
-        st_Progress_Bar_Unlock(this_win->wi_progress_bar);
+        st_Progress_Bar_Step_Done(this_win->wi_progress_bar);
         st_Progress_Bar_Finish(this_win->wi_progress_bar);
     }
 }
@@ -129,13 +126,11 @@ void st_Write_BMP(u_int8_t* src_buffer, int width, int height, const char* filen
     int16_t nb_components24b = 3;
     u_int8_t *destination_buffer = NULL;
 
-    struct_progress_bar* wi_progress_bar = st_Progress_Bar_Alloc_Enable();
-    st_Progress_Bar_Lock(wi_progress_bar, 1);
-    st_Progress_Bar_Init(wi_progress_bar, (int8_t*)"BMP EXPORT START");
-    st_Progress_Bar_Signal(wi_progress_bar, 35, (int8_t*)"BMP image encoding");
+    st_Progress_Bar_Add_Step(global_progress_bar);
+    st_Progress_Bar_Init(global_progress_bar, (int8_t*)"BMP EXPORT START");
+    st_Progress_Bar_Signal(global_progress_bar, 35, (int8_t*)"BMP image encoding");
     
     BMP* img = BMP_Create(width, height, nb_components24b << 3);
-    printf("debug 1\n");
     u_int32_t  i;
     int16_t x, y;
     for ( x = 0; x < width; ++x)
@@ -147,13 +142,13 @@ void st_Write_BMP(u_int8_t* src_buffer, int width, int height, const char* filen
         }
     }
 
-    st_Progress_Bar_Signal(wi_progress_bar, 75, (int8_t*)"Saving image file");
+    st_Progress_Bar_Signal(global_progress_bar, 75, (int8_t*)"Saving image file");
 
     BMP_WriteFile(img, filename);
     BMP_Free( img );
       
-    st_Progress_Bar_Signal(wi_progress_bar, 100, (int8_t*)"Finished");
-    st_Progress_Bar_Unlock(wi_progress_bar);
-    st_Progress_Bar_Finish(wi_progress_bar);        
+    st_Progress_Bar_Signal(global_progress_bar, 100, (int8_t*)"Finished");
+    st_Progress_Bar_Step_Done(global_progress_bar);
+    st_Progress_Bar_Finish(global_progress_bar);        
 
 }

@@ -31,10 +31,7 @@ void st_Init_JPEG(struct_window *this_win){
 	this_win->refresh_win = st_Win_Print_JPEG;
     this_win->wi_to_work_in_mfdb = &this_win->wi_original_mfdb;
     /* Progress Bar Stuff */
-    this_win->wi_progress_bar = (struct_progress_bar*)mem_alloc(sizeof(struct_progress_bar));
-    this_win->wi_progress_bar->progress_bar_enabled = TRUE;
-    this_win->wi_progress_bar->progress_bar_in_use = FALSE;
-    this_win->wi_progress_bar->progress_bar_locked = FALSE;
+this_win->wi_progress_bar = global_progress_bar;
     if(!st_Set_Renderer(this_win)){
         sprintf(alert_message, "screen_format: %d\nscreen_bits_per_pixel: %d", screen_workstation_format, screen_workstation_bits_per_pixel);
         st_form_alert(FORM_STOP, alert_message);
@@ -44,10 +41,10 @@ void st_Init_JPEG(struct_window *this_win){
 
 void st_Write_JPEG(u_int8_t* src_buffer, int width, int height, const char* filename)
 {
-    struct_progress_bar* wi_progress_bar = st_Progress_Bar_Alloc_Enable();
-    st_Progress_Bar_Lock(wi_progress_bar, 1);
-    st_Progress_Bar_Init(wi_progress_bar, (int8_t*)"JPEG WRITING");
-    st_Progress_Bar_Signal(wi_progress_bar, 10, (int8_t*)"JPEG image encoding");
+
+    st_Progress_Bar_Add_Step(global_progress_bar);
+    st_Progress_Bar_Init(global_progress_bar, (int8_t*)"JPEG WRITING");
+    st_Progress_Bar_Signal(global_progress_bar, 10, (int8_t*)"JPEG image encoding");
 
     J_COLOR_SPACE color_space = JCS_RGB;
     struct jpeg_compress_struct cinfo;
@@ -59,11 +56,12 @@ void st_Write_JPEG(u_int8_t* src_buffer, int width, int height, const char* file
 
     if ( !outfile )
     {
-        printf("Error opening output jpeg file %s\n!", filename );
+        sprintf(alert_message, "Error opening output jpeg file %s\n!", filename );
+        st_form_alert(FORM_STOP, alert_message);
         return;
     }
 
-    st_Progress_Bar_Signal(wi_progress_bar, 40, (int8_t*)"JPEG compression");
+    st_Progress_Bar_Signal(global_progress_bar, 40, (int8_t*)"JPEG compression");
     cinfo.err = jpeg_std_error( &jerr );
     jpeg_create_compress(&cinfo);
     jpeg_stdio_dest(&cinfo, outfile);
@@ -78,7 +76,7 @@ void st_Write_JPEG(u_int8_t* src_buffer, int width, int height, const char* file
     /* Now do the compression .. */
     jpeg_start_compress( &cinfo, TRUE );
     /* like reading a file, this time write one row at a time */
-    st_Progress_Bar_Signal(wi_progress_bar, 70, (int8_t*)"Writing scanlines");
+    st_Progress_Bar_Signal(global_progress_bar, 70, (int8_t*)"Writing scanlines");
     while( cinfo.next_scanline < cinfo.image_height )
     {
         row_pointer[0] = &src_buffer[ cinfo.next_scanline * MFDB_STRIDE(cinfo.image_width) *  cinfo.input_components];
@@ -90,9 +88,9 @@ void st_Write_JPEG(u_int8_t* src_buffer, int width, int height, const char* file
     jpeg_destroy_compress( &cinfo );
     fclose( outfile );
     
-    st_Progress_Bar_Signal(wi_progress_bar, 100, (int8_t*)"Finished");
-    st_Progress_Bar_Unlock(wi_progress_bar);
-    st_Progress_Bar_Finish(wi_progress_bar); 
+    st_Progress_Bar_Signal(global_progress_bar, 100, (int8_t*)"Finished");
+    st_Progress_Bar_Step_Done(global_progress_bar);
+    st_Progress_Bar_Finish(global_progress_bar); 
 
     /* success code is 1! */
     return;
@@ -105,7 +103,7 @@ void _st_Read_JPEG (int16_t this_win_handle,  boolean file_process){
     if(this_win->wi_data->wi_original_modified == FALSE){
         int16_t nb_components_24bits = 3, nb_components_32bits = 4, nb_components_original;
 
-        st_Progress_Bar_Lock(this_win->wi_progress_bar, 1);
+        st_Progress_Bar_Add_Step(this_win->wi_progress_bar);
         st_Progress_Bar_Init(this_win->wi_progress_bar, (int8_t*)"JPEG READING");
 
         // Variables for the source jpg
@@ -216,14 +214,8 @@ void _st_Read_JPEG (int16_t this_win_handle,  boolean file_process){
         mem_free(RGB_Buffer);
         
         st_Progress_Bar_Signal(this_win->wi_progress_bar, 100, (int8_t*)"Finished");
-        st_Progress_Bar_Unlock(this_win->wi_progress_bar);
+        st_Progress_Bar_Step_Done(this_win->wi_progress_bar);
         st_Progress_Bar_Finish(this_win->wi_progress_bar);
-        
-        // printf("Adding %d pixels per line\n", width_stride);
-        // printf("\nwidth = %d, height = %d\n", width, height);
-        // printf("\ncinfo.out_color_space %d\n",cinfo.out_color_space);
-        // printf("\ncinfo.output_components %d\n",cinfo.output_components);
-        // printf("\ncinfo.comps_in_scan %d\n",cinfo.comps_in_scan);
 
         this_win->wi_data->img.scaled_pourcentage = 0;
         this_win->wi_data->img.rotate_degree = 0;
