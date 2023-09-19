@@ -16,6 +16,8 @@
 #include "img_bmp/img_bmp.h"
 #include "img_tga/img_tga.h"
 
+#include "img_dummy/img_dummy.h"
+
 #include "png_ico/png_ico.h"
 
 #include "utils_rsc/progress.h"
@@ -88,6 +90,8 @@ void* exec_eventloop(void* p_param);
 bool init_app();
 int16_t st_VDI_Pixel_Format(VdiHdl vdi_handle);
 bool new_win_img(const char *new_file);
+bool new_win_start();
+void st_Win_Print_Dummy(int16_t this_win_handle);
 int16_t new_win_form_rsc(const char *new_file, const char* win_title, int16_t object_index);
 void exit_app();
 
@@ -117,7 +121,7 @@ void* st_Img_Rotate(void* p_param);
 /* MFDB for each icons */
 
 struct_st_ico_png st_ico_1_mfdb, st_ico_2_mfdb, st_ico_3_mfdb, st_ico_4_mfdb, st_ico_5_mfdb, st_ico_6_mfdb, st_ico_7_mfdb, st_ico_8_mfdb, st_ico_9_mfdb, st_ico_10_mfdb;
-
+struct_st_ico_png st_ico_11_mfdb, st_ico_12_mfdb;
 /*	Here you declare an array of struct with :
 *		- index: an unique index associated to the icon you want to display in the control bar. Negative index signals the end of the array and must end it
 *		- main icon path: must match the icon path, i.e. where your icon is located
@@ -130,7 +134,7 @@ struct_st_ico_png st_ico_1_mfdb, st_ico_2_mfdb, st_ico_3_mfdb, st_ico_4_mfdb, st
 *		- mask icon status, this is handled by the lib so this value should always be FALSE
 */
 
-struct_st_ico_png_list control_bar_list[] = {
+struct_st_ico_png_list control_bar_winimage_list[] = {
 	{	1,		 "ico24/open.png",		NULL,		&st_ico_1_mfdb,		NULL,		st_Img_Open, 	12,		4 ,		FALSE	},
 	{	2,		 "ico24/export.png",		NULL,		&st_ico_2_mfdb,		NULL,		st_Img_Export, 	48,		4 ,		FALSE	},
 	{	3,		 "ico24/collapse.png",		"ico24/expand.png",		&st_ico_3_mfdb,		&st_ico_4_mfdb,		st_Img_Windowed, 	80,		4 ,		FALSE	},
@@ -143,22 +147,28 @@ struct_st_ico_png_list control_bar_list[] = {
 	{	-1,		NULL,					NULL, 				NULL, 			 		NULL,				NULL,			0,		0 ,		0	},
 };
 
+struct_st_ico_png_list control_bar_winstart_list[] = {
+	{	1,		 "ico24/open.png",		NULL,		&st_ico_11_mfdb,		NULL,		st_Img_Open, 	12,		4 ,		FALSE	},
+	{	2,		 "ico24/cut.png",		NULL,		&st_ico_12_mfdb,		NULL,		st_Img_Crop, 	48,		4 ,		FALSE	},
+	{	-1,		NULL,					NULL, 				NULL, 			 		NULL,				NULL,			0,		0 ,		0	},
+};
+
 /*	Your control bar declaration */
 
 // struct_st_control_bar my_control_bar; /* I use a malloc inside my init function so no need for me to declare on here */
 
-/* st_Init_Control_Bar() - Init the originals values for your control bar in an Init function */
+/* st_Init_WinImage_Control_Bar() - Init the originals values for your control bar in an Init function */
 
-void st_Init_Control_Bar(void* p_param);
+void st_Init_WinImage_Control_Bar(void* p_param);
 
-void st_Init_Control_Bar(void* p_param){
+void st_Init_WinImage_Control_Bar(void* p_param){
 	/* depend of your application - I need this in order to get a win_handle linked to this control bar */
 	struct_window *this_win = (struct_window*)p_param;
 	if( this_win->wi_to_display_mfdb->fd_addr != NULL ){
 	this_win->wi_control_bar = (struct_st_control_bar*)mem_alloc(sizeof(struct_st_control_bar));
 	/* The array of struct you declared below - It contain indexes, path, etc... */
-	this_win->wi_control_bar->control_bar_list = (struct_st_ico_png_list*)mem_alloc(sizeof(control_bar_list));
-	memcpy(this_win->wi_control_bar->control_bar_list, &control_bar_list, sizeof(control_bar_list));
+	this_win->wi_control_bar->control_bar_list = (struct_st_ico_png_list*)mem_alloc(sizeof(control_bar_winimage_list));
+	memcpy(this_win->wi_control_bar->control_bar_list, &control_bar_winimage_list, sizeof(control_bar_winimage_list));
 	/* A right padding if you want an icon is showed at the opposite of the others i.e. for example main icon to the left but one of them to the right */
 	this_win->wi_control_bar->last_ico_padding_right = 72;
 	/* When control_bar_h is equal to zero the control bar was hidden - this value represent the height of the control bar */
@@ -177,7 +187,31 @@ void st_Init_Control_Bar(void* p_param){
 	this_win->wi_control_bar->vdi_handle = &st_vdi_handle;
 	/* Screen MFDB - You may obtained it with a declaration like MFDB screen_mfdb = {0}; */
 	this_win->wi_control_bar->virtual_screen_mfdb = &screen_mfdb;
+	/* We want hide the control bar with the right click */
+	this_win->wi_control_bar->force_unhide = FALSE;
 	}
+}
+
+void st_Init_WinStart_Control_Bar(void* p_param);
+
+void st_Init_WinStart_Control_Bar(void* p_param){
+	struct_window *this_win = (struct_window*)p_param;
+
+	// if( this_win->wi_to_display_mfdb->fd_addr != NULL ){
+
+		this_win->wi_control_bar = (struct_st_control_bar*)mem_alloc(sizeof(struct_st_control_bar));
+		this_win->wi_control_bar->control_bar_list = (struct_st_ico_png_list*)mem_alloc(sizeof(control_bar_winstart_list));
+		memcpy(this_win->wi_control_bar->control_bar_list, &control_bar_winstart_list, sizeof(control_bar_winstart_list));
+		this_win->wi_control_bar->last_ico_padding_right = 24;
+		this_win->wi_control_bar->control_bar_h = CONTROLBAR_H;
+		this_win->wi_control_bar->transparency = FALSE;
+		this_win->wi_control_bar->background_mfdb = NULL;
+		this_win->wi_control_bar->need_to_reload_control_mfdb = TRUE;
+		this_win->wi_control_bar->transparency_color = grey_color;
+		this_win->wi_control_bar->vdi_handle = &st_vdi_handle;
+		this_win->wi_control_bar->virtual_screen_mfdb = &screen_mfdb;
+		this_win->wi_control_bar->force_unhide = TRUE;
+	// }
 }
 
 /*	
@@ -358,7 +392,7 @@ int main(int argc, char *argv[]){
 	
 	global_progress_bar = st_Progress_Bar_Alloc_Enable();
 
-	if(!st_Ico_PNG_Init(control_bar_list)){
+	if(!st_Ico_PNG_Init(control_bar_winimage_list)){
 		goto quit;
 	}
 
@@ -372,16 +406,23 @@ int main(int argc, char *argv[]){
 			goto close_ico_png;
 		}
 	} else {
-		form_alert(1, "[1][Please provide a file in argument][Bye]");
-		goto close_ico_png;
+		// form_alert(1, "[1][Please provide a file in argument][Bye]");
+		// goto close_ico_png;
+		if(!st_Ico_PNG_Init(control_bar_winstart_list)){
+			goto close_ico_png;
+		}
+		if(!new_win_start()){
+			goto close_ico_png;
+		}		
 	}
 
 	while (!exit_call) {
 		exec_eventloop(NULL);
 	}
 
+	st_Ico_PNG_Release(control_bar_winstart_list);
 close_ico_png:
-	st_Ico_PNG_Release(control_bar_list);
+	st_Ico_PNG_Release(control_bar_winimage_list);
 
 	st_Progress_Bar_Finish(global_progress_bar);
 
@@ -593,7 +634,10 @@ void *event_loop(void *result)
 					if(selected_window->wi_data->thumbnail_master == TRUE){
 						window_area_buffer[2] = MIN(selected_window->wi_thumb->thumbs_max_area_w, window_area_buffer[2]);
 						window_area_buffer[3] = MIN(selected_window->wi_thumb->thumbs_max_area_h, window_area_buffer[3]);
-					} else {
+					} else if(selected_window->wi_data->control_bar_media == TRUE){
+						window_area_buffer[2] = MIN(selected_window->total_length_w, window_area_buffer[2]);
+						window_area_buffer[3] = MIN(selected_window->total_length_h, window_area_buffer[3]);
+					}else {
 						window_area_buffer[2] = MAX( MIN(selected_window->total_length_w, window_area_buffer[2]), MIN_WINDOWS_WSIZE);
 						window_area_buffer[3] = MAX( MIN(selected_window->total_length_h, window_area_buffer[3]), MIN_WINDOWS_HSIZE);
 					}
@@ -724,7 +768,7 @@ void *event_loop(void *result)
 					switch (mb)
 					{
 					case 2:
-						if(selected_window->wi_control_bar != NULL){
+						if(selected_window->wi_control_bar != NULL && !selected_window->wi_control_bar->force_unhide){
 							selected_window->wi_control_bar->control_bar_h = selected_window->wi_control_bar->control_bar_h > 0 ? 0 : CONTROLBAR_H;
 							st_Control_Bar_PXY_Update(selected_window->wi_control_bar, &selected_window->work_area);
 							wipe_pxy_area(selected_window->work_pxy);
@@ -877,7 +921,7 @@ bool new_win_img(const char *new_file){
                 }
                 st_Set_Clipping(CLIPPING_OFF, win_struct_array[i].work_pxy);
 
-				st_Init_Control_Bar((void*)&win_struct_array[i]);
+				st_Init_WinImage_Control_Bar((void*)&win_struct_array[i]);
 
 				if(win_struct_array[i].wi_data->thumbnail_slave == TRUE){
 					char* file = basename(win_struct_array[i].wi_data->path);
@@ -891,6 +935,34 @@ bool new_win_img(const char *new_file){
 			wind_set(win_struct_array[i].wi_handle,WF_TOP,0,0,0,0);
 			win_struct_array[i].win_is_topped = TRUE;
 			send_message(win_struct_array[i].wi_handle, WM_REDRAW);
+			return true;
+		}
+		i++;
+	}
+	return false;
+}
+
+bool new_win_start(){
+	int16_t i = 0;
+	
+	while(i < MAX_WINDOWS){
+		if(win_struct_array[i].wi_handle == 0){
+			win_struct_array[i].wi_style = WIN_STYLE_FORM;
+			if(win_struct_array[i].wi_data == NULL){
+				win_struct_array[i].wi_data = (struct_metadata *)mem_alloc(sizeof(struct_metadata));
+				st_Init_Default_Win(&win_struct_array[i]);
+				win_struct_array[i].wi_name = (char *)mem_alloc(WINDOW_TITLE_MAXLEN);
+				strcpy(win_struct_array[i].wi_name, "MM PIC");
+				win_struct_array[i].wi_data->control_bar_media = TRUE;
+                open_window(&win_struct_array[i]);
+
+				st_Init_Dummy(&win_struct_array[i]);
+
+				st_Init_WinStart_Control_Bar((void*)&win_struct_array[i]);
+
+				win_struct_array[i].refresh_win(win_struct_array[i].wi_handle);
+
+			}
 			return true;
 		}
 		i++;
@@ -1017,7 +1089,7 @@ int16_t new_win_crop(struct_crop* this_crop, const char* win_title){
 
                 open_window(&win_struct_array[i]);
 
-				st_Init_Control_Bar((void*)&win_struct_array[i]);
+				st_Init_WinImage_Control_Bar((void*)&win_struct_array[i]);
 
 				win_struct_array[i].refresh_win(win_struct_array[i].wi_handle);
 

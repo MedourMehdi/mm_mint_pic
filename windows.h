@@ -129,6 +129,7 @@ typedef struct {
 	boolean fx_requested;
 	boolean thumbnail_master;
 	boolean thumbnail_slave;
+	boolean control_bar_media;	
 	boolean image_media;
 	boolean rsc_media;
 	boolean autoscale;

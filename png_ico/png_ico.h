@@ -65,6 +65,7 @@ typedef struct {
 	MFDB*					background_mfdb;
 	MFDB*					virtual_screen_mfdb;
 	boolean 				need_to_reload_control_mfdb;
+	boolean 				force_unhide;	
 	boolean 				transparency;
 	u_int32_t 				transparency_color;
 	VdiHdl*					vdi_handle;
