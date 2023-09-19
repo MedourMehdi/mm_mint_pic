@@ -544,17 +544,12 @@ MFDB* st_MFDB8bpp_to_MFDB32(MFDB* MFDB8){
     int8_t* dst_buffer_32bits = (int8_t*)st_ScreenBuffer_Alloc_bpp(MFDB8->fd_w, MFDB8->fd_h, 32);
     MFDB* dst_32bits = mfdb_alloc_bpp(dst_buffer_32bits, MFDB8->fd_w, MFDB8->fd_h, 32);
 
-    if(screen_workstation_format < 2){
-        if(screen_workstation_format == 1){
-        st_Progress_Bar_Signal(wi_progress_bar, 30, (int8_t*)"8bpp planar to chunky");
-        MFDB* MFDB8C = st_Planar_to_Chunky_8bits(MFDB8);
-        st_Progress_Bar_Signal(wi_progress_bar, 70, (int8_t*)"Index to ARGB");
-        st_Convert_Indexed_to_ARGB(MFDB8C, dst_32bits);
-        mfdb_free(MFDB8C);
-        } else {
-            st_Progress_Bar_Signal(wi_progress_bar, 50, (int8_t*)"Index to ARGB");
-            st_Convert_Indexed_to_ARGB(MFDB8, dst_32bits);
-        }
+    if(screen_workstation_format == 0){
+    st_Progress_Bar_Signal(wi_progress_bar, 30, (int8_t*)"8bpp planar to chunky");
+    MFDB* MFDB8C = st_Planar_to_Chunky_8bits(MFDB8);
+    st_Progress_Bar_Signal(wi_progress_bar, 70, (int8_t*)"Index to ARGB");
+    st_Convert_Indexed_to_ARGB(MFDB8C, dst_32bits);
+    mfdb_free(MFDB8C);
     } else {
         st_Progress_Bar_Signal(wi_progress_bar, 50, (int8_t*)"Index to ARGB");
         st_Convert_Indexed_to_ARGB(MFDB8, dst_32bits);
@@ -641,7 +636,6 @@ MFDB* st_MFDB32_To_MFDB4bpp(MFDB* MFDB32){
     }else{
         st_Progress_Bar_Signal(wi_progress_bar, 30, (int8_t*)"Floyd dithering");
         makeDitherFSRgb3bpp((u_int8_t*)MFDB24->fd_addr, MFDB24->fd_w, MFDB24->fd_h);
-        // makeDitherSierraRgbNbpp((u_int8_t*)MFDB24->fd_addr, MFDB24->fd_w, MFDB24->fd_h, 1);
         st_Progress_Bar_Signal(wi_progress_bar, 60, (int8_t*)"RGB to 8bits indexed image");
         classic_RGB_to_8bits_Indexed((uint8_t*)MFDB24->fd_addr, (uint8_t*)dst_8bpp->fd_addr, MFDB24->fd_w, MFDB24->fd_h);
     }
