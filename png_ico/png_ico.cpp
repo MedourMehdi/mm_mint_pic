@@ -231,9 +231,9 @@ void st_Ico32_PNG_Load(struct_st_control_bar* this_control_bar, struct_st_ico_pn
 	int16_t		src_width_stride = MFDB_STRIDE(width) - width;
 
 	for(y = 0; y < height; y++){
-		m = ((width + src_width_stride) * y);
-		n = ((dest_mfdb->fd_w + dst_width_stride) * (y + ico->y));
-		for(x = 0; x < (width + src_width_stride); x++){
+		m = ((MFDB_STRIDE(width)) * y);
+		n = ((MFDB_STRIDE(dest_mfdb->fd_w)) * (y + ico->y));
+		for(x = 0; x < (MFDB_STRIDE(width)); x++){
 			j = ((m + x) << 2);
 			// i = ((n + x + ico->x) << 2);
 			i = (n + x + ico->x);
