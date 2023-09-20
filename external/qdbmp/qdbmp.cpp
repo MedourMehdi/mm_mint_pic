@@ -430,7 +430,7 @@ if(!bmp->Header.ImageDataSize){
 
 
 	/* Read image data */
-	printf("bmp->Header.ImageDataSize %lu\n", bmp->Header.ImageDataSize);
+	// printf("bmp->Header.ImageDataSize %lu\n", bmp->Header.ImageDataSize);
 	if ( fread( bmp->Data, sizeof( char ), bmp->Header.ImageDataSize, f ) != bmp->Header.ImageDataSize )
 	{
 		BMP_LAST_ERROR_CODE = BMP_FILE_INVALID;
