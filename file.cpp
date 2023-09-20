@@ -7,7 +7,10 @@ const char *get_filename_ext(const char *filename);
 
 boolean open_file(struct_window *this_win, const char *my_path){
 	if(this_win->wi_data != NULL){
-		this_win->wi_data->path = my_path;
+		if(this_win->wi_data->path == NULL){
+			this_win->wi_data->path = (char*)mem_alloc(strlen(my_path) + 1);
+			strcpy((char*)this_win->wi_data->path, my_path);
+		}
 		this_win->wi_data->file_lock = fopen(this_win->wi_data->path,READ_ONLY_BINARY);
 		if(!this_win->wi_data->file_lock){
 			sprintf(alert_message, "Open: Error reading file\n%s", this_win->wi_data->path);

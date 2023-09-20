@@ -846,6 +846,7 @@ bool new_win_img(const char *new_file){
 			if(win_struct_array[i].wi_data == NULL){
 				/* Init wi_data structure */
 				win_struct_array[i].wi_data = (struct_metadata *)mem_alloc(sizeof(struct_metadata));
+				win_struct_array[i].wi_data->path = NULL;
 				/* Fill window title structure */
 				char* file = basename(new_file);
 				win_struct_array[i].wi_name = (char *)mem_alloc(sizeof(file) + 5);
@@ -856,7 +857,8 @@ bool new_win_img(const char *new_file){
 				struct_window* win_master_thumb = get_win_thumb_master_by_file(new_file);
 				if(win_master_thumb != NULL){
 					win_struct_array[i].wi_data->original_buffer = win_master_thumb->wi_data->original_buffer;
-					win_struct_array[i].wi_data->path = win_master_thumb->wi_data->path;
+					win_struct_array[i].wi_data->path = (char*)mem_alloc(strlen(win_master_thumb->wi_data->path) + 1);
+					strcpy((char*)win_struct_array[i].wi_data->path, win_master_thumb->wi_data->path);
 					win_struct_array[i].wi_data->file_lock = win_master_thumb->wi_data->file_lock;
 					win_struct_array[i].wi_data->extension = win_master_thumb->wi_data->extension;
 					win_struct_array[i].prefers_file_instead_mem = win_master_thumb->prefers_file_instead_mem;
