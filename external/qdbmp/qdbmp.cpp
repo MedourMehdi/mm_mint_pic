@@ -300,7 +300,7 @@ BMP* BMP_ReadBuffer( _INT8* buffer )
 
 
 	/* Read image data */
-	printf("bmp->Header.ImageDataSize %lu - Offset %lu\n", bmp->Header.ImageDataSize, bmp->Header.DataOffset);
+	// printf("bmp->Header.ImageDataSize %lu - Offset %lu\n", bmp->Header.ImageDataSize, bmp->Header.DataOffset);
 	memcpy( bmp->Data, &buffer[i] , bmp->Header.ImageDataSize );
 	if ( bmp->Data == NULL )
 	{
