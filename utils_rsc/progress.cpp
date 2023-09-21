@@ -1,4 +1,5 @@
 #include "progress.h"
+// #include "../utils/utils.h"
 
 /* Indices de fichier ressource pour PROGRESS. */
 
@@ -13,6 +14,9 @@ void end_prog(GRECT	*rect);
 void set_prog(int16_t value, int16_t MAXc);
 void set_text(int16_t obj, int8_t *str);
 void disp_obj(OBJECT *tree, int16_t obj);
+
+char rsc_file_name[] = "\\rsc\\progress.rsc";
+char rsc_path[256] = {'\0'};
 
 #ifndef _OBJC_XYWH_
 #define _OBJC_XYWH_
@@ -57,8 +61,19 @@ void st_Progress_Bar_Step_Done(struct_progress_bar* progress_bar){
 
 void st_Progress_Bar_Init(struct_progress_bar* progress_bar, int8_t *title){
     if(progress_bar != NULL){
-        if(progress_bar->progress_bar_enabled == true && progress_bar->progress_bar_in_use != true){
-            if(rsrc_load(".\\rsc\\progress.rsc") == 0){
+        if(progress_bar->progress_bar_enabled && !progress_bar->progress_bar_in_use){
+            if(strlen(rsc_path) < 1){
+                int16_t current_drive;
+                char current_path[256] = {'\0'};
+
+                current_drive = Dgetdrv();
+                Dgetpath(current_path,0);
+                rsc_path[0] = current_drive + 65;
+                rsc_path[1] = ':';
+                strcat(rsc_path,current_path);
+                strcat(rsc_path,rsc_file_name);
+            }
+            if(!rsrc_load((const char*)&rsc_path)){
                 form_alert(1, "[1][st_Progress_Bar_Init -> RSC Error][Okay]");
             }   
             progress_bar->progress_bar_in_use = true;
@@ -66,7 +81,7 @@ void st_Progress_Bar_Init(struct_progress_bar* progress_bar, int8_t *title){
             progress_bar->max_value = 100;
             beg_prog(&progress_bar->form_rect);
         }
-        if(progress_bar->progress_bar_enabled == true){
+        if(progress_bar->progress_bar_enabled){
             set_prog(progress_bar->current_value, progress_bar->max_value);
             set_text(PROTITLE, title);
         }
@@ -75,7 +90,7 @@ void st_Progress_Bar_Init(struct_progress_bar* progress_bar, int8_t *title){
 
 void st_Progress_Bar_Signal(struct_progress_bar* progress_bar, int16_t current_value, int8_t *progress_txt){
     if(progress_bar != NULL){
-        if(progress_bar->progress_bar_in_use == true && progress_bar->progress_bar_enabled == true){
+        if(progress_bar->progress_bar_in_use && progress_bar->progress_bar_enabled ){
             
             if( progress_bar->initial_nb_functions ){
                 progress_bar->current_value += ( (progress_bar->max_value - progress_bar->current_value) * current_value ) / 100;
@@ -89,7 +104,7 @@ void st_Progress_Bar_Signal(struct_progress_bar* progress_bar, int16_t current_v
 
 void st_Progress_Bar_Finish(struct_progress_bar* progress_bar){
     if(progress_bar != NULL){
-        if(progress_bar->progress_bar_enabled == true && progress_bar->progress_bar_locked != true){
+        if(progress_bar->progress_bar_enabled && !progress_bar->progress_bar_locked){
             progress_bar->current_value = 1;
             end_prog(&progress_bar->form_rect);
             progress_bar->progress_bar_in_use = false;
