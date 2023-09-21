@@ -60,7 +60,7 @@ boolean file_to_memory(struct_window *this_win){
 	return true;
 }
 
-boolean memory_to_file(MFDB *this_mfdb, char* final_path){
+boolean mfdb_to_file(MFDB *this_mfdb, char* final_path){
 	FILE *fp;
 	u_int32_t size;
 	if((fp = fopen(final_path,WRITE_BINARY)) == NULL){

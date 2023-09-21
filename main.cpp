@@ -711,14 +711,13 @@ void *event_loop(void *result)
 			selected_window = detect_window(msg_buffer[3]);
 
 			if(selected_window != NULL){
+
 				if(close_window(selected_window->wi_handle)){
 
-					if (number_of_opened_windows > 0){
-						// reorder_struct_window(); /* fix me */
-					}
-					else{ 
+					if (number_of_opened_windows < 1){
 						exit_call = TRUE; 
 					}
+
 				}
 			}
 			break;
@@ -753,8 +752,12 @@ void *event_loop(void *result)
 					time_t t = time(NULL);
 					struct tm tm = *localtime(&t);
 					char this_time[24] = {'\0'};
-					sprintf(this_time, "crop_%d-%02d-%02d_%02d-%02d-%02d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
-		
+					/* Multitos can't handle filename greater than 8+3 */
+					if(mint_version > 0x0108){
+						sprintf(this_time, "crop_%d-%02d-%02d_%02d-%02d-%02d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+					}else{
+						sprintf(this_time, "crop_%d",selected_window->wi_handle);
+					}
 					new_win_crop(selected_window->wi_crop, (const char*)this_time);
 				}
 			}
@@ -1084,7 +1087,7 @@ int16_t new_win_crop(struct_crop* this_crop, const char* win_title){
 				win_struct_array[i].total_length_w = win_struct_array[i].wi_original_mfdb.fd_w;
 				win_struct_array[i].total_length_h = win_struct_array[i].wi_original_mfdb.fd_h;				
 
-				win_struct_array[i].wi_name = (char *)mem_alloc(WINDOW_TITLE_MAXLEN);
+				win_struct_array[i].wi_name = (char *)mem_alloc(strlen(win_title) + 1);
 				strcpy(win_struct_array[i].wi_name, win_title);
 				win_struct_array[i].wi_data->path = (const char *)mem_alloc(strlen(win_title) + 15);
 				strcpy((char*)win_struct_array[i].wi_data->path, win_title);
@@ -1096,9 +1099,6 @@ int16_t new_win_crop(struct_crop* this_crop, const char* win_title){
 				win_struct_array[i].refresh_win(win_struct_array[i].wi_handle);
 
 				win_struct_array[i].wi_data->wi_original_modified = TRUE;
-				// wind_set(win_struct_array[i].wi_handle,WF_TOP,0,0,0,0);
-				// win_struct_array[i].win_is_topped = TRUE;
-				// send_message(win_struct_array[i].wi_handle, WM_REDRAW);	
 			}
 			return win_struct_array[i].wi_handle;
 		}

@@ -11,7 +11,7 @@
 
 boolean open_file(struct_window *this_win, const char *my_path);
 boolean file_to_memory(struct_window *this_win);
-boolean memory_to_file(MFDB *this_mfdb, char* final_path);
+boolean mfdb_to_file(MFDB *this_mfdb, char* final_path);
 int16_t file_selector(char *final_path, char* title, char *file_selected);
 
 #endif

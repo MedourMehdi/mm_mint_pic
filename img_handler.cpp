@@ -2,7 +2,6 @@
 
 #include "utils_gfx/pix_convert.h"
 #include "utils/utils.h"
-#include "utils_rsc/progress.h"
 
 void st_Handle_FX(struct_window *this_win);
 

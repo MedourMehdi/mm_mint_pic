@@ -439,7 +439,7 @@ void st_Control_Bar_Redraw(struct_st_control_bar* control_bar, int16_t my_win_ha
 void st_Control_Bar_Refresh_Classic(struct_st_control_bar *control_bar, int16_t control_bar_requested_width, int16_t bpp){
 
 	if(control_bar->need_to_reload_control_mfdb == TRUE){
-		u_int32_t fill_color= 0xFFB7ADAD;
+		u_int32_t fill_color = 0xFFB7ADAD;
 		if(bpp < 8){
 			fill_color = 0xFFFFFFFF;
 		}
