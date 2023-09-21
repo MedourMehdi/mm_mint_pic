@@ -339,11 +339,13 @@ void mfdb_free(MFDB* my_mfdb){
 void st_Save_Pal(int16_t* paletteBuffer, int16_t max_colors)
 {
     int i;
+    // printf("u_int16_t palette_fix[16] = {\n");
     for(i = 0; i < max_colors; i++)
     {
         paletteBuffer[i] = Setcolor(i, -1);
-        // printf("col %d -> 0x%04X\n", i, paletteBuffer[i]);
+        // printf("0x%04X,\n", paletteBuffer[i]);
     }
+    // printf("}\n");
 }
 
 void st_Load_Pal(int16_t* paletteBuffer)

@@ -924,6 +924,7 @@ bool new_win_img(const char *new_file){
                     end_time = st_Supexec(get200hz);
                     win_struct_array[i].rendering_time = (end_time - start_time) * 5;
                 }
+				// printf("Rendering time %lu\n", win_struct_array[i].rendering_time);
                 st_Set_Clipping(CLIPPING_OFF, win_struct_array[i].work_pxy);
 
 				st_Init_WinImage_Control_Bar((void*)&win_struct_array[i]);

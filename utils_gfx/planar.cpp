@@ -91,6 +91,18 @@ MFDB* st_Chunky8bpp_to_Planar_4bpp(MFDB* source_mfdb){
 	u_int32_t i;
     uint32_t totalpixels = (MFDB_STRIDE(dest_width)* dest_height) >> 1;
 
+
+    // if(edDi_present){
+    //     for(i = 0; i < totalpixels; i++){
+    //         dest_4bpp_C[ i ] =  ( ( reverse(src_data[ i << 1 ]) & 0xF0) ) | ( ( reverse(src_data[ (i << 1) + 1]) & 0xF0) >> 4 ) ;      
+    //     }        
+    // } else {
+    //     for(i = 0; i < totalpixels; i++){
+    //         dest_4bpp_C[ i ] =   ( (src_data[ i << 1 ] & 0x0F) << 4 ) | ( src_data[ (i << 1) + 1 ] & 0x0F ) ;      
+    //     }
+    // }
+
+
     for(i = 0; i < totalpixels; i++){
         dest_4bpp_C[ i ] =  ( ( reverse(src_data[ i << 1 ]) & 0xF0) ) | ( ( reverse(src_data[ (i << 1) + 1]) & 0xF0) >> 4 ) ;      
     }  
