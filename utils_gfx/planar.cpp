@@ -6,6 +6,8 @@
 inline void st_C2P_8bpp_4px(u_int8_t* destination_buffer, u_int8_t* src_data, u_int16_t k);
 inline void st_C2P_4bpp_8px(u_int8_t* destination_buffer, u_int8_t* src_data);
 
+inline void convert_4bpp_chunky32bpp(u_int8_t *src_buffer, u_int32_t *temp_buffer, u_int16_t *palette, u_int16_t width);
+
 MFDB* st_Chunky_to_Planar_8bits(MFDB* source_mfdb){
 
     u_int16_t dest_width = source_mfdb->fd_w;
@@ -89,19 +91,9 @@ MFDB* st_Chunky8bpp_to_Planar_4bpp(MFDB* source_mfdb){
 	u_int32_t i;
     uint32_t totalpixels = (MFDB_STRIDE(dest_width)* dest_height) >> 1;
 
-    // if(edDi_present){
-    //     for(i = 0; i < totalpixels; i++){
-    //         dest_4bpp_C[ i ] =  ( ( reverse(src_data[ i << 1 ]) & 0xF0) ) | ( ( reverse(src_data[ (i << 1) + 1]) & 0xF0) >> 4 ) ;      
-    //     }        
-    // } else {
-    //     for(i = 0; i < totalpixels; i++){
-    //         dest_4bpp_C[ i ] =   ( (src_data[ i << 1 ] & 0x0F) << 4 ) | ( src_data[ (i << 1) + 1 ] & 0x0F ) ;      
-    //     }
-    // }
-
-        for(i = 0; i < totalpixels; i++){
-            dest_4bpp_C[ i ] =  ( ( reverse(src_data[ i << 1 ]) & 0xF0) ) | ( ( reverse(src_data[ (i << 1) + 1]) & 0xF0) >> 4 ) ;      
-        }  
+    for(i = 0; i < totalpixels; i++){
+        dest_4bpp_C[ i ] =  ( ( reverse(src_data[ i << 1 ]) & 0xF0) ) | ( ( reverse(src_data[ (i << 1) + 1]) & 0xF0) >> 4 ) ;      
+    }  
 
     for(i = 0; i < totalpixels; i += 8){
         st_C2P_4bpp_8px(&destination_buffer[i], &dest_4bpp_C[i]);
@@ -125,5 +117,66 @@ inline void st_C2P_4bpp_8px(u_int8_t* destination_buffer, u_int8_t* src_data){
             ( (((*src_data >> j) & 0x01) << 3 ) | (((*src_data++ >> l) & 0x01) << 2) |
             (((*src_data >> j) & 0x01) << 1) | ((*src_data++ >> l) & 0x01) );
         src_data -= 8;
+    }
+}
+
+MFDB *st_Planar4bpp_to_chunky32bpp(MFDB* MFDB4bpp, u_int16_t *palette) {
+    int16_t y, i;
+
+    u_int8_t *src_buffer = (uint8_t*)MFDB4bpp->fd_addr;
+    u_int16_t width = (uint16_t)MFDB4bpp->fd_w;
+    uint16_t height = (uint16_t)MFDB4bpp->fd_h;
+
+    u_int32_t *dst_buffer;
+    
+    dst_buffer = (u_int32_t *)st_ScreenBuffer_Alloc_bpp(width, height, 32);
+
+    MFDB* destination_mfdb = mfdb_alloc_bpp((int8_t*)dst_buffer, width, height, 32);
+
+    for(y = 0; y < height; y++){
+        convert_4bpp_chunky32bpp(&src_buffer[(MFDB_STRIDE(width) >> 1) * y], &dst_buffer[MFDB_STRIDE(width) * y], palette, MFDB_STRIDE(width));
+    }
+    return destination_mfdb;
+}
+
+inline void convert_4bpp_chunky32bpp(u_int8_t *src_buffer, u_int32_t *temp_buffer, u_int16_t *palette, u_int16_t width){
+    int16_t     i, j, k;
+    u_int8_t    pix4;
+    u_int16_t   color;
+    u_int8_t    r, g, b, a = 0xFF;
+
+    i = 0;
+    k = 0;
+    while (i < width) {
+        pix4 = 0;
+        for(j = 7; j >= 0; j--){
+            pix4 = ((src_buffer[k] >> j & 0x01) << 3)
+                | ((src_buffer[k + 2] >> j & 0x01) << 2)
+                | ((src_buffer[k + 4] >> j & 0x01) << 1)
+                | ((src_buffer[k + 6] >> j & 0x01));
+            color = palette[ reverse(pix4) >> 4 ];
+
+            r = (((color >> 8) & 0x07) << 5) | (((color >> 8) & 0x07) << 2) | ((color >> 9) & 0x03);
+            g = (((color >> 4) & 0x07) << 5) | (((color >> 4) & 0x07) << 2) | ((color >> 5) & 0x03);
+            b = ((color & 0x07)  << 5) | ((color & 0x07) << 2) | (color & 0x03);
+
+            temp_buffer[i] = a << 24 | r << 16 | g << 8 | b;
+            i++;
+        }
+        for(j = 7; j >= 0; j--){
+            pix4 = ((src_buffer[k + 1] >> j & 0x01) << 3)
+                | ((src_buffer[k + 3] >> j & 0x01) << 2)
+                | ((src_buffer[k + 5] >> j & 0x01) << 1)
+                | ((src_buffer[k + 7] >> j & 0x01));
+            color = palette[ reverse(pix4) >> 4 ];
+
+            r = (((color >> 8) & 0x07) << 5) | (((color >> 8) & 0x07) << 2) | ((color >> 9) & 0x03);
+            g = (((color >> 4) & 0x07) << 5) | (((color >> 4) & 0x07) << 2) | ((color >> 5) & 0x03);
+            b = ((color & 0x07)  << 5) | ((color & 0x07) << 2) | (color & 0x03);
+
+            temp_buffer[i] = a << 24 | r << 16 | g << 8 | b;
+            i++;
+        }
+        k += 8;
     }
 }

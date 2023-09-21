@@ -57,7 +57,22 @@ bool st_Crop_To_MFDB(struct_crop* this_crop){
             mfdb_free(tmp_mfdb);
             return true;
             
-            break;         
+            break;
+        case 4:
+            tmp_buffer = st_ScreenBuffer_Alloc_bpp(this_crop->rect_crop_array.g_w, this_crop->rect_crop_array.g_h, screen_workstation_bits_per_pixel);
+            tmp_mfdb = mfdb_alloc_bpp((int8_t*)tmp_buffer, this_crop->rect_crop_array.g_w, this_crop->rect_crop_array.g_h, screen_workstation_bits_per_pixel);
+            vro_cpyfm(st_vdi_handle, S_ONLY, xy, &screen_mfdb, tmp_mfdb);
+
+            MFDB32 = st_MFDB4bpp_to_MFDB32(tmp_mfdb, palette_ori);
+
+            mfdb_update_bpp(this_crop->wi_crop_original, (int8_t*)MFDB32->fd_addr, MFDB32->fd_w, MFDB32->fd_h, 32);
+            /* Trix to signal "no dithering" to st_MFDB4bpp_to_MFDB32 function */
+            this_crop->wi_crop_original->fd_r3 = 1;
+            mem_free(MFDB32); /* This free MFDB structure and keep fd_addr buffer */
+            mfdb_free(tmp_mfdb);
+            return true;
+            
+            break;                 
         case 8:
             tmp_buffer = st_ScreenBuffer_Alloc_bpp(this_crop->rect_crop_array.g_w, this_crop->rect_crop_array.g_h, screen_workstation_bits_per_pixel);
             tmp_mfdb = mfdb_alloc_bpp((int8_t*)tmp_buffer, this_crop->rect_crop_array.g_w, this_crop->rect_crop_array.g_h, screen_workstation_bits_per_pixel);

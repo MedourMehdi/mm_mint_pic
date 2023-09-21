@@ -551,6 +551,10 @@ void* st_Image_Export_To_MFD(void* p_param){
             dst_mfdb = st_MFDB32_To_MFDB8bpp(this_mfdb);
             raw_data = (uint8_t*)dst_mfdb->fd_addr;
             break;
+        case 4: /* 4 bits per pixel */
+            dst_mfdb = st_MFDB32_To_MFDB4bpp(this_mfdb);
+            raw_data = (uint8_t*)dst_mfdb->fd_addr;
+            break;            
         case 1: /* 1 bit per pixel */
             dst_mfdb = st_MFDB32_To_MFDB1bpp(this_mfdb);
             raw_data = (uint8_t*)dst_mfdb->fd_addr;
@@ -572,7 +576,7 @@ void* st_Image_Export_To_MFD(void* p_param){
         }
     }
 
-    if(memory_to_file(dst_mfdb, my_export->export_path) == true){
+    if(mfdb_to_file(dst_mfdb, my_export->export_path) == true){
         sprintf(alert_message, "Export done\nNew width %dpx\nNew height %dpx\nBits per px %d", dst_mfdb->fd_w, dst_mfdb->fd_h, dst_mfdb->fd_nplanes);
     } else{
         sprintf(alert_message, "Data wasn't exported");

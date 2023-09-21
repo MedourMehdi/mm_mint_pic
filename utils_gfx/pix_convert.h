@@ -34,5 +34,8 @@ MFDB* st_MFDB32_To_MFDBGRAY(MFDB* MFDB32);
 MFDB* st_MFDB32_To_MFDB1bpp(MFDB* MFDB32);
 MFDB* st_MFDB1bpp_to_MFDB32(MFDB* MFDB1bpp);
 MFDB* st_MFDB32_To_MFDB4bpp(MFDB* MFDB32);
+MFDB* st_MFDB4bpp_to_MFDB32(MFDB* MFDB4bpp, int16_t* this_palette);
 
+void* st_Floyd_Dithering(MFDB* MFDB24);
+void* st_Sierra_Dithering(MFDB* MFDB24);
 #endif
