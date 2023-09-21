@@ -154,7 +154,7 @@ void _st_Read_TIFF(int16_t this_win_handle,  boolean file_process, int16_t img_i
         for(y = 0; y < height; y++){
             for(x = 0; x < width; x++){
                 i = (x + y * MFDB_STRIDE(width)) << 2;
-                j = (x + y * width);                
+                j = (x + y * width);
                 destination_buffer[i++] = TIFFGetA(raster[j]);
                 destination_buffer[i++] = TIFFGetR(raster[j]);
                 destination_buffer[i++] = TIFFGetG(raster[j]);
@@ -279,13 +279,8 @@ void _st_Handle_Thumbs_TIFF(int16_t this_win_handle, boolean file_process){
 
             mem_free(raster);
             if(screen_workstation_bits_per_pixel != 32){
-                st_Progress_Bar_Step_Done(this_win->wi_progress_bar);
-                st_Progress_Bar_Finish(this_win->wi_progress_bar);                
                 this_win->wi_thumb->thumbs_list_array[i].thumb_mfdb = this_win->render_win(thumb_original_mfdb);
                 mfdb_free(thumb_original_mfdb);
-                st_Progress_Bar_Add_Step(this_win->wi_progress_bar);
-                st_Progress_Bar_Init(this_win->wi_progress_bar, (int8_t*)"THUMBS PROCESSING");  
-                st_Progress_Bar_Signal(this_win->wi_progress_bar, bar_pos, (int8_t*)progess_bar_indication);                 
             } else {
                 this_win->wi_thumb->thumbs_list_array[i].thumb_mfdb = thumb_original_mfdb;
             }
