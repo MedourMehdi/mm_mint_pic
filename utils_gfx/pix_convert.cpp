@@ -4,12 +4,12 @@
 #include "../external/dither/dither.h"
 #include "../utils/utils.h"
 #include "planar.h"
+
 #include "color.h"
 
 #include "../utils_rsc/progress.h"
 
 bool zview_Color_Init = false;
-bool use_rgb2lab = false;
 bool rgb2lab_Color_Init = false;
 
 #define R8(R5) (( R5 * 527 + 23 ) >> 6)
@@ -493,11 +493,34 @@ MFDB* st_MFDB32_To_MFDBGRAY(MFDB* MFDB32){
 
 MFDB* st_MFDB32_To_MFDB8bpp(MFDB* MFDB32){
 
+    
+
+    int16_t bpp = screen_workstation_bits_per_pixel;
+    bool force_planar_mode = false;
+    bool use_zview_dithering = false;
+    bool use_rgb2lab = false;
+    bool disable_dithering = false;
+
+    if(edDi_present && screen_workstation_bits_per_pixel < 16){
+        use_zview_dithering = true;
+    }
+    if(MFDB32->fd_r2){
+        bpp = MFDB32->fd_r2;
+        use_rgb2lab = true;
+        use_zview_dithering = false;
+        force_planar_mode = true;
+        MFDB32->fd_r2 = 0;
+    }
+    if(MFDB32->fd_r3){
+        disable_dithering = true;
+        MFDB32->fd_r3 = 0;
+    }
+    int16_t max_colors = (1 << bpp);
     st_Progress_Bar_Add_Step(global_progress_bar);
     st_Progress_Bar_Init(global_progress_bar, (int8_t*)"ARGB to 256 colors");
     st_Progress_Bar_Signal(global_progress_bar, 10, (int8_t*)"Init");
 
-    if(!zview_Color_Init && edDi_present){
+    if(!zview_Color_Init && use_zview_dithering){
         st_Progress_Bar_Signal(global_progress_bar, 20, (int8_t*)"Palette prefetching");
         zview_Set_Max_Color(1 << screen_workstation_bits_per_pixel);
         zview_VDI_SavePalette_sRGB(vdi_palette);
@@ -510,32 +533,32 @@ MFDB* st_MFDB32_To_MFDB8bpp(MFDB* MFDB32){
     int8_t* dst_buffer_8bits = (int8_t*)st_ScreenBuffer_Alloc_bpp(MFDB24->fd_w, MFDB24->fd_h, 8);
     MFDB* MFDB8C = mfdb_alloc_bpp(dst_buffer_8bits, MFDB24->fd_w, MFDB24->fd_h, 8);
     /* screen_workstation_format == 1 => Whole planes */
-    if(screen_workstation_format > 0){
-        printf("screen work format %d", screen_workstation_format);
+    if(screen_workstation_format > 0 && !force_planar_mode){
         st_Progress_Bar_Signal(global_progress_bar, 20, (int8_t*)"Floyd dithering");
-        st_Floyd_Dithering(MFDB24);
+        st_Floyd_Dithering(MFDB24, screen_workstation_bits_per_pixel);
         st_Progress_Bar_Signal(global_progress_bar, 50, (int8_t*)"RGB to 8bits conversion");
         st_Convert_RGB_to_8bits(MFDB24, MFDB8C);
     } else {
-        if(edDi_present){
+
+        if(use_zview_dithering){
             st_Progress_Bar_Signal(global_progress_bar, 50, (int8_t*)"edDi Dithering RGB to 8bits");
             zview_Dither_RGB_to_8bits((uint8_t*)MFDB24->fd_addr, (uint8_t*)MFDB8C->fd_addr, MFDB24->fd_w, MFDB24->fd_h);
         }else{
             st_Progress_Bar_Signal(global_progress_bar, 30, (int8_t*)"Floyd dithering");
-            st_Floyd_Dithering(MFDB24);
+            st_Floyd_Dithering(MFDB24, bpp);
             if(use_rgb2lab) {  
                 st_Progress_Bar_Signal(global_progress_bar, 70, (int8_t*)"rgb2lab_RGB_to_8bits_Indexed");      
-                rgb2lab_RGB_to_8bits_Indexed((uint8_t*)MFDB24->fd_addr, (uint8_t*)MFDB8C->fd_addr, MFDB24->fd_w, MFDB24->fd_h);
+                rgb2lab_RGB_to_8bits_Indexed((uint8_t*)MFDB24->fd_addr, (uint8_t*)MFDB8C->fd_addr, MFDB24->fd_w, MFDB24->fd_h, max_colors);
             } else {
                 st_Progress_Bar_Signal(global_progress_bar, 70, (int8_t*)"classic_RGB_to_8bits_Indexed"); 
-                classic_RGB_to_8bits_Indexed((uint8_t*)MFDB24->fd_addr, (uint8_t*)MFDB8C->fd_addr, MFDB24->fd_w, MFDB24->fd_h);
+                classic_RGB_to_8bits_Indexed((uint8_t*)MFDB24->fd_addr, (uint8_t*)MFDB8C->fd_addr, MFDB24->fd_w, MFDB24->fd_h, max_colors);
             }            
         }
     }
 
     mfdb_free(MFDB24);
 
-    if(screen_workstation_format < 2){
+    if(screen_workstation_format < 2 || force_planar_mode){
         st_Progress_Bar_Signal(global_progress_bar, 70, (int8_t*)"8bpp Chunky to 8bpp Planar");
         MFDB* MFDB8P = st_Chunky_to_Planar_8bits(MFDB8C);
         mfdb_free(MFDB8C);
@@ -586,7 +609,7 @@ MFDB* st_MFDB32_To_MFDB1bpp(MFDB* MFDB32){
     MFDB* MFDBGRAY = st_MFDB32_To_MFDBGRAY(MFDB32);
     MFDB* MFDB24 = st_MFDB32_To_MFDB24(MFDBGRAY);
 
-    st_Floyd_Dithering(MFDB24);
+    st_Floyd_Dithering(MFDB24, 1);
 
     st_Progress_Bar_Signal(global_progress_bar, 70, (int8_t*)"GRAY to Mono in progress");
 
@@ -624,14 +647,36 @@ MFDB* st_MFDB1bpp_to_MFDB32(MFDB* MFDB1bpp){
 /* 4BPP */
 
 MFDB* st_MFDB32_To_MFDB4bpp(MFDB* MFDB32){
-    
+
+    int16_t bpp = screen_workstation_bits_per_pixel;
+    bool use_zview_dithering = false;
+    bool use_rgb2lab = false;
+    bool disable_dithering = false;
+
+    if(edDi_present && screen_workstation_bits_per_pixel < 16){
+        use_zview_dithering = true;
+    }
+    if(MFDB32->fd_r2){
+        bpp = MFDB32->fd_r2;
+        use_rgb2lab = true;
+        use_zview_dithering = false;
+        MFDB32->fd_r2 = 0;
+    }
+    if(MFDB32->fd_r3){
+        disable_dithering = true;
+        MFDB32->fd_r3 = 0;
+    }
+    int16_t max_colors = (1 << bpp);
+
     st_Progress_Bar_Add_Step(global_progress_bar);
     st_Progress_Bar_Init(global_progress_bar, (int8_t*)"ARGB to 16 colors");
-    st_Progress_Bar_Signal(global_progress_bar, 10, (int8_t*)"Init");
+    st_Progress_Bar_Signal(global_progress_bar, 10, (int8_t*)"Palette fetching");
+
     if(!rgb2lab_Color_Init && use_rgb2lab){
-        st_VDI_SavePalette_LAB(vdi_palette);
+        st_VDI_SavePalette_LAB(max_colors);
     }
-    if(!zview_Color_Init && edDi_present){
+
+    if(!zview_Color_Init && use_zview_dithering){
         st_Progress_Bar_Signal(global_progress_bar, 20, (int8_t*)"Palette vectors building");
         zview_Set_Max_Color(1 << screen_workstation_bits_per_pixel);
         zview_VDI_SavePalette_sRGB(vdi_palette);
@@ -644,31 +689,20 @@ MFDB* st_MFDB32_To_MFDB4bpp(MFDB* MFDB32){
     int8_t* dst_buffer_8bpp = (int8_t*)st_ScreenBuffer_Alloc_bpp(MFDB24->fd_w, MFDB24->fd_h, 8);
     MFDB* MFDB8C = mfdb_alloc_bpp(dst_buffer_8bpp, MFDB24->fd_w, MFDB24->fd_h, 8);
 
-    if(edDi_present){
+    if(use_zview_dithering) {
         st_Progress_Bar_Signal(global_progress_bar, 50, (int8_t*)"edDi Dithering RGB to 8bits");
         zview_Dither_RGB_to_8bits((uint8_t*)MFDB24->fd_addr, (uint8_t*)MFDB8C->fd_addr, MFDB24->fd_w, MFDB24->fd_h);
-    }else{
-        
-        if(MFDB32->fd_r3 != 1){
+    } else {
+        if(!disable_dithering){
             st_Progress_Bar_Signal(global_progress_bar, 30, (int8_t*)"Floyd dithering");
-            st_Floyd_Dithering(MFDB24);
+            st_Floyd_Dithering(MFDB24, bpp);
         }
-
         st_Progress_Bar_Signal(global_progress_bar, 60, (int8_t*)"RGB to 8bits indexed image (may be long)");
-/* 
-BMP Image 800x600x8 
-on Hatari 68020 32Mhz + Multitos
-rgb2lab 162,88s
-classic rendering 76,685s
-edDi zview dithering Myaes + Nvdi 20,12s
-*/
-        if(use_rgb2lab) {        
-            rgb2lab_RGB_to_8bits_Indexed((uint8_t*)MFDB24->fd_addr, (uint8_t*)MFDB8C->fd_addr, MFDB24->fd_w, MFDB24->fd_h);
+        if(use_rgb2lab) {  
+            rgb2lab_RGB_to_8bits_Indexed((uint8_t*)MFDB24->fd_addr, (uint8_t*)MFDB8C->fd_addr, MFDB24->fd_w, MFDB24->fd_h, max_colors);
         } else {
-            classic_RGB_to_8bits_Indexed((uint8_t*)MFDB24->fd_addr, (uint8_t*)MFDB8C->fd_addr, MFDB24->fd_w, MFDB24->fd_h);
+            classic_RGB_to_8bits_Indexed((uint8_t*)MFDB24->fd_addr, (uint8_t*)MFDB8C->fd_addr, MFDB24->fd_w, MFDB24->fd_h, max_colors);
         }
-
-
     }
 
     mfdb_free(MFDB24);
@@ -697,9 +731,9 @@ MFDB* st_MFDB4bpp_to_MFDB32(MFDB* MFDB4bpp, int16_t* this_palette){
     return MFDB32;
 }
 
-void* st_Floyd_Dithering(MFDB* MFDB24){
+void* st_Floyd_Dithering(MFDB* MFDB24, int16_t bpp){
 
-    switch (screen_workstation_bits_per_pixel)
+    switch (bpp)
     {
     case 1:
         makeDitherFS((u_int8_t*)MFDB24->fd_addr, MFDB24->fd_w, MFDB24->fd_h);
@@ -716,9 +750,9 @@ void* st_Floyd_Dithering(MFDB* MFDB24){
     return NULL;
 }
 
-void* st_Sierra_Dithering(MFDB* MFDB24){
+void* st_Sierra_Dithering(MFDB* MFDB24, int16_t bpp){
 
-    switch (screen_workstation_bits_per_pixel)
+    switch (bpp)
     {
     case 1:
         makeDitherSierra((u_int8_t*)MFDB24->fd_addr, MFDB24->fd_w, MFDB24->fd_h);

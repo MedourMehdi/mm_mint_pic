@@ -2,12 +2,14 @@
 
 #ifndef COLOR_HEADERS
 #define COLOR_HEADERS
-void st_VDI_SavePalette_LAB(int16_t (*_vdi_palette)[3]);
 
-void classic_RGB_to_8bits_Indexed(u_int8_t* src_ptr, u_int8_t* dst_ptr, int16_t width, int16_t height);
-void rgb2lab_RGB_to_8bits_Indexed(u_int8_t* src_ptr, u_int8_t* dst_ptr, int16_t width, int16_t height);
+void st_VDI_SavePalette_LAB(int16_t max_colors);
 
-u_int16_t palette_ste[16] =
+void classic_RGB_to_8bits_Indexed(u_int8_t* src_ptr, u_int8_t* dst_ptr, int16_t width, int16_t height, int16_t max_colors);
+void rgb2lab_RGB_to_8bits_Indexed(u_int8_t* src_ptr, u_int8_t* dst_ptr, int16_t width, int16_t height, int16_t max_colors);
+
+/*
+u_int16_t palette_16[16] =
 {
     0x0FFF,
     0x0F00,
@@ -26,4 +28,6 @@ u_int16_t palette_ste[16] =
     0x03FF,
     0x0000,
 };
+*/
+
 #endif

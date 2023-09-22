@@ -10,6 +10,7 @@
 #include "../img_tiff/img_tiff.h"
 #include "../img_bmp/img_bmp.h"
 #include "../img_tga/img_tga.h"
+#include "../img_pi/img_pi.h"
 
 typedef struct {
     char        export_path[256];
@@ -23,6 +24,8 @@ typedef struct {
     u_int8_t    *export_data;
     void        *(*export_function)(void*);
 } struct_export;
+
+ /*  Resource C-Header-file v1.95 for ResourceMaster v2.06&up by ARDISOFT  */
 
 #define DiagResize 0  /* form/dial */
 #define DiagResize_diagboxresize 0  /* BOX in tree DiagResize */
@@ -55,6 +58,8 @@ typedef struct {
 #define DiagExport_chk_mfd 13  /* BUTTON in tree DiagExport */
 #define DiagExport_chk_bmp 15  /* BUTTON in tree DiagExport */
 #define DiagExport_chk_tga 16  /* BUTTON in tree DiagExport */
+#define DiagExport_chk_pi1 17  /* BUTTON in tree DiagExport */
+#define DiagExport_chk_pi3 18  /* BUTTON in tree DiagExport */
 #define DiagExport_TextInfo1 14  /* TEXT in tree DiagExport */
 
 #define DiagInfo 2  /* form/dial */
@@ -65,6 +70,7 @@ typedef struct {
 #define DiagInfo_HiddenInfo 8  /* TEXT in tree DiagInfo */
 
 
+
 void* st_Image_Export_To_PNG(void* p_param);
 void* st_Image_Export_To_HEIF(void* p_param);
 void* st_Image_Export_To_TIFF(void* p_param);
@@ -73,6 +79,7 @@ void* st_Image_Export_To_JPEG(void* p_param);
 void* st_Image_Export_To_MFD(void* p_param);
 void* st_Image_Export_To_BMP(void* p_param);
 void* st_Image_Export_To_TGA(void* p_param);
+void* st_Image_Export_To_Degas(void* p_param);
 
 boolean st_Set_Export(void* (*export_function)(void*), const char* this_extention, OBJECT* this_ftext_to_uptdate);
 void st_Update_Comments(int16_t this_win_form_handle, void* p_param, OBJECT* this_ftext_to_uptdate, uint16_t bpp, const char* format );
@@ -224,6 +231,14 @@ fo_bnxtobj	New current object, or 0 if the next object has the status HIDDEN or 
                 form_button(tree, DiagExport_chk_tga, 1, 0);
                 st_Set_Export(&st_Image_Export_To_TGA, this_export.export_extension, &obj_gui_ftext_filepath);
                 st_Update_Comments(this_win_form_handle, (void*)&this_export, &obj_gui_ftext_info, 24, "TGA");                          
+            }else if(strcasecmp(this_export.export_extension, ".pi1") == 0 || strcasecmp(this_export.export_extension, ".PI1") == 0){
+                form_button(tree, DiagExport_chk_pi1, 1, 0);
+                st_Set_Export(&st_Image_Export_To_Degas, this_export.export_extension, &obj_gui_ftext_filepath);
+                st_Update_Comments(this_win_form_handle, (void*)&this_export, &obj_gui_ftext_info, 4, "Degas");                          
+            }else if(strcasecmp(this_export.export_extension, ".pi3") == 0 || strcasecmp(this_export.export_extension, ".PI3") == 0){
+                form_button(tree, DiagExport_chk_pi3, 1, 0);
+                st_Set_Export(&st_Image_Export_To_Degas, this_export.export_extension, &obj_gui_ftext_filepath);
+                st_Update_Comments(this_win_form_handle, (void*)&this_export, &obj_gui_ftext_info, 1, "Degas");                          
             } else {
                 printf("Unknown %s extension", this_export.export_extension);
             }
@@ -267,7 +282,19 @@ fo_bnxtobj	New current object, or 0 if the next object has the status HIDDEN or 
                 objc_draw( tree, 0, MAX_DEPTH, obj_pxy_filepath[0] , obj_pxy_filepath[1], obj_pxy_filepath[2], obj_pxy_filepath[3] );
             }
             st_Update_Comments(this_win_form_handle, (void*)&this_export, &obj_gui_ftext_info, 24, "TGA");
-            break;                  
+            break;
+        case DiagExport_chk_pi1:
+            if(st_Set_Export(&st_Image_Export_To_Degas, ".pi1", &obj_gui_ftext_filepath)){
+                objc_draw( tree, 0, MAX_DEPTH, obj_pxy_filepath[0] , obj_pxy_filepath[1], obj_pxy_filepath[2], obj_pxy_filepath[3] );
+            }
+            st_Update_Comments(this_win_form_handle, (void*)&this_export, &obj_gui_ftext_info, 4, "DEGAS");
+            break;
+        case DiagExport_chk_pi3:
+            if(st_Set_Export(&st_Image_Export_To_Degas, ".pi3", &obj_gui_ftext_filepath)){
+                objc_draw( tree, 0, MAX_DEPTH, obj_pxy_filepath[0] , obj_pxy_filepath[1], obj_pxy_filepath[2], obj_pxy_filepath[3] );
+            }
+            st_Update_Comments(this_win_form_handle, (void*)&this_export, &obj_gui_ftext_info, 1, "DEGAS");
+            break;               
         case DiagExport_chk_mfd:
             if(st_Set_Export(&st_Image_Export_To_MFD, ".mfd", &obj_gui_ftext_filepath)){
                 objc_draw( tree, 0, MAX_DEPTH, obj_pxy_filepath[0] , obj_pxy_filepath[1], obj_pxy_filepath[2], obj_pxy_filepath[3] );
@@ -310,6 +337,60 @@ boolean st_Set_Export(void* (*export_function)(void*), const char* this_extentio
         shrink_char_obj(this_export.export_path, this_ftext_to_uptdate);
         return true;
     }
+}
+
+void* st_Image_Export_To_Degas(void* p_param){
+    struct_export* my_export = (struct_export*)p_param;
+
+    u_int16_t width;
+    u_int16_t height;
+    int16_t bpp;
+
+    if(strcasecmp( my_export->export_extension, ".pi1") == 0){
+        width = 320;
+        height = 200;
+        bpp = 4;
+    }else{
+        width = 640;
+        height = 400;
+        bpp = 1;
+    }
+
+    u_int8_t* raw_data;
+    MFDB* MFDB32_src;
+    MFDB* MFDB32_dst;
+    u_int8_t* destination_buffer;
+
+    switch (my_export->export_components)
+    {
+    case 4: /* 32 bits per pixels */
+            MFDB32_src = mfdb_alloc_bpp((int8_t*)my_export->export_data, my_export->export_width, my_export->export_height, 32);
+            destination_buffer = st_ScreenBuffer_Alloc_bpp(width, height, 32);
+            MFDB32_dst = mfdb_alloc_bpp( (int8_t*)destination_buffer, width, height, 32);
+
+            st_Rescale_ARGB(MFDB32_src, MFDB32_dst, width, height);
+
+            raw_data = (u_int8_t*)MFDB32_dst->fd_addr;
+                       
+        break;
+    default:
+        sprintf(alert_message,"Error\nnb_components are %d", my_export->export_components);
+        st_form_alert(FORM_EXCLAM, alert_message);
+        return NULL;    
+        break;
+    }
+    if(st_FileExistsAccess(my_export->export_path) == 1){
+        sprintf(alert_message,"File exist\nDo you want to erase it?");
+        if(st_form_alert_choice(FORM_STOP, alert_message) == 1){
+            return NULL;
+        }
+    }
+    st_Write_Degas(raw_data, width, height, my_export->export_path);
+
+    mfdb_free(MFDB32_dst);
+    mem_free(MFDB32_src);
+    form_alert(1, "[1][Export Degas done][Okay]");
+    return NULL;
 }
 
 void* st_Image_Export_To_HEIF(void* p_param){
@@ -708,14 +789,31 @@ void st_Update_Comments(int16_t this_win_form_handle, void* p_param, OBJECT* thi
     struct_window* this_win_master = detect_window(this_win_form->wi_data->rsc.win_master_handle);
 
     char extended_info[12] = {0};
-    if(screen_workstation_format == 0){
+    if(bpp < 8){
         sprintf(extended_info, "Bitpl." );
     }else{
         sprintf(extended_info, "Bpp" );
     }
+    int16_t width, height;
+
+    if(strcasecmp(format, "DEGAS")){
+        switch (bpp)
+        {
+        case 4:
+            width = 320; height = 200;
+            break;
+        case 1:
+            width = 640; height = 400;
+            break;   
+        default:
+            break;
+        }
+    } else {
+        width = this_win_master->total_length_w; height = this_win_master->total_length_h;
+    }
 
     sprintf( my_export->export_comments, "%s/%d%s %dpx/%dpx", 
-        format, bpp, extended_info, this_win_master->total_length_w, this_win_master->total_length_h);
+        format, bpp, extended_info, width, height);
 
     shrink_char_obj(this_export.export_comments, this_ftext_to_uptdate);
     

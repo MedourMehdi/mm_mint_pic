@@ -15,6 +15,7 @@
 #include "img_tiff/img_tiff.h"
 #include "img_bmp/img_bmp.h"
 #include "img_tga/img_tga.h"
+#include "img_pi/img_pi.h"
 
 #include "img_dummy/img_dummy.h"
 
@@ -465,6 +466,9 @@ bool init_app(){
 	if (screen_workstation_bits_per_pixel < 16){
 		st_Save_Pal(palette_ori, 1 << screen_workstation_bits_per_pixel);
 		st_VDI_SavePalette_RGB(vdi_palette);
+	}else{
+		st_Save_Pal(palette_ori, 256);
+		st_VDI_SavePalette_RGB(vdi_palette);
 	}
 
 	int32_t cookie_mch, cookie_mint, cookie_cpu, cookie_eddi = 0;
@@ -898,6 +902,8 @@ bool new_win_img(const char *new_file){
 					st_Init_BMP(&win_struct_array[i]);
 				} else if (check_ext(file_extension, "TGA")){
 					st_Init_TGA(&win_struct_array[i]);
+				} else if (check_ext(file_extension, "PI1") || check_ext(file_extension, "PI3") ){
+					st_Init_Degas(&win_struct_array[i]);
 				}
 
 				else {

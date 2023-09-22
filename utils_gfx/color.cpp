@@ -5,12 +5,12 @@
 
 /* Classic color distance declaration */
 inline u_int32_t distance_rgb( u_int16_t* RGB1, u_int16_t* RGB2 );
-inline u_int16_t get_closest_value(u_int8_t* RGB_ptr);
+inline u_int16_t get_closest_value(u_int8_t* RGB_ptr, int16_t max_colors);
 
 /* RGB2LAB declarations */
 double main_vdi_palette_lab[256][3];
 double deltaE(double* labA, double* labB);
-u_int16_t get_closest_value_rgb2lab(u_int8_t* RGB_ptr);
+u_int16_t get_closest_value_rgb2lab(u_int8_t* RGB_ptr, int16_t max_colors);
 
 /* Classic color distance routines */
 
@@ -32,7 +32,7 @@ inline u_int32_t distance_rgb( u_int16_t* RGB1, u_int16_t* RGB2 ) {
     return rez;
 }
 
-inline u_int16_t get_closest_value(u_int8_t* RGB_ptr) {
+inline u_int16_t get_closest_value(u_int8_t* RGB_ptr, int16_t max_colors) {
     u_int16_t i = 0;
     u_int32_t j = 0, best_idx = 0;
 
@@ -46,7 +46,7 @@ inline u_int16_t get_closest_value(u_int8_t* RGB_ptr) {
     RGB[1] = RGB_ptr[1];
     RGB[2] = RGB_ptr[2];    
 
-	while(i < (1 << screen_workstation_bits_per_pixel) ) {
+	while(i < max_colors ) {
 
         switch (computer_type)
         {
@@ -79,27 +79,28 @@ inline u_int16_t get_closest_value(u_int8_t* RGB_ptr) {
     return best_idx;
 }
 
-void classic_RGB_to_8bits_Indexed(u_int8_t* src_ptr, u_int8_t* dst_ptr, int16_t width, int16_t height){
+void classic_RGB_to_8bits_Indexed(u_int8_t* src_ptr, u_int8_t* dst_ptr, int16_t width, int16_t height, int16_t max_colors){
     u_int32_t totalPixels = mul_3_fast(MFDB_STRIDE(width) * height);
     u_int32_t i = 0;
     while(i < totalPixels){
-        *dst_ptr++ = (u_int8_t)get_closest_value(&src_ptr[i]);
+        *dst_ptr++ = (u_int8_t)get_closest_value(&src_ptr[i], max_colors);
         i = i + 3;
     }
 }
 
 /* RGB2LAB routines */
 
-void st_VDI_SavePalette_LAB(int16_t (*_vdi_palette)[3]) {
+void st_VDI_SavePalette_LAB(int16_t (*_vdi_palette)[3], int16_t max_colors) {
 	u_int16_t i;
 	DoubleTriplet this_pal, result_pal_lab;    
 
-	for(i = 0; i < (1 << screen_workstation_bits_per_pixel); i++) {
-        if(edDi_present){
-            this_pal.r = ((double)(_vdi_palette[i][0]) / 1000);
-            this_pal.g = ((double)(_vdi_palette[i][1]) / 1000);
-            this_pal.b = ((double)(_vdi_palette[i][2]) / 1000);
-        } else if(computer_type == 1) {
+	for(i = 0; i < max_colors; i++) {
+        // if(edDi_present && screen_workstation_bits_per_pixel < 16){
+        //     this_pal.r = ((double)(_vdi_palette[i][0]) / 1000);
+        //     this_pal.g = ((double)(_vdi_palette[i][1]) / 1000);
+        //     this_pal.b = ((double)(_vdi_palette[i][2]) / 1000);
+        // } else 
+        if(computer_type > 0) {
 
             this_pal.r = (double)(( ( ((palette_ori[i] >> 7) & 0x0E ) | ((palette_ori[i] >> 11) & 0x01 ) ) << 4 )) / 255 ;
             this_pal.g = (double)((( ((palette_ori[i] >> 3) & 0x0E) | ((palette_ori[i] >> 7) & 0x01 ) ) << 4 )) / 255 ;
@@ -135,7 +136,7 @@ double deltaE(double* labA, double* labB){
   return i < 0 ? 0 : sqrt(i);
 }
 
-u_int16_t get_closest_value_rgb2lab(u_int8_t* RGB_ptr){
+u_int16_t get_closest_value_rgb2lab(u_int8_t* RGB_ptr, int16_t max_colors){
 
     u_int16_t i = 0;
     u_int16_t best_idx = 0;
@@ -157,7 +158,7 @@ u_int16_t get_closest_value_rgb2lab(u_int8_t* RGB_ptr){
     LAB1[1] = result_rgb_lab.A;
     LAB1[2] = result_rgb_lab.B;
 
-	while(i < (1 << screen_workstation_bits_per_pixel) ) {
+	while(i < max_colors) {
 
         LAB2[0] = main_vdi_palette_lab[i][0];
         LAB2[1] = main_vdi_palette_lab[i][1];   
@@ -175,11 +176,11 @@ u_int16_t get_closest_value_rgb2lab(u_int8_t* RGB_ptr){
     return best_idx;
 }
 
-void rgb2lab_RGB_to_8bits_Indexed(u_int8_t* src_ptr, u_int8_t* dst_ptr, int16_t width, int16_t height){
+void rgb2lab_RGB_to_8bits_Indexed(u_int8_t* src_ptr, u_int8_t* dst_ptr, int16_t width, int16_t height, int16_t max_colors){
     u_int32_t totalPixels = mul_3_fast(MFDB_STRIDE(width) * height);
     u_int32_t i = 0;
     while(i < totalPixels){
-        *dst_ptr++ = (u_int8_t)get_closest_value_rgb2lab(&src_ptr[i]);
+        *dst_ptr++ = (u_int8_t)get_closest_value_rgb2lab(&src_ptr[i], max_colors);
         i = i + 3;
     }
 }
