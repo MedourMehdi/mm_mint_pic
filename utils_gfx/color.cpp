@@ -90,7 +90,7 @@ void classic_RGB_to_8bits_Indexed(u_int8_t* src_ptr, u_int8_t* dst_ptr, int16_t 
 
 /* RGB2LAB routines */
 
-void st_VDI_SavePalette_LAB(int16_t (*_vdi_palette)[3], int16_t max_colors) {
+void st_VDI_SavePalette_LAB(int16_t max_colors) {
 	u_int16_t i;
 	DoubleTriplet this_pal, result_pal_lab;    
 
@@ -101,7 +101,6 @@ void st_VDI_SavePalette_LAB(int16_t (*_vdi_palette)[3], int16_t max_colors) {
         //     this_pal.b = ((double)(_vdi_palette[i][2]) / 1000);
         // } else 
         if(computer_type > 0) {
-
             this_pal.r = (double)(( ( ((palette_ori[i] >> 7) & 0x0E ) | ((palette_ori[i] >> 11) & 0x01 ) ) << 4 )) / 255 ;
             this_pal.g = (double)((( ((palette_ori[i] >> 3) & 0x0E) | ((palette_ori[i] >> 7) & 0x01 ) ) << 4 )) / 255 ;
             this_pal.b = (double)((( ((palette_ori[i]) & 0x07 ) << 1 | ((palette_ori[i] >> 3) & 0x01 ) ) << 4 )) / 255 ;                    

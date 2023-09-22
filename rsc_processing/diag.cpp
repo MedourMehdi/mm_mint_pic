@@ -234,11 +234,11 @@ fo_bnxtobj	New current object, or 0 if the next object has the status HIDDEN or 
             }else if(strcasecmp(this_export.export_extension, ".pi1") == 0 || strcasecmp(this_export.export_extension, ".PI1") == 0){
                 form_button(tree, DiagExport_chk_pi1, 1, 0);
                 st_Set_Export(&st_Image_Export_To_Degas, this_export.export_extension, &obj_gui_ftext_filepath);
-                st_Update_Comments(this_win_form_handle, (void*)&this_export, &obj_gui_ftext_info, 4, "Degas");                          
+                st_Update_Comments(this_win_form_handle, (void*)&this_export, &obj_gui_ftext_info, 4, "DEGAS");                          
             }else if(strcasecmp(this_export.export_extension, ".pi3") == 0 || strcasecmp(this_export.export_extension, ".PI3") == 0){
                 form_button(tree, DiagExport_chk_pi3, 1, 0);
                 st_Set_Export(&st_Image_Export_To_Degas, this_export.export_extension, &obj_gui_ftext_filepath);
-                st_Update_Comments(this_win_form_handle, (void*)&this_export, &obj_gui_ftext_info, 1, "Degas");                          
+                st_Update_Comments(this_win_form_handle, (void*)&this_export, &obj_gui_ftext_info, 1, "DEGAS");                          
             } else {
                 printf("Unknown %s extension", this_export.export_extension);
             }
@@ -796,7 +796,7 @@ void st_Update_Comments(int16_t this_win_form_handle, void* p_param, OBJECT* thi
     }
     int16_t width, height;
 
-    if(strcasecmp(format, "DEGAS")){
+    if(!strcasecmp(format, "Degas")){
         switch (bpp)
         {
         case 4:
