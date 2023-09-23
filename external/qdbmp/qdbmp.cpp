@@ -1,4 +1,4 @@
-#include "QDBMP.H"
+#include "qdbmp.h"
 #include <stdlib.h>
 #include <string.h>
 #define MFDB_STRIDE(w) (((w) + 15) & -16)
