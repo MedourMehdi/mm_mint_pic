@@ -7,7 +7,7 @@
 #define PNG_BACKGROUND_COLOR	0xFFFFFF
 #ifndef ALPHA_COMPOSITE
 #define ALPHA_COMPOSITE( composite, fg, alpha, bg) {									\
-    u_int16_t register temp = (( u_int16_t)( fg) * ( u_int16_t)( alpha) +						\
+    u_int16_t temp = (( u_int16_t)( fg) * ( u_int16_t)( alpha) +						\
                    ( u_int16_t)( bg) * ( u_int16_t)(255 - ( u_int16_t)( alpha)) + ( u_int16_t)128);	\
     ( composite) = ( u_int8_t)(( temp + ( temp >> 8)) >> 8);								\
 }

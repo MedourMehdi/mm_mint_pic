@@ -39,7 +39,6 @@ uint16_t zview_Remap_Color (int32_t value, SRGB *screen_colortab){
 	
 	int16_t  best_fit  = 0;
 	uint16_t best_err  = 0xFFFFu;
-	// int16_t  max_color = 256;
 	
 	int16_t i = 0;
 	
@@ -98,9 +97,9 @@ uint8_t zview_Saturation(uint8_t * rgb) {
 }
 
 void zview_Save_sRGB_Colors(int16_t (*_vdi_palette)[3], SRGB *screen_colortab){
-	register uint16_t  i;
+	uint16_t  i;
 	
-	for( i = 0; i < (256); i++)
+	for( i = 0; i < max_color; i++)
 	{
 		screen_colortab[i].red   = div_1000_fast( ((((int32_t)_vdi_palette[i][0] << 8 ) - _vdi_palette[i][0]) + 500) );
 		screen_colortab[i].green = div_1000_fast( ((((int32_t)_vdi_palette[i][1] << 8 ) - _vdi_palette[i][1]) + 500) );

@@ -56,7 +56,7 @@ void st_Write_TIFF(u_int8_t* src_buffer, int width, int height, const char* file
     st_Progress_Bar_Init(global_progress_bar, (int8_t*)"TIFF WRITING");
     st_Progress_Bar_Signal(global_progress_bar, 10, (int8_t*)"TIFF image encoding");
 
-    uint32* buffer = (uint32*)src_buffer;
+    u_int32_t* buffer = (u_int32_t*)src_buffer;
     TIFF *image = TIFFOpen(filename, "wb");
 
     st_Progress_Bar_Signal(global_progress_bar, 20, (int8_t*)"Setting TAG");
@@ -80,7 +80,7 @@ void st_Write_TIFF(u_int8_t* src_buffer, int width, int height, const char* file
 
     st_Progress_Bar_Signal(global_progress_bar, 60, (int8_t*)"Writing scanlines");
     //Now writing image to the file one strip at a time
-    uint32 i;
+    u_int32_t i;
     for(i = 0; i < height; i++)
     {
         TIFFWriteScanline(image, &src_buffer[(i + 1) * 3 * MFDB_STRIDE(width) ], i, 0);
@@ -106,9 +106,9 @@ void _st_Read_TIFF(int16_t this_win_handle,  boolean file_process, int16_t img_i
         st_Progress_Bar_Signal(this_win->wi_progress_bar, 15, (int8_t*)"Init");
 
         TIFF *tiff_handler;
-        uint32 width, height;
+        u_int32_t width, height;
 
-        uint16 compression, bitpersample, samplesperpixel;
+        u_int16_t compression, bitpersample, samplesperpixel;
         int16_t x, y;   
 
         const char *file_name;
@@ -131,7 +131,7 @@ void _st_Read_TIFF(int16_t this_win_handle,  boolean file_process, int16_t img_i
         TIFFGetField( tiff_handler, TIFFTAG_SAMPLESPERPIXEL, &samplesperpixel);
 
         st_Progress_Bar_Signal(this_win->wi_progress_bar, 65, (int8_t*)"Reading data");
-        uint32* raster = ( uint32* )mem_alloc( ( width * height ) << 2);
+        u_int32_t* raster = ( u_int32_t* )mem_alloc( ( width * height ) << 2);
         if(raster == NULL){
             TIFFClose(tiff_handler);
             return;	
@@ -198,9 +198,9 @@ void _st_Handle_Thumbs_TIFF(int16_t this_win_handle, boolean file_process){
 
 	const char *file_name;
     TIFF *tiff_handler;
-    uint32 original_width;
-    uint32 original_height;
-    uint16 idx = 0;
+    u_int32_t original_width;
+    u_int32_t original_height;
+    u_int16_t idx = 0;
 
     if( file_process == TRUE ){
         file_name = this_win->wi_data->path;
@@ -228,14 +228,14 @@ void _st_Handle_Thumbs_TIFF(int16_t this_win_handle, boolean file_process){
             TIFFSetDirectory(tiff_handler, i);
 
             char progess_bar_indication[96];
-            int16 bar_pos = mul_100_fast(i) / this_win->wi_thumb->thumbs_nb;
+            int16_t bar_pos = mul_100_fast(i) / this_win->wi_thumb->thumbs_nb;
             sprintf(progess_bar_indication, "Thumbnail id.%d/%d - Image id.%d", i, this_win->wi_thumb->thumbs_nb, this_win->wi_thumb->thumbs_list_array[i].thumb_id);
             st_Progress_Bar_Signal(this_win->wi_progress_bar, bar_pos, (int8_t*)progess_bar_indication);
 
             TIFFGetField( tiff_handler, TIFFTAG_IMAGEWIDTH, &original_width);
             TIFFGetField( tiff_handler, TIFFTAG_IMAGELENGTH, &original_height);
 
-            uint32* raster = ( uint32* )mem_alloc( ( original_width * original_height ) << 2);
+            u_int32_t* raster = ( u_int32_t* )mem_alloc( ( original_width * original_height ) << 2);
             TIFFReadRGBAImageOriented(tiff_handler, original_width, original_height, raster, ORIENTATION_TOPLEFT, 0);
 
             u_int8_t* temp_buffer = st_ScreenBuffer_Alloc_bpp(original_width, original_height, 32);
