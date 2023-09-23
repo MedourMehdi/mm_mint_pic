@@ -47,6 +47,7 @@ boolean mouse_status = TRUE;
 boolean clip_status = FALSE;
 
 struct_window win_struct_array[MAX_WINDOWS] = {0};
+
 int16_t number_of_opened_windows = 0;
 
 int16_t butdown = FALSE;						/* button state tested for UP/DOWN */
@@ -176,7 +177,7 @@ void st_Init_WinImage_Control_Bar(void* p_param){
 	this_win->wi_control_bar->control_bar_h = 0;
 	/* If you want some transparency filter set transparency to TRUE */
 	this_win->wi_control_bar->transparency = TRUE;
-	if(cpu_type < 40){
+	if(cpu_type < 40 || computer_type < 5){
 		this_win->wi_control_bar->transparency = FALSE;
 		/* Disabling transparency computing on ST */
 	}
@@ -412,8 +413,6 @@ int main(int argc, char *argv[]){
 			goto close_ico_png;
 		}
 	} else {
-		// form_alert(1, "[1][Please provide a file in argument][Bye]");
-		// goto close_ico_png;
 		if(!st_Ico_PNG_Init(control_bar_winstart_list)){
 			TRACE(("Failed st_Ico_PNG_Init()\n"))
 			goto close_ico_png;
@@ -473,7 +472,7 @@ bool init_app(){
 	screen_workstation_bits_per_pixel = work_out[4];
 	screen_workstation_format = st_VDI_Pixel_Format(st_vdi_handle);
 
-	TRACE(("screen_workstation_bits_per_pixel %dpx screen_workstation_format %dpx\n", screen_workstation_bits_per_pixel, screen_workstation_format))
+	TRACE(("screen_workstation_bits_per_pixel %d screen_workstation_format %d\n", screen_workstation_bits_per_pixel, screen_workstation_format))
 
 	if ( screen_workstation_bits_per_pixel < 1){
 		screen_workstation_bits_per_pixel = 1;
@@ -487,7 +486,7 @@ bool init_app(){
 		st_Save_Pal(palette_ori, 256);
 		st_VDI_SavePalette_RGB(vdi_palette);
 	}
-
+	
 	int32_t cookie_mch, cookie_mint, cookie_cpu, cookie_eddi = 0;
 	if(Getcookie(*(int32_t *) "_MCH",&cookie_mch)){
 		computer_type = 0;
@@ -534,7 +533,7 @@ bool init_app(){
 		emutos_rom = true;
 	}
 
-	TRACE(("Tos Version = %d EmutosRom %d\n", tos_version, emutos_rom))
+	TRACE(("Tos Version = %#04x EmutosRom %d\n", tos_version, emutos_rom))
     st_Set_Mouse( FALSE );
 	graf_mouse(ARROW,0L);
 	st_Set_Mouse( TRUE );
@@ -910,6 +909,7 @@ bool new_win_img(const char *new_file){
 					}
 				}
 				file_extension = win_struct_array[i].wi_data->extension;
+				TRACE(("File Extension %s\n", file_extension))
 				if (check_ext(file_extension, "HEI") || check_ext(file_extension, "HEIF") || check_ext(file_extension, "HEIC") ){
 					st_Init_HEIF(&win_struct_array[i]);
 				} else if (check_ext(file_extension, "PNG")){
@@ -977,6 +977,7 @@ bool new_win_img(const char *new_file){
 		}
 		i++;
 	}
+	TRACE(("Loop finished at %d iter\n", i))
 	return false;
 }
 
