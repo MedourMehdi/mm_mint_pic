@@ -383,17 +383,20 @@ void* st_Img_Windowed(void* param){
 /* Main */
 
 int main(int argc, char *argv[]){
-
+	TRACE(("Starting App\n"))
 	char* this_file = (char*)mem_alloc(128);
 	memset(this_file, 0, 128);
 
     if(!init_app()){
+		TRACE(("Failed Init App\n"))
 		goto quit;
 	}
 	
+	TRACE(("st_Progress_Bar_Alloc_Enable()\n"))
 	global_progress_bar = st_Progress_Bar_Alloc_Enable();
 
 	if(!st_Ico_PNG_Init(control_bar_winimage_list)){
+		TRACE(("Failed st_Ico_PNG_Init()\n"))
 		goto quit;
 	}
 
@@ -403,16 +406,20 @@ int main(int argc, char *argv[]){
 				if(i < (argc - 1)){strcat(this_file, " ");}
 		}
 		remove_quotes(this_file, this_file);
+		TRACE(("File %s\n", this_file))
 		if(!new_win_img(this_file)){
+			TRACE(("Failed new_win_img()\n"))
 			goto close_ico_png;
 		}
 	} else {
 		// form_alert(1, "[1][Please provide a file in argument][Bye]");
 		// goto close_ico_png;
 		if(!st_Ico_PNG_Init(control_bar_winstart_list)){
+			TRACE(("Failed st_Ico_PNG_Init()\n"))
 			goto close_ico_png;
 		}
 		if(!new_win_start()){
+			TRACE(("Failed new_win_start()\n"))
 			goto close_ico_png;
 		}		
 	}
@@ -434,7 +441,9 @@ quit:
 }
 
 bool init_app(){
+	
 	bool ret = true;
+	TRACE(("appl_init()\n"))
     appl_init();
 
     st_vdi_handle = graf_handle(&wchar, &hchar, &wbox, &hbox);
@@ -450,19 +459,27 @@ bool init_app(){
 		work_in[i] = 1;
 	}
     work_in[10] = 2;
+	TRACE(("v_opnvwk()\n"))
     v_opnvwk(work_in, &st_vdi_handle, work_out);
 
     hrez = work_out[1] + 1;
 	wrez = work_out[0] + 1;
+	
+	TRACE(("wrez %dpx hrez %dpx\n", wrez, hrez))
+
 	number_of_colors = work_out[13];
 
 	vq_extnd(st_vdi_handle,1,work_out);
 	screen_workstation_bits_per_pixel = work_out[4];
 	screen_workstation_format = st_VDI_Pixel_Format(st_vdi_handle);
+
+	TRACE(("screen_workstation_bits_per_pixel %dpx screen_workstation_format %dpx\n", screen_workstation_bits_per_pixel, screen_workstation_format))
+
 	if ( screen_workstation_bits_per_pixel < 1){
 		screen_workstation_bits_per_pixel = 1;
 	}
 
+	TRACE(("st_Save_Pal() / st_VDI_SavePalette_RGB()\n"))
 	if (screen_workstation_bits_per_pixel < 16){
 		st_Save_Pal(palette_ori, 1 << screen_workstation_bits_per_pixel);
 		st_VDI_SavePalette_RGB(vdi_palette);
@@ -477,11 +494,13 @@ bool init_app(){
 	} else {
 		computer_type = cookie_mch >> 16;
 	}
+	TRACE(("computer_type %d\n", computer_type))
 	if(Getcookie(*(int32_t *) "MiNT",&cookie_mint)){
 		mint_version = 0;
 	} else {
 		mint_version = cookie_mint;
 	}
+	TRACE(("mint_version %#04x\n", mint_version))
 	if(mint_version < 0x0100){
 		if(st_form_alert_choice(FORM_EXCLAM, (char*)"This app requiers Mint > 1") == 1){
 			ret = false;
@@ -498,6 +517,7 @@ bool init_app(){
 			}
 		}		
 	}
+	TRACE(("edDi_present = %d Cookie %#08x\n", edDi_present, cookie_eddi))
 	if(Getcookie(*(int32_t *) "_CF_",&cookie_cpu)){
 		if(Getcookie(*(int32_t *) "_CPU_",&cookie_cpu)){
 			cpu_type = 0;
@@ -507,13 +527,14 @@ bool init_app(){
 	} else {
 		cpu_type = 54;
 	}
-
+	TRACE(("cpu_type = %d\n", cpu_type))
 	tos_version = (int)((OSHEADER *)get_sysvar(_sysbase))->os_version;
 
 	if( (*(uint32_t *)&((OSHEADER *)get_sysvar(_sysbase))->p_rsv2) == 0x45544f53){
 		emutos_rom = true;
 	}
 
+	TRACE(("Tos Version = %d EmutosRom %d\n", tos_version, emutos_rom))
     st_Set_Mouse( FALSE );
 	graf_mouse(ARROW,0L);
 	st_Set_Mouse( TRUE );
@@ -884,6 +905,7 @@ bool new_win_img(const char *new_file){
 				} else {
 					open_window(&win_struct_array[i]);
 					if(!open_file(&win_struct_array[i], new_file)){
+						TRACE(("Failed open_file()\n"))
 						return false;
 					}
 				}
@@ -908,10 +930,12 @@ bool new_win_img(const char *new_file){
 
 				else {
 					form_alert(1, "[1][Wrong file extension][Okay]");
+					TRACE(("Failed file extension\n"))
 					return false;
 				}
 				if(win_struct_array[i].prefers_file_instead_mem != TRUE){
 					if(!file_to_memory(&win_struct_array[i])){
+						TRACE(("Failed file_to_memory()\n"))
 						form_alert(1, "[1][File to Mem error][Okay]");
 						return false;						
 					}
@@ -930,9 +954,10 @@ bool new_win_img(const char *new_file){
                     end_time = st_Supexec(get200hz);
                     win_struct_array[i].rendering_time = (end_time - start_time) * 5;
                 }
+				TRACE(("Rendering time %lums\n", win_struct_array[i].rendering_time))
 				// printf("Rendering time %lu\n", win_struct_array[i].rendering_time);
                 st_Set_Clipping(CLIPPING_OFF, win_struct_array[i].work_pxy);
-
+				TRACE(("st_Init_WinImage_Control_Bar()\n"))
 				st_Init_WinImage_Control_Bar((void*)&win_struct_array[i]);
 
 				if(win_struct_array[i].wi_data->thumbnail_slave == TRUE){
@@ -946,6 +971,7 @@ bool new_win_img(const char *new_file){
 			}
 			wind_set(win_struct_array[i].wi_handle,WF_TOP,0,0,0,0);
 			win_struct_array[i].win_is_topped = TRUE;
+			TRACE(("send_message(win_struct_array[%d].wi_handle, WM_REDRAW)\n", i))
 			send_message(win_struct_array[i].wi_handle, WM_REDRAW);
 			return true;
 		}

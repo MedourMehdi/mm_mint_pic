@@ -43,4 +43,6 @@ void st_VDI_LoadPalette_RGB(int16_t (*_vdi_palette)[3]);
 void remove_quotes(char* s1, char* s2);
 
 unsigned char reverse(unsigned char b);
+
+void dbg_printf(const char *fmt, ...);
 #endif

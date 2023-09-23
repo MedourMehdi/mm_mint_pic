@@ -1,4 +1,6 @@
 #include "utils.h"
+#include <stdio.h>
+#include <stdarg.h>
 #include <math.h>
 
 u_int16_t palette_256[256] = {
@@ -405,6 +407,14 @@ void st_VDI_SavePalette_RGB(int16_t (*_vdi_palette)[3])
 		_vdi_palette[i][1] = rgb[1];
 		_vdi_palette[i][2] = rgb[2];
 	}
+}
+
+void dbg_printf(const char *fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    vfprintf(stderr, fmt, args);
+    va_end(args);
 }
 
 void st_VDI_LoadPalette_RGB(int16_t (*_vdi_palette)[3])
