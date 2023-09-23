@@ -95,11 +95,6 @@ void st_VDI_SavePalette_LAB(int16_t max_colors) {
 	DoubleTriplet this_pal, result_pal_lab;    
 
 	for(i = 0; i < max_colors; i++) {
-        // if(edDi_present && screen_workstation_bits_per_pixel < 16){
-        //     this_pal.r = ((double)(_vdi_palette[i][0]) / 1000);
-        //     this_pal.g = ((double)(_vdi_palette[i][1]) / 1000);
-        //     this_pal.b = ((double)(_vdi_palette[i][2]) / 1000);
-        // } else 
         if(computer_type > 0) {
             this_pal.r = (double)(( ( ((palette_ori[i] >> 7) & 0x0E ) | ((palette_ori[i] >> 11) & 0x01 ) ) << 4 )) / 255 ;
             this_pal.g = (double)((( ((palette_ori[i] >> 3) & 0x0E) | ((palette_ori[i] >> 7) & 0x01 ) ) << 4 )) / 255 ;

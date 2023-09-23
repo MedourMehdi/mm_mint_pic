@@ -499,7 +499,7 @@ MFDB* st_MFDB32_To_MFDB8bpp(MFDB* MFDB32){
     bool force_planar_mode = false;
     bool use_zview_dithering = false;
     bool use_rgb2lab = false;
-    bool disable_dithering = false;
+    bool disable_classic_dithering = false;
 
     if(edDi_present && screen_workstation_bits_per_pixel < 16){
         use_zview_dithering = true;
@@ -512,7 +512,7 @@ MFDB* st_MFDB32_To_MFDB8bpp(MFDB* MFDB32){
         MFDB32->fd_r2 = 0;
     }
     if(MFDB32->fd_r3){
-        disable_dithering = true;
+        disable_classic_dithering = true;
         MFDB32->fd_r3 = 0;
     }
     int16_t max_colors = (1 << bpp);
@@ -651,11 +651,12 @@ MFDB* st_MFDB32_To_MFDB4bpp(MFDB* MFDB32){
     int16_t bpp = screen_workstation_bits_per_pixel;
     bool use_zview_dithering = false;
     bool use_rgb2lab = false;
-    bool disable_dithering = false;
+    bool disable_classic_dithering = false;
 
     if(edDi_present && screen_workstation_bits_per_pixel < 16){
         use_zview_dithering = true;
     }
+
     if(MFDB32->fd_r2){
         bpp = MFDB32->fd_r2;
         use_rgb2lab = true;
@@ -663,7 +664,7 @@ MFDB* st_MFDB32_To_MFDB4bpp(MFDB* MFDB32){
         MFDB32->fd_r2 = 0;
     }
     if(MFDB32->fd_r3){
-        disable_dithering = true;
+        disable_classic_dithering = true;
         MFDB32->fd_r3 = 0;
     }
     int16_t max_colors = (1 << bpp);
@@ -672,16 +673,16 @@ MFDB* st_MFDB32_To_MFDB4bpp(MFDB* MFDB32){
     st_Progress_Bar_Init(global_progress_bar, (int8_t*)"ARGB to 16 colors");
     st_Progress_Bar_Signal(global_progress_bar, 10, (int8_t*)"Palette fetching");
 
-    if(!rgb2lab_Color_Init && use_rgb2lab){
-        st_VDI_SavePalette_LAB(max_colors);
-    }
-
     if(!zview_Color_Init && use_zview_dithering){
         st_Progress_Bar_Signal(global_progress_bar, 20, (int8_t*)"Palette vectors building");
-        zview_Set_Max_Color(1 << screen_workstation_bits_per_pixel);
+        zview_Set_Max_Color(1 << bpp);
         zview_VDI_SavePalette_sRGB(vdi_palette);
         zview_Build_Cube216(pix_palette);
         zview_Color_Init = true;
+    }
+
+    if(!rgb2lab_Color_Init && use_rgb2lab){
+        st_VDI_SavePalette_LAB(max_colors);
     }
 
     MFDB* MFDB24 = st_MFDB32_To_MFDB24(MFDB32);
@@ -693,7 +694,7 @@ MFDB* st_MFDB32_To_MFDB4bpp(MFDB* MFDB32){
         st_Progress_Bar_Signal(global_progress_bar, 50, (int8_t*)"edDi Dithering RGB to 8bits");
         zview_Dither_RGB_to_8bits((uint8_t*)MFDB24->fd_addr, (uint8_t*)MFDB8C->fd_addr, MFDB24->fd_w, MFDB24->fd_h);
     } else {
-        if(!disable_dithering){
+        if(!disable_classic_dithering){
             st_Progress_Bar_Signal(global_progress_bar, 30, (int8_t*)"Floyd dithering");
             st_Floyd_Dithering(MFDB24, bpp);
         }
