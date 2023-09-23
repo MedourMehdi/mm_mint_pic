@@ -401,7 +401,7 @@ void st_VDI_SavePalette_RGB(int16_t (*_vdi_palette)[3])
 {
 	int16_t rgb[3];
 	u_int16_t i;  
-	for(i = 0; i < MAX(256, (1 << screen_workstation_bits_per_pixel)); i++) {
+	for(i = 0; i < MIN(256, (1 << screen_workstation_bits_per_pixel)); i++) {
 		vq_color(st_vdi_handle, i, 0, rgb);
 		_vdi_palette[i][0] = rgb[0];
 		_vdi_palette[i][1] = rgb[1];
