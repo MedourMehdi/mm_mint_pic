@@ -248,6 +248,7 @@ void st_Reload_Control_Bar(struct_window *this_win, struct_st_control_bar* contr
 void* st_Img_Rotate(void* p_param){
 	struct_window*	this_win = (struct_window*)p_param;
 	this_win->wi_data->fx_requested = TRUE;
+	this_win->wi_data->needs_refresh = TRUE;
 	this_win->wi_data->img.rotate_degree = this_win->wi_data->img.rotate_degree <= 180 ? this_win->wi_data->img.rotate_degree + 90 : 0;
 	send_message(this_win->wi_handle, WM_SIZED);
 	return NULL;
@@ -257,6 +258,7 @@ void* st_Img_ZoomIn(void* p_param){
 	struct_window*	this_win = (struct_window*)p_param;
 	this_win->wi_data->autoscale = FALSE;
 	this_win->wi_data->fx_requested = TRUE;
+	this_win->wi_data->needs_refresh = TRUE;
 	this_win->wi_data->img.scaled_pourcentage = this_win->wi_data->img.scaled_pourcentage < 100 ? this_win->wi_data->img.scaled_pourcentage + 10 : 100;
 	this_win->wi_data->img.scaled_width = (this_win->wi_data->img.original_width * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
 	this_win->wi_data->img.scaled_height = (this_win->wi_data->img.original_height * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
@@ -268,21 +270,12 @@ void* st_Img_ZoomOut(void* p_param){
 	struct_window*	this_win = (struct_window*)p_param;
 	this_win->wi_data->autoscale = FALSE;
 	this_win->wi_data->fx_requested = TRUE;
-	if(this_win->wi_data->img.rotate_degree !=0){
-		this_win->wi_data->fx_requested = TRUE;
-	}
+	this_win->wi_data->needs_refresh = TRUE;
 	this_win->wi_data->img.scaled_pourcentage = this_win->wi_data->img.scaled_pourcentage > -90 ? this_win->wi_data->img.scaled_pourcentage - 10 : -90;
 	this_win->wi_data->img.scaled_width = (this_win->wi_data->img.original_width * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
 	this_win->wi_data->img.scaled_height = (this_win->wi_data->img.original_height * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
 
 	send_message(this_win->wi_handle, WM_SIZED);
-	return NULL;
-}
-
-void* st_Restart(void* p_param){
-	form_alert(1, "[1][System is going to restart][Okay]");
-	st_Supexec((int32_t(*)())reset);
-
 	return NULL;
 }
 
@@ -359,6 +352,7 @@ void* st_Img_Open(void* param){
 void* st_Img_Reload(void* param){
 	struct_window *this_win = (struct_window*)param;
 
+	this_win->wi_data->wi_original_modified = FALSE;
 	this_win->wi_data->needs_refresh = TRUE;
 	this_win->wi_to_work_in_mfdb = &this_win->wi_original_mfdb;
 	this_win->wi_data->fx_on = FALSE;
@@ -374,6 +368,7 @@ void* st_Img_Reload(void* param){
 void* st_Img_Windowed(void* param){
 	struct_window *this_win = (struct_window*)param;
 	this_win->wi_data->autoscale = this_win->wi_data->autoscale == TRUE ? FALSE : TRUE;
+	this_win->wi_data->needs_refresh = TRUE;
 	this_win->wi_data->img.scaled_pourcentage = 0;
 	this_win->refresh_win(this_win->wi_handle);
 	send_message(this_win->wi_handle, WM_REDRAW);
@@ -584,6 +579,7 @@ void *event_loop(void *result)
 		);
 	if( events & MU_MESAG )
 	{
+		TRACE(("Message %d\n", msg_buffer[0]))
 		switch (msg_buffer[0])
 		{
 		case 0x4711:

@@ -19,10 +19,10 @@ void _st_Read_PNG_Callback(png_structp _pngptr, png_bytep _data, png_size_t _len
 void st_Init_PNG(struct_window *this_win){
     this_win->wi_data->image_media = TRUE;
     this_win->wi_data->window_size_limited = TRUE;
+    this_win->wi_data->needs_refresh = TRUE;
 	this_win->refresh_win = st_Win_Print_PNG;
     this_win->wi_to_work_in_mfdb = &this_win->wi_original_mfdb;
-    /* Progress Bar Stuff */
-this_win->wi_progress_bar = global_progress_bar;
+    this_win->wi_progress_bar = global_progress_bar;
     if(!st_Set_Renderer(this_win)){
         sprintf(alert_message, "screen_format: %d\nscreen_bits_per_pixel: %d", screen_workstation_format, screen_workstation_bits_per_pixel);
         st_form_alert(FORM_STOP, alert_message);
@@ -34,11 +34,9 @@ void st_Win_Print_PNG(int16_t this_win_handle){
     struct_window *this_win;
     this_win = detect_window(this_win_handle);
 
-    if(this_win->wi_data->needs_refresh == TRUE){
-        this_win->wi_data->wi_original_modified = FALSE;
-        this_win->wi_data->needs_refresh = FALSE;
+    if(this_win->wi_data->wi_original_modified == FALSE){
         this_win->wi_to_work_in_mfdb = &this_win->wi_original_mfdb;
-    } 
+    }
 
     _st_Read_PNG(this_win_handle, this_win->prefers_file_instead_mem);
 
