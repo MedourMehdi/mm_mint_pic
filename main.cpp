@@ -16,6 +16,7 @@
 #include "img_bmp/img_bmp.h"
 #include "img_tga/img_tga.h"
 #include "img_pi/img_pi.h"
+#include "img_svg/img_svg.h"
 
 #include "img_dummy/img_dummy.h"
 
@@ -926,7 +927,9 @@ bool new_win_img(const char *new_file){
 					st_Init_TGA(&win_struct_array[i]);
 				} else if (check_ext(file_extension, "PI1") || check_ext(file_extension, "PI3") ){
 					st_Init_Degas(&win_struct_array[i]);
-				}
+				} else if (check_ext(file_extension, "SVG")){
+					st_Init_SVG(&win_struct_array[i]);
+				} 
 
 				else {
 					form_alert(1, "[1][Wrong file extension][Okay]");
