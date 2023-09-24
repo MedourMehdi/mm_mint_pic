@@ -2,7 +2,6 @@
 #include "../img_handler.h"
 
 #include "../utils/utils.h"
-// #include "../utils_gfx/pix_convert.h"
 
 #define PNG_BACKGROUND_COLOR	0xFFFFFF
 #ifndef ALPHA_COMPOSITE
@@ -12,10 +11,6 @@
     ( composite) = ( u_int8_t)(( temp + ( temp >> 8)) >> 8);								\
 }
 #endif
-
-// #ifndef png_const_bytep
-// typedef png_bytep png_const_bytep;
-// #endif
 
 void st_Win_Print_PNG(int16_t this_win_handle);
 void _st_Read_PNG(int16_t this_win_handle, boolean file_process);

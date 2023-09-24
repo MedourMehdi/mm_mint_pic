@@ -21,7 +21,9 @@
 // #endif
 #define BYTES_TO_CHECK	8
 
+#ifndef COMPUTE_TRANSPARENCY
 #define COMPUTE_TRANSPARENCY(adjustedColor, opacity, foregroundColor, backgroundColor) { adjustedColor = opacity * foregroundColor + (1 - opacity) * backgroundColor; }
+#endif
 
 #ifndef HAVE_BOOLEAN
 typedef int boolean;

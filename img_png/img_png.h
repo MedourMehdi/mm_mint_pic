@@ -2,12 +2,12 @@
 #include "../windows.h"
 
 #ifndef IMG_PNG
-    #define IMG_PNG
+#define IMG_PNG
 
-    #ifndef PNG_HEADER_LOADED
-        #define PNG_HEADER_LOADED
-        #include <png.h>
-    #endif
+#ifndef PNG_HEADER_LOADED
+    #define PNG_HEADER_LOADED
+    #include <png.h>
+#endif
 
 // void st_Win_Print_PNG(int16_t this_win_handle);
 void st_Init_PNG(struct_window *this_win); 
