@@ -60,7 +60,8 @@ void _st_Read_SVG(int16_t this_win_handle, boolean file_process){
         printf("parsing %s\n", this_win->wi_data->path );
         image = nsvgParseFromFile(this_win->wi_data->path, "px", 96.0f);
         if (image == NULL) {
-            printf("Could not open SVG image.\n");
+            sprintf(alert_message, "Could not open SVG image:\n%s", this_win->wi_data->path);
+            st_form_alert(FORM_EXCLAM, alert_message);            
             goto error;
         }
 
@@ -86,11 +87,10 @@ void _st_Read_SVG(int16_t this_win_handle, boolean file_process){
         rast = nsvgCreateRasterizer();
 
         if (rast == NULL) {
-            printf("Could not init rasterizer.\n");
+            sprintf(alert_message, "Could not init rasterizer.\n");
+            st_form_alert(FORM_EXCLAM, alert_message);            
             goto error;
         }
-
-        printf("rasterizing image %d x %d\n", width, height);
         
         nsvgRasterize(rast, image, 0, 0, 1, destination_buffer, width, height, MFDB_STRIDE(width) << 2);
 
