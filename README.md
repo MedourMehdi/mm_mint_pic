@@ -32,7 +32,7 @@ No shared library or module is required to run it.
 * LibWebp
 * LibJpeg
 
-You should found most of these libraries here: https://tho-otto.de/crossmint.php or you can read https://www.atari-forum.com/viewforum.php?f=70&sid=3d5a35722383f636d46de67fa33c5b57 if you want to rebuild them.
+You should found most of these libraries here: https://tho-otto.de/crossmint.php or you can read https://www.atari-forum.com/viewforum.php?f=70 if you want to rebuild them.
 
 ### Installing
 
