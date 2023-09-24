@@ -57,7 +57,13 @@ void _st_Read_SVG(int16_t this_win_handle, boolean file_process){
         u_int8_t* destination_buffer;
         u_int32_t *dst_ptr;
 
-        printf("parsing %s\n", this_win->wi_data->path );
+        st_Progress_Bar_Add_Step(this_win->wi_progress_bar);
+
+        st_Progress_Bar_Init(this_win->wi_progress_bar, (int8_t*)"SVG processing");
+
+        st_Progress_Bar_Signal(this_win->wi_progress_bar, 20, (int8_t*)"Parsing from file");
+
+        TRACE(("nsvgParseFromFile()\n"))
         image = nsvgParseFromFile(this_win->wi_data->path, "px", 96.0f);
         if (image == NULL) {
             sprintf(alert_message, "Could not open SVG image:\n%s", this_win->wi_data->path);
@@ -83,7 +89,8 @@ void _st_Read_SVG(int16_t this_win_handle, boolean file_process){
             st_form_alert(FORM_EXCLAM, alert_message);
             goto error;
         }
-
+        st_Progress_Bar_Signal(this_win->wi_progress_bar, 60, (int8_t*)"Rasterize");
+        TRACE(("nsvgCreateRasterizer()\n"))
         rast = nsvgCreateRasterizer();
 
         if (rast == NULL) {
@@ -91,9 +98,10 @@ void _st_Read_SVG(int16_t this_win_handle, boolean file_process){
             st_form_alert(FORM_EXCLAM, alert_message);            
             goto error;
         }
-        
+        TRACE(("nsvgRasterize()\n"))
         nsvgRasterize(rast, image, 0, 0, 1, destination_buffer, width, height, MFDB_STRIDE(width) << 2);
 
+        st_Progress_Bar_Signal(this_win->wi_progress_bar, 80, (int8_t*)"Convert RGBA to ARGB");
         dst_ptr = (u_int32_t*)destination_buffer;
         for(int16_t y = 0; y < height; y++ ){
             for(int16_t x = 0; x < width; x++){
@@ -104,6 +112,7 @@ void _st_Read_SVG(int16_t this_win_handle, boolean file_process){
         if(this_win->wi_original_mfdb.fd_addr != NULL){
             mem_free(this_win->wi_original_mfdb.fd_addr);
         }
+        TRACE(("mfdb_update_bpp()\n"))
 		mfdb_update_bpp(&this_win->wi_original_mfdb, (int8_t *)destination_buffer, width, height, 32);
 
         this_win->wi_data->img.scaled_pourcentage = 0;
@@ -114,10 +123,14 @@ void _st_Read_SVG(int16_t this_win_handle, boolean file_process){
         this_win->total_length_h = this_win->wi_original_mfdb.fd_h;     
         this_win->wi_data->wi_original_modified = TRUE;
         this_win->wi_data->wi_buffer_modified = FALSE;	
-
-        error:
-            nsvgDeleteRasterizer(rast);
-            nsvgDelete(image);        		
+        st_Progress_Bar_Signal(this_win->wi_progress_bar, 100, (int8_t*)"Finished");
+    error:
+        TRACE(("nsvgDeleteRasterizer()\n"))
+        nsvgDeleteRasterizer(rast);
+        TRACE(("nsvgDelete()\n"))
+        nsvgDelete(image);
+        st_Progress_Bar_Step_Done(this_win->wi_progress_bar);
+        st_Progress_Bar_Finish(this_win->wi_progress_bar);	
 	}
 
 }
