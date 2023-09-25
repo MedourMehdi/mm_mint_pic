@@ -14,7 +14,7 @@
 
 void _st_Read_HEIF(int16_t, boolean file_processing, u_int32_t img_id);
 void _st_Handle_Thumbs_Heif(int16_t this_win_handle, boolean file_process);
-void _st_Heif_RGBA_To_ARGB(uint8_t* source_buffer, uint8_t* destination_buffer, int16_t width, int16_t height, int16_t stride, u_int32_t background_color);
+void _st_Heif_RGBA_To_ARGB(uint8_t* source_buffer, uint8_t* destination_buffer, int16_t width, int16_t height);
 
 void st_Win_Print_HEIF(int16_t);
 
@@ -134,7 +134,7 @@ void _st_Read_HEIF(int16_t this_win_handle, boolean file_process, u_int32_t img_
             sprintf(alert_message, "Out Of Mem Error\nAsked for %doctets", width * height * nb_components_32bits);
             st_form_alert(FORM_EXCLAM, alert_message);
         } else {
-            _st_Heif_RGBA_To_ARGB((u_int8_t *)data, destination_buffer, width, height, stride, 0xFFFFFFFF);
+            _st_Heif_RGBA_To_ARGB((u_int8_t *)data, destination_buffer, width, height);
             mfdb_update_bpp(&this_win->wi_original_mfdb, (int8_t*)destination_buffer, width, height, nb_components_32bits << 3);
             this_win->total_length_w = this_win->wi_original_mfdb.fd_w;
             this_win->total_length_h = this_win->wi_original_mfdb.fd_h;
@@ -251,7 +251,7 @@ void _st_Handle_Thumbs_Heif(int16_t this_win_handle, boolean file_process){
             int stride;
             const u_int8_t* data = heif_image_get_plane_readonly(scaled_img, heif_channel_interleaved, &stride);
 
-            _st_Heif_RGBA_To_ARGB((u_int8_t *)data, destination_buffer, new_width, new_height, stride, this_win->wi_thumb->thumb_background_color);
+            _st_Heif_RGBA_To_ARGB((u_int8_t *)data, destination_buffer, new_width, new_height);
 
             MFDB* thumb_original_mfdb = mfdb_alloc_bpp( (int8_t*)destination_buffer, new_width, new_height, nb_components_32bits << 3);
 
@@ -287,36 +287,51 @@ void _st_Handle_Thumbs_Heif(int16_t this_win_handle, boolean file_process){
 #endif    
 }
 
-void _st_Heif_RGBA_To_ARGB(uint8_t* source_buffer, uint8_t* destination_buffer, int16_t width, int16_t height, int16_t stride, u_int32_t background_color){
-    u_int32_t x, y, i, j, k, l, m, n, o;
-    int16_t width_stride = MFDB_STRIDE(width) - width;
-    int16_t nb_components_32bits = 4;
+// void _st_Heif_RGBA_To_ARGB(uint8_t* source_buffer, uint8_t* destination_buffer, int16_t width, int16_t height, int16_t stride, u_int32_t background_color){
+//     u_int32_t x, y, i, j, k, l, m, n, o;
+//     int16_t width_stride = MFDB_STRIDE(width) - width;
+//     int16_t nb_components_32bits = 4;
 
-    uint8_t a, r, g, b, *ptr_color;
-    ptr_color = (uint8_t*)&background_color;
-    a = ptr_color[0]; r = ptr_color[1]; g = ptr_color[2]; b = ptr_color[3];
+//     uint8_t a, r, g, b, *ptr_color;
+//     ptr_color = (uint8_t*)&background_color;
+//     a = ptr_color[0]; r = ptr_color[1]; g = ptr_color[2]; b = ptr_color[3];
 
-        for (y = 0; y < height; y++) {
-            m = (width * y);
-            l = (MFDB_STRIDE(width) * y);
-            o = (y * stride);
-            for (x = 0; x < width; x++) {
-                n = (l + x) << 2;
-                j = o + (x << 2);
-                destination_buffer[n] = source_buffer[j + 3];
-                destination_buffer[n + 1] = source_buffer[j];
-                destination_buffer[n + 2] = source_buffer[j + 1];
-                destination_buffer[n + 3] = source_buffer[j + 2];
-                i = ((l + x) + 1) << 2;
-            }
-            for(k = width_stride; k > 0; k--){
-                destination_buffer[i++] = a;
-                destination_buffer[i++] = r;
-                destination_buffer[i++] = g;
-                destination_buffer[i++] = b;
-            }
+//         for (y = 0; y < height; y++) {
+//             m = (width * y);
+//             l = (MFDB_STRIDE(width) * y);
+//             o = (y * stride);
+//             for (x = 0; x < width; x++) {
+//                 n = (l + x) << 2;
+//                 j = o + (x << 2);
+//                 destination_buffer[n] = source_buffer[j + 3];
+//                 destination_buffer[n + 1] = source_buffer[j];
+//                 destination_buffer[n + 2] = source_buffer[j + 1];
+//                 destination_buffer[n + 3] = source_buffer[j + 2];
+//                 i = ((l + x) + 1) << 2;
+//             }
+//             for(k = width_stride; k > 0; k--){
+//                 destination_buffer[i++] = a;
+//                 destination_buffer[i++] = r;
+//                 destination_buffer[i++] = g;
+//                 destination_buffer[i++] = b;
+//             }
+//         }
+// }
+
+void _st_Heif_RGBA_To_ARGB(uint8_t* source_buffer, uint8_t* destination_buffer, int16_t width, int16_t height){
+    u_int32_t x, y, i;
+    u_int32_t *dst_ptr, *src_ptr;
+    src_ptr = (u_int32_t*)source_buffer;
+    dst_ptr = (u_int32_t*)destination_buffer;
+    for(int16_t y = 0; y < height; y++ ){
+        for(int16_t x = 0; x < width; x++){
+            i = (y * MFDB_STRIDE(width)) + x;
+            dst_ptr[i] = ((src_ptr[i] & 0x000000FF) << 24 ) | ((src_ptr[i] & 0xFFFFFF00) >> 8);
         }
+    }
 }
+
+
 
 void st_Write_HEIF(uint8_t* src_buffer, int width, int height, const char* filename) {
 
