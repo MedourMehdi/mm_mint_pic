@@ -119,18 +119,26 @@ void st_Handle_FX(struct_window *this_win){
         /* We duplicate the original MFDB so we can work on it */
         mfdb_duplicate(src_mfdb, fx_mfdb);
 
-        /**/
-        if(this_win->wi_data->img.rotate_degree !=0){
-            st_Progress_Bar_Signal(this_win->wi_progress_bar, 50, (int8_t*)"Image Rotation");
-            st_Rotate_ARGB(fx_mfdb, dst_mfdb, this_win->wi_data->img.rotate_degree);
+        if(this_win->wi_data->resized && !this_win->wi_data->autoscale){
+            st_Progress_Bar_Signal(this_win->wi_progress_bar, 50, (int8_t*)"Image Resizing");
+            st_Rescale_ARGB(fx_mfdb, dst_mfdb, 
+                    this_win->wi_data->img.export_width, this_win->wi_data->img.export_height);
             mfdb_duplicate(dst_mfdb, fx_mfdb);
         }
 
-        if(this_win->wi_data->img.scaled_pourcentage != 0){
+        /**/
+
+        if(this_win->wi_data->img.scaled_pourcentage){
             st_Progress_Bar_Signal(this_win->wi_progress_bar, 50, (int8_t*)"Image Rescale");
             st_Rescale_ARGB(fx_mfdb, dst_mfdb, this_win->wi_data->img.scaled_width, this_win->wi_data->img.scaled_height);
             mfdb_duplicate(dst_mfdb, fx_mfdb);
         }          
+
+        if(this_win->wi_data->img.rotate_degree){
+            st_Progress_Bar_Signal(this_win->wi_progress_bar, 50, (int8_t*)"Image Rotation");
+            st_Rotate_ARGB(fx_mfdb, dst_mfdb, this_win->wi_data->img.rotate_degree);
+            mfdb_duplicate(dst_mfdb, fx_mfdb);
+        }
 
         mfdb_duplicate(fx_mfdb ,dst_mfdb);
         

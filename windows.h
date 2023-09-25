@@ -133,6 +133,7 @@ typedef struct {
 	boolean image_media;
 	boolean rsc_media;
 	boolean autoscale;
+	boolean resized;
 	boolean window_size_limited;
 	boolean wi_buffer_modified;
 	boolean stop_original_data_load;

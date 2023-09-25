@@ -928,12 +928,10 @@ bool new_win_img(const char *new_file){
 
 				else {
 					form_alert(1, "[1][Wrong file extension][Okay]");
-					TRACE(("Failed file extension\n"))
 					return false;
 				}
 				if(win_struct_array[i].prefers_file_instead_mem != TRUE){
 					if(!file_to_memory(&win_struct_array[i])){
-						TRACE(("Failed file_to_memory()\n"))
 						form_alert(1, "[1][File to Mem error][Okay]");
 						return false;						
 					}
@@ -953,9 +951,7 @@ bool new_win_img(const char *new_file){
                     win_struct_array[i].rendering_time = (end_time - start_time) * 5;
                 }
 				TRACE(("Rendering time %lums\n", win_struct_array[i].rendering_time))
-				// printf("Rendering time %lu\n", win_struct_array[i].rendering_time);
                 st_Set_Clipping(CLIPPING_OFF, win_struct_array[i].work_pxy);
-				TRACE(("st_Init_WinImage_Control_Bar()\n"))
 				st_Init_WinImage_Control_Bar((void*)&win_struct_array[i]);
 
 				if(win_struct_array[i].wi_data->thumbnail_slave == TRUE){
@@ -969,7 +965,6 @@ bool new_win_img(const char *new_file){
 			}
 			wind_set(win_struct_array[i].wi_handle,WF_TOP,0,0,0,0);
 			win_struct_array[i].win_is_topped = TRUE;
-			TRACE(("send_message(win_struct_array[%d].wi_handle, WM_REDRAW)\n", i))
 			send_message(win_struct_array[i].wi_handle, WM_REDRAW);
 			return true;
 		}
