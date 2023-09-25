@@ -10,6 +10,7 @@ void _st_Read_WEBP(int16_t this_win_handle, boolean file_process);
 void st_Init_WEBP(struct_window *this_win){
     this_win->wi_data->image_media = TRUE;
     this_win->wi_data->window_size_limited = TRUE;
+    this_win->wi_data->remap_displayed_mfdb = TRUE;
 	this_win->refresh_win = st_Win_Print_WEBP;
     /* Progress Bar Stuff */
     this_win->wi_progress_bar = global_progress_bar;
@@ -101,6 +102,8 @@ void _st_Read_WEBP(int16_t this_win_handle, boolean file_process)
 
         this_win->wi_data->img.scaled_pourcentage = 0;
         this_win->wi_data->img.rotate_degree = 0;
+        this_win->wi_data->resized = FALSE;
+        this_win->wi_data->resized = FALSE;
         this_win->wi_data->img.original_width = width;
         this_win->wi_data->img.original_height = height;
 

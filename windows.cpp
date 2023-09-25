@@ -32,7 +32,7 @@ void send_message(int16_t my_win_handle, int16_t my_message){
 	int16_t my_win_message[8];
 	struct_window *this_win;
 	this_win = detect_window(my_win_handle);
-	update_struct_window(this_win);
+	// update_struct_window(this_win);
 	my_win_message[0] = my_message;
 	my_win_message[1] = gl_apid;
 	my_win_message[2] = 0;
@@ -318,8 +318,10 @@ void win_refresh_from_buffer(struct_window *this_win){
 				do_vslide(this_win->wi_handle, 1000L * this_win->current_pos_y);	
 			}
 		}
-		// buffer_to_screen(this_win->wi_handle, &this_win->work_area);
-		send_message(this_win->wi_handle, WM_REDRAW);
+		if(msg_buffer[0] != WM_SIZED){
+			send_message(this_win->wi_handle, WM_REDRAW);
+		}
+		
 	}
 
 }
@@ -675,9 +677,12 @@ void st_Limit_Work_Area(struct_window *this_win){
 		|| this_win->work_area.g_w > MAX(this_win->total_length_w, MIN_WINDOWS_WSIZE) )
 		)
 	{
+		TRACE(("st_Limit_Work_Area(%d)\n", this_win->wi_handle))
+		int16_t window_area_buffer[4];
 		this_win->work_area.g_h = MIN(this_win->total_length_h, this_win->work_area.g_h);
 		this_win->work_area.g_w = MIN(this_win->total_length_w, this_win->work_area.g_w);	
-		TRACE(("st_Limit_Work_Area(%d)\n", this_win->wi_handle))
+		wind_calc(WC_BORDER,this_win->wi_style, this_win->work_area.g_x, this_win->work_area.g_y, this_win->work_area.g_w, this_win->work_area.g_h, &window_area_buffer[0], &window_area_buffer[1], &window_area_buffer[2], &window_area_buffer[3]);
+		wind_set(this_win->wi_handle,WF_CURRXYWH, window_area_buffer[0], window_area_buffer[1], window_area_buffer[2], window_area_buffer[3]);
 		send_message(this_win->wi_handle, WM_SIZED);
 	}
 }

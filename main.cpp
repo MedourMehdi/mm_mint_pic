@@ -199,22 +199,18 @@ void st_Init_WinStart_Control_Bar(void* p_param);
 
 void st_Init_WinStart_Control_Bar(void* p_param){
 	struct_window *this_win = (struct_window*)p_param;
-
-	// if( this_win->wi_to_display_mfdb->fd_addr != NULL ){
-
-		this_win->wi_control_bar = (struct_st_control_bar*)mem_alloc(sizeof(struct_st_control_bar));
-		this_win->wi_control_bar->control_bar_list = (struct_st_ico_png_list*)mem_alloc(sizeof(control_bar_winstart_list));
-		memcpy(this_win->wi_control_bar->control_bar_list, &control_bar_winstart_list, sizeof(control_bar_winstart_list));
-		this_win->wi_control_bar->last_ico_padding_right = 24;
-		this_win->wi_control_bar->control_bar_h = CONTROLBAR_H;
-		this_win->wi_control_bar->transparency = FALSE;
-		this_win->wi_control_bar->background_mfdb = NULL;
-		this_win->wi_control_bar->need_to_reload_control_mfdb = TRUE;
-		this_win->wi_control_bar->transparency_color = grey_color;
-		this_win->wi_control_bar->vdi_handle = &st_vdi_handle;
-		this_win->wi_control_bar->virtual_screen_mfdb = &screen_mfdb;
-		this_win->wi_control_bar->force_unhide = TRUE;
-	// }
+	this_win->wi_control_bar = (struct_st_control_bar*)mem_alloc(sizeof(struct_st_control_bar));
+	this_win->wi_control_bar->control_bar_list = (struct_st_ico_png_list*)mem_alloc(sizeof(control_bar_winstart_list));
+	memcpy(this_win->wi_control_bar->control_bar_list, &control_bar_winstart_list, sizeof(control_bar_winstart_list));
+	this_win->wi_control_bar->last_ico_padding_right = 24;
+	this_win->wi_control_bar->control_bar_h = CONTROLBAR_H;
+	this_win->wi_control_bar->transparency = FALSE;
+	this_win->wi_control_bar->background_mfdb = NULL;
+	this_win->wi_control_bar->need_to_reload_control_mfdb = TRUE;
+	this_win->wi_control_bar->transparency_color = grey_color;
+	this_win->wi_control_bar->vdi_handle = &st_vdi_handle;
+	this_win->wi_control_bar->virtual_screen_mfdb = &screen_mfdb;
+	this_win->wi_control_bar->force_unhide = TRUE;
 }
 
 /*	
@@ -232,7 +228,7 @@ void st_Reload_Control_Bar(struct_window *this_win, struct_st_control_bar* contr
 void st_Reload_Control_Bar(struct_window *this_win, struct_st_control_bar* control_bar){
 	if( this_win->wi_to_display_mfdb->fd_addr != NULL && this_win->wi_control_bar != NULL ){
 		if(this_win->wi_control_bar->control_bar_h > 0){
-			if(screen_workstation_bits_per_pixel <= 8 || this_win->work_area.g_x > this_win->total_length_w || this_win->work_area.g_y > this_win->total_length_h || cpu_type < 30){
+			if(screen_workstation_bits_per_pixel <= 8 || this_win->work_area.g_w > this_win->total_length_w || this_win->work_area.g_h > this_win->total_length_h || cpu_type < 30){
 				control_bar->need_to_reload_control_mfdb = control_bar->st_control_bar_mfdb.fd_w == wrez ? false : true;
 				st_Control_Bar_Refresh_Classic(control_bar, wrez, screen_workstation_bits_per_pixel);
 			} else {
@@ -251,7 +247,8 @@ void* st_Img_Rotate(void* p_param){
 	struct_window*	this_win = (struct_window*)p_param;
 	this_win->wi_data->fx_requested = TRUE;
 	this_win->wi_data->img.rotate_degree = this_win->wi_data->img.rotate_degree <= 180 ? this_win->wi_data->img.rotate_degree + 90 : 0;
-	send_message(this_win->wi_handle, WM_SIZED);
+	this_win->refresh_win(this_win->wi_handle);
+	send_message(this_win->wi_handle, WM_REDRAW);	
 	return NULL;
 }
 
@@ -259,10 +256,16 @@ void* st_Img_ZoomIn(void* p_param){
 	struct_window*	this_win = (struct_window*)p_param;
 	this_win->wi_data->autoscale = FALSE;
 	this_win->wi_data->fx_requested = TRUE;
-	this_win->wi_data->img.scaled_pourcentage = this_win->wi_data->img.scaled_pourcentage < 100 ? this_win->wi_data->img.scaled_pourcentage + 10 : 100;
-	this_win->wi_data->img.scaled_width = (this_win->wi_data->img.original_width * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
-	this_win->wi_data->img.scaled_height = (this_win->wi_data->img.original_height * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
-	send_message(this_win->wi_handle, WM_SIZED);
+	this_win->wi_data->img.scaled_pourcentage = this_win->wi_data->img.scaled_pourcentage < 100 ? this_win->wi_data->img.scaled_pourcentage + 10 : 100;	
+	if(this_win->wi_data->resized){
+		this_win->wi_data->img.scaled_width = (this_win->wi_data->img.export_width * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
+		this_win->wi_data->img.scaled_height = (this_win->wi_data->img.export_height * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
+	}else{
+		this_win->wi_data->img.scaled_width = (this_win->wi_data->img.original_width * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
+		this_win->wi_data->img.scaled_height = (this_win->wi_data->img.original_height * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
+	}
+	this_win->refresh_win(this_win->wi_handle);
+	send_message(this_win->wi_handle, WM_REDRAW);	
 	return NULL;
 }
 
@@ -271,10 +274,15 @@ void* st_Img_ZoomOut(void* p_param){
 	this_win->wi_data->autoscale = FALSE;
 	this_win->wi_data->fx_requested = TRUE;
 	this_win->wi_data->img.scaled_pourcentage = this_win->wi_data->img.scaled_pourcentage > -90 ? this_win->wi_data->img.scaled_pourcentage - 10 : -90;
-	this_win->wi_data->img.scaled_width = (this_win->wi_data->img.original_width * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
-	this_win->wi_data->img.scaled_height = (this_win->wi_data->img.original_height * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
-
-	send_message(this_win->wi_handle, WM_SIZED);
+	if(this_win->wi_data->resized){
+		this_win->wi_data->img.scaled_width = (this_win->wi_data->img.export_width * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
+		this_win->wi_data->img.scaled_height = (this_win->wi_data->img.export_height * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
+	}else{
+		this_win->wi_data->img.scaled_width = (this_win->wi_data->img.original_width * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
+		this_win->wi_data->img.scaled_height = (this_win->wi_data->img.original_height * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
+	}
+	this_win->refresh_win(this_win->wi_handle);
+	send_message(this_win->wi_handle, WM_REDRAW);
 	return NULL;
 }
 
@@ -306,6 +314,7 @@ void* st_Img_Resize(void* p_param){
 		this_win_form->wi_data->rsc.process_function = &st_Form_Events_Change_Resolution;
 
 		st_Form_Init_Change_Resolution(this_win_form_handle);
+
 		}
 	} else { 
 		form_alert(1, "[1][There is already a form opened for this window.|Please close it before process an other task][Okay]");
@@ -351,15 +360,12 @@ void* st_Img_Open(void* param){
 
 void* st_Img_Reload(void* param){
 	struct_window *this_win = (struct_window*)param;
-
 	this_win->wi_data->stop_original_data_load = FALSE;
 	this_win->wi_data->fx_on = FALSE;
     this_win->wi_data->img.scaled_pourcentage = 0;
     this_win->wi_data->img.rotate_degree = 0;	
 	this_win->refresh_win(this_win->wi_handle);
-
 	send_message(this_win->wi_handle, WM_REDRAW);
-
 	return NULL;
 }
 
@@ -665,7 +671,7 @@ void *event_loop(void *result)
 
 				update_struct_window(selected_window);
 
-				if(selected_window->wi_data->thumbnail_master != TRUE){
+				if(selected_window->wi_data->thumbnail_master != TRUE ){
 					selected_window->refresh_win(selected_window->wi_handle);
 				}
 
@@ -673,6 +679,7 @@ void *event_loop(void *result)
 					TRACE(("st_Control_Bar_PXY_Update(%d) / st_Reload_Control_Bar(%d)\n", selected_window->wi_handle, selected_window->wi_handle))
 					st_Control_Bar_PXY_Update(selected_window->wi_control_bar, &selected_window->work_area);
 					st_Reload_Control_Bar(selected_window, selected_window->wi_control_bar);
+					send_message(selected_window->wi_handle, WM_REDRAW);
 				}
 				if(selected_window->wi_data->thumbnail_master == TRUE){
 					if(selected_window->wi_thumb->thumbs_cols != selected_window->wi_thumb->thumb_w_Item / selected_window->work_area.g_w){
@@ -794,7 +801,7 @@ void *event_loop(void *result)
 						if(selected_window->wi_control_bar != NULL && !selected_window->wi_control_bar->force_unhide){
 							selected_window->wi_control_bar->control_bar_h = selected_window->wi_control_bar->control_bar_h > 0 ? 0 : CONTROLBAR_H;
 							st_Control_Bar_PXY_Update(selected_window->wi_control_bar, &selected_window->work_area);
-							wipe_pxy_area(selected_window->work_pxy);
+							// wipe_pxy_area(selected_window->work_pxy);
 							win_refresh_from_buffer(selected_window);
 						}
 						break;

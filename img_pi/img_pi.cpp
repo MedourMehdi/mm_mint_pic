@@ -11,6 +11,7 @@ void _st_Read_Degas(int16_t this_win_handle, boolean file_process);
 void st_Init_Degas(struct_window *this_win){
     this_win->wi_data->image_media = TRUE;
     this_win->wi_data->window_size_limited = TRUE;
+    this_win->wi_data->remap_displayed_mfdb = TRUE;
 	this_win->refresh_win = st_Win_Print_Degas;
     // this_win->wi_progress_bar = global_progress_bar;
     if(!st_Set_Renderer(this_win)){
@@ -114,6 +115,7 @@ void _st_Read_Degas(int16_t this_win_handle, boolean file_process){
 
         this_win->wi_data->img.scaled_pourcentage = 0;
         this_win->wi_data->img.rotate_degree = 0;
+        this_win->wi_data->resized = FALSE;
         this_win->wi_data->img.original_width = width;
         this_win->wi_data->img.original_height = height;
         this_win->total_length_w = this_win->wi_original_mfdb.fd_w;

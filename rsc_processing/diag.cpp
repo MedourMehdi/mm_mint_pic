@@ -731,7 +731,8 @@ void st_Form_Events_Change_Resolution(int16_t this_win_handle) {
         this_win_master->wi_data->img.export_height = atoi(tree[DiagResize_FTEXTNewH].ob_spec.tedinfo->te_ptext);
         this_win_master->wi_data->fx_requested = TRUE;
         this_win_master->wi_data->resized = TRUE;
-        send_message(this_win_master->wi_handle, WM_SIZED);
+		this_win_master->refresh_win(this_win_master->wi_handle);
+		send_message(this_win_master->wi_handle, WM_REDRAW);
         break;
     default:
         break;
