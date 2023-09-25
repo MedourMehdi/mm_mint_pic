@@ -238,7 +238,9 @@ void st_Reload_Control_Bar(struct_window *this_win, struct_st_control_bar* contr
 			} else {
 				st_Control_Bar_Refresh_MFDB(control_bar, this_win->wi_to_display_mfdb, this_win->current_pos_x, this_win->current_pos_y, this_win->work_area.g_w, this_win->work_area.g_h);
 			}
-			st_Control_Bar_Buffer_to_Screen(control_bar, &control_bar->rect_control_bar);
+			if(msg_buffer[0] != WM_VSLID && msg_buffer[0] != WM_HSLID){
+				st_Control_Bar_Buffer_to_Screen(control_bar, &control_bar->rect_control_bar);
+			}
 		}
 	}
 }
@@ -273,13 +275,6 @@ void* st_Img_ZoomOut(void* p_param){
 	this_win->wi_data->img.scaled_height = (this_win->wi_data->img.original_height * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
 
 	send_message(this_win->wi_handle, WM_SIZED);
-	return NULL;
-}
-
-void* st_Restart(void* p_param){
-	form_alert(1, "[1][System is going to restart][Okay]");
-	st_Supexec((int32_t(*)())reset);
-
 	return NULL;
 }
 
@@ -669,6 +664,10 @@ void *event_loop(void *result)
 				wind_set(msg_buffer[3],WF_CURRXYWH, window_area_buffer[0], window_area_buffer[1], window_area_buffer[2], window_area_buffer[3]);
 
 				update_struct_window(selected_window);
+
+				if(selected_window->wi_data->thumbnail_master != TRUE){
+					selected_window->refresh_win(selected_window->wi_handle);
+				}
 
 				if(selected_window->wi_control_bar != NULL){
 					TRACE(("st_Control_Bar_PXY_Update(%d) / st_Reload_Control_Bar(%d)\n", selected_window->wi_handle, selected_window->wi_handle))
