@@ -16,6 +16,10 @@
 #define  div_1000_fast(x) ((x >> 10) + (x >> 15) - (x >> 17) + (x >> 21) + (x >> 24) + (x >> 26) - (x >> 29));
 #endif
 
+#ifndef MFDB_STRIDE
+#define MFDB_STRIDE(w) (((w) + 15) & -16)
+#endif
+
 uint8_t		zview_Saturation(uint8_t * rgb);
 uint16_t	zview_Remap_Color (int32_t value, SRGB *screen_colortab);
 uint32_t	zview_Color_Lookup ( uint32_t rgb, SRGB *screen_colortab, int16_t *trans);
@@ -153,7 +157,7 @@ static inline uint8_t zview_Dither_True ( uint8_t * rgb, int16_t * err, int8_t *
 }
 
 void zview_Dither_RGB_to_8bits(uint8_t* src_ptr, uint8_t* dst_ptr, int16_t width, int16_t height){
-    uint32_t totalPixels = mul_3_fast(width * height);
+    uint32_t totalPixels = mul_3_fast(MFDB_STRIDE(width) * height);
 	int16_t err[3] = { 0, 0, 0 };
 	int8_t *dth = (int8_t*)Mxalloc(totalPixels, 3);
 	if(dth == NULL){

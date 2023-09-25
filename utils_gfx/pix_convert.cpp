@@ -493,17 +493,16 @@ MFDB* st_MFDB32_To_MFDBGRAY(MFDB* MFDB32){
 
 MFDB* st_MFDB32_To_MFDB8bpp(MFDB* MFDB32){
 
-    
-
     int16_t bpp = screen_workstation_bits_per_pixel;
-    bool force_planar_mode = false;
     bool use_zview_dithering = false;
+    bool force_planar_mode = false;
     bool use_rgb2lab = false;
     bool disable_classic_dithering = false;
 
     if(edDi_present && screen_workstation_bits_per_pixel < 16){
         use_zview_dithering = true;
     }
+
     if(MFDB32->fd_r2){
         bpp = MFDB32->fd_r2;
         use_rgb2lab = true;
@@ -515,14 +514,15 @@ MFDB* st_MFDB32_To_MFDB8bpp(MFDB* MFDB32){
         disable_classic_dithering = true;
         MFDB32->fd_r3 = 0;
     }
-    int16_t max_colors = (1 << bpp);
+    int16_t max_colors = (1 << bpp);    
+
     st_Progress_Bar_Add_Step(global_progress_bar);
     st_Progress_Bar_Init(global_progress_bar, (int8_t*)"ARGB to 256 colors");
     st_Progress_Bar_Signal(global_progress_bar, 10, (int8_t*)"Init");
 
     if(!zview_Color_Init && use_zview_dithering){
         st_Progress_Bar_Signal(global_progress_bar, 20, (int8_t*)"Palette prefetching");
-        zview_Set_Max_Color(1 << screen_workstation_bits_per_pixel);
+        zview_Set_Max_Color(max_colors);
         zview_VDI_SavePalette_sRGB(vdi_palette);
         zview_Build_Cube216(pix_palette);
         zview_Color_Init = true;
@@ -675,7 +675,7 @@ MFDB* st_MFDB32_To_MFDB4bpp(MFDB* MFDB32){
 
     if(!zview_Color_Init && use_zview_dithering){
         st_Progress_Bar_Signal(global_progress_bar, 20, (int8_t*)"Palette vectors building");
-        zview_Set_Max_Color(1 << bpp);
+        zview_Set_Max_Color(max_colors);
         zview_VDI_SavePalette_sRGB(vdi_palette);
         zview_Build_Cube216(pix_palette);
         zview_Color_Init = true;

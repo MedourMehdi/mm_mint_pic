@@ -45,7 +45,9 @@ typedef int boolean;
 
 #define DO_WE_USE_FILE TRUE
 
+#ifndef MFDB_STRIDE
 #define MFDB_STRIDE(w) (((w) + 15) & -16)
+#endif
 
 #define div_255_fast(x) (((x) + (((x) + 257) >> 8)) >> 8)
 
