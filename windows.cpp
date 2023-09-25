@@ -460,6 +460,8 @@ void buffer_to_screen(int16_t my_win_handle, GRECT *raster_dest){
 	this_win = detect_window(my_win_handle);
 	update_struct_window(this_win);
 
+	bool wipe = false;
+
 	int16_t clip = 0;
 	int16_t xy[8], xy_clip[4];
 	int16_t w, h, x, y;
@@ -505,6 +507,7 @@ void buffer_to_screen(int16_t my_win_handle, GRECT *raster_dest){
 
 	if(this_win->wi_data->image_media == TRUE){
 		if(this_win->work_area.g_w > this_win->total_length_w){
+			wipe = TRUE;
 			xy[0] = 0;
 			xy[2] = this_win->total_length_w - 1; 
 			if(this_win->wi_data->thumbnail_master == FALSE){
@@ -516,6 +519,7 @@ void buffer_to_screen(int16_t my_win_handle, GRECT *raster_dest){
 			xy[6] = xy[4] + this_win->total_length_w - 1;
 		}
 		if(this_win->work_area.g_h > this_win->total_length_h){
+			wipe = TRUE;
 			xy[1] = 0;
 			xy[3] = this_win->total_length_h - 1;
 			if(this_win->wi_data->thumbnail_master == FALSE){
@@ -525,6 +529,11 @@ void buffer_to_screen(int16_t my_win_handle, GRECT *raster_dest){
 			}
 			xy[7] = xy[5] + this_win->total_length_h - 1;
 		} 
+	}
+
+	if(wipe){
+	    vr_recfl(st_vdi_handle,this_win->work_pxy);	
+    	vsf_interior(st_vdi_handle,0);
 	}
 
 	vro_cpyfm(st_vdi_handle, S_ONLY, xy, this_win->wi_to_display_mfdb, &screen_mfdb);
@@ -637,10 +646,6 @@ void st_Init_Default_Win(struct_window *this_win){
 
 void st_Start_Window_Process(struct_window *this_win){
 	st_Set_Mouse( FALSE );
-	if(this_win != NULL){
-	    vr_recfl(st_vdi_handle,this_win->work_pxy);	
-	}
-    vsf_interior(st_vdi_handle,0);
     graf_mouse(BUSY_BEE,0L);
     st_Set_Mouse( TRUE );
 }
