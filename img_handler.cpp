@@ -22,12 +22,8 @@ boolean st_Img32b_To_Window(struct_window *this_win){
         if(this_win->wi_data->autoscale == TRUE){
             st_Rescale_ARGB(this_win->wi_to_work_in_mfdb, &this_win->wi_rendered_mfdb, this_win->work_area.g_w, this_win->work_area.g_h);
             this_win->wi_to_display_mfdb = &this_win->wi_rendered_mfdb;
-            this_win->total_length_w = this_win->wi_rendered_mfdb.fd_w ;
-            this_win->total_length_h = this_win->wi_rendered_mfdb.fd_h ;
         } else {
             this_win->wi_to_display_mfdb = this_win->wi_to_work_in_mfdb;
-            this_win->total_length_w = this_win->wi_to_work_in_mfdb->fd_w;
-            this_win->total_length_h = this_win->wi_to_work_in_mfdb->fd_h;
         }
         break;
     default:
@@ -46,8 +42,6 @@ boolean st_Img32b_To_Window(struct_window *this_win){
             }                        
             st_Rescale_ARGB(this_win->wi_to_work_in_mfdb, &this_win->wi_rendered_mfdb, this_win->work_area.g_w, this_win->work_area.g_h);
             this_win->wi_rendered_bitdepth_mfdb = this_win->render_win(&this_win->wi_rendered_mfdb);
-            this_win->total_length_w = this_win->wi_rendered_bitdepth_mfdb->fd_w ;
-            this_win->total_length_h = this_win->wi_rendered_bitdepth_mfdb->fd_h ;
             this_win->wi_to_display_mfdb = this_win->wi_rendered_bitdepth_mfdb;
         } else {
             if(this_win->wi_data->wi_buffer_modified == FALSE){
@@ -57,12 +51,13 @@ boolean st_Img32b_To_Window(struct_window *this_win){
                 this_win->wi_original_bitdepth_mfdb = this_win->render_win(this_win->wi_to_work_in_mfdb);
                 this_win->wi_data->wi_buffer_modified = TRUE;
             }
-            this_win->wi_to_display_mfdb = this_win->wi_original_bitdepth_mfdb;
-            this_win->total_length_w = this_win->wi_original_bitdepth_mfdb->fd_w ;
-            this_win->total_length_h = this_win->wi_original_bitdepth_mfdb->fd_h ;                        
+            this_win->wi_to_display_mfdb = this_win->wi_original_bitdepth_mfdb;                       
         }
         break;
     }
+
+    this_win->total_length_w = this_win->wi_to_display_mfdb->fd_w;
+    this_win->total_length_h = this_win->wi_to_display_mfdb->fd_h;
 
     if(!this_win->wi_data->autoscale){st_Limit_Work_Area(this_win);}
 

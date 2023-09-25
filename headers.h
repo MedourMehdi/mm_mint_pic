@@ -111,7 +111,7 @@ extern bool emutos_rom;
 #define FORM_QUESTION   2
 #define FORM_STOP       3
 
-// #define DEBUG   1
+#define DEBUG   1
 
 #ifdef DEBUG
 #define TRACE(x) do { if (DEBUG) dbg_printf x; } while (0);

@@ -268,9 +268,6 @@ void* st_Img_ZoomOut(void* p_param){
 	struct_window*	this_win = (struct_window*)p_param;
 	this_win->wi_data->autoscale = FALSE;
 	this_win->wi_data->fx_requested = TRUE;
-	if(this_win->wi_data->img.rotate_degree !=0){
-		this_win->wi_data->fx_requested = TRUE;
-	}
 	this_win->wi_data->img.scaled_pourcentage = this_win->wi_data->img.scaled_pourcentage > -90 ? this_win->wi_data->img.scaled_pourcentage - 10 : -90;
 	this_win->wi_data->img.scaled_width = (this_win->wi_data->img.original_width * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
 	this_win->wi_data->img.scaled_height = (this_win->wi_data->img.original_height * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
@@ -332,11 +329,12 @@ void* st_Img_Export(void* p_param){
 		int16_t this_win_form_handle = new_win_form_rsc(rsc_file_to_load, window_form_title , rsc_object_index);
 		if(this_win_form_handle == NIL){
 			form_alert(1, "[1][Error opening this form|Please get the source code and debug it!][Okay]");
-		}
-		else{
+		} else {
 			struct_window* this_win_form = detect_window(this_win_form_handle);
+
 			this_win_form->wi_data->rsc.win_master_handle = this_win_master->wi_handle;
 			this_win_master->wi_form = &this_win_form->wi_data->rsc;
+
 			this_win_form->wi_data->rsc.process_function = &process_diag_export;
 		}
 	} else { 
@@ -359,8 +357,7 @@ void* st_Img_Open(void* param){
 void* st_Img_Reload(void* param){
 	struct_window *this_win = (struct_window*)param;
 
-	this_win->wi_data->needs_refresh = TRUE;
-	this_win->wi_to_work_in_mfdb = &this_win->wi_original_mfdb;
+	this_win->wi_data->stop_original_data_load = FALSE;
 	this_win->wi_data->fx_on = FALSE;
     this_win->wi_data->img.scaled_pourcentage = 0;
     this_win->wi_data->img.rotate_degree = 0;	
@@ -584,6 +581,7 @@ void *event_loop(void *result)
 		);
 	if( events & MU_MESAG )
 	{
+		TRACE(("msg_buffer[0] = %d\n", msg_buffer[0]))
 		switch (msg_buffer[0])
 		{
 		case 0x4711:
@@ -669,19 +667,17 @@ void *event_loop(void *result)
 				}
 				wind_calc(WC_BORDER,selected_window->wi_style, window_area_buffer[0], window_area_buffer[1], window_area_buffer[2], window_area_buffer[3],&window_area_buffer[0],&window_area_buffer[1],&window_area_buffer[2],&window_area_buffer[3]);
 				wind_set(msg_buffer[3],WF_CURRXYWH, window_area_buffer[0], window_area_buffer[1], window_area_buffer[2], window_area_buffer[3]);
+
 				update_struct_window(selected_window);
 
-				
-				if(selected_window->wi_data->thumbnail_master != TRUE){
-					selected_window->refresh_win(selected_window->wi_handle);
-				}
-
 				if(selected_window->wi_control_bar != NULL){
+					TRACE(("st_Control_Bar_PXY_Update(%d) / st_Reload_Control_Bar(%d)\n", selected_window->wi_handle, selected_window->wi_handle))
 					st_Control_Bar_PXY_Update(selected_window->wi_control_bar, &selected_window->work_area);
 					st_Reload_Control_Bar(selected_window, selected_window->wi_control_bar);
 				}
 				if(selected_window->wi_data->thumbnail_master == TRUE){
 					if(selected_window->wi_thumb->thumbs_cols != selected_window->wi_thumb->thumb_w_Item / selected_window->work_area.g_w){
+						TRACE(("Re compute thumbs_cols : thumbnail_master %d -> refresh_win(%d)", selected_window->wi_data->thumbnail_master, selected_window->wi_handle))
 						selected_window->refresh_win(selected_window->wi_handle);
 					}
 				}
@@ -1019,20 +1015,29 @@ int16_t new_win_form_rsc(const char *new_file, const char* win_title, int16_t ob
 		if(win_struct_array[i].wi_handle == 0){
 			win_struct_array[i].wi_style = WIN_STYLE_FORM;
 			if(win_struct_array[i].wi_data == NULL){
+
 				win_struct_array[i].wi_data = (struct_metadata *)mem_alloc(sizeof(struct_metadata));
+
 				st_Init_Default_Win(&win_struct_array[i]);
+
 				win_struct_array[i].wi_data->rsc.rsc_file = new_file;
-				if(rsc_already_loaded(new_file) == false){
-					if(!rsrc_load(win_struct_array[i].wi_data->rsc.rsc_file)){
+
+				if( !rsc_already_loaded(new_file) ){
+					if( !rsrc_load(win_struct_array[i].wi_data->rsc.rsc_file) ){
 						form_alert(1, "[1][new_win_form_rsc -> RSC Error][Okay]");
 						return NIL;
 					}
 				}
+
 				rsrc_gaddr(R_TREE, object_index, &win_struct_array[i].wi_data->rsc.tree);
+
 				win_struct_array[i].wi_name = (char *)mem_alloc(WINDOW_TITLE_MAXLEN);
 				strcpy(win_struct_array[i].wi_name, win_title);
+
 				st_Init_Form((void*)&win_struct_array[i]);
+
                 open_window(&win_struct_array[i]);
+
 				win_struct_array[i].refresh_win(win_struct_array[i].wi_handle);
 			}
 			return win_struct_array[i].wi_handle;
@@ -1135,7 +1140,7 @@ int16_t new_win_crop(struct_crop* this_crop, const char* win_title){
 
 				win_struct_array[i].refresh_win(win_struct_array[i].wi_handle);
 
-				win_struct_array[i].wi_data->wi_original_modified = TRUE;
+				win_struct_array[i].wi_data->stop_original_data_load = TRUE;
 			}
 			return win_struct_array[i].wi_handle;
 		}

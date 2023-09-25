@@ -10,7 +10,6 @@ void st_Init_BMP(struct_window *this_win){
     this_win->wi_data->image_media = TRUE;
     this_win->wi_data->window_size_limited = TRUE;
 	this_win->refresh_win = st_Win_Print_BMP;
-    this_win->wi_to_work_in_mfdb = &this_win->wi_original_mfdb;
     /* Progress Bar Stuff */
     this_win->wi_progress_bar = global_progress_bar;
     this_win->prefers_file_instead_mem = FALSE; /* If FALSE the original file will be copied to memory and available in this_win->wi_data->original_buffer */
@@ -25,11 +24,9 @@ void st_Win_Print_BMP(int16_t this_win_handle){
     struct_window *this_win;
     this_win = detect_window(this_win_handle);
 
-    if(this_win->wi_data->needs_refresh == TRUE){
-        this_win->wi_data->wi_original_modified = FALSE;
-        this_win->wi_data->needs_refresh = FALSE;
+    if(this_win->wi_data->stop_original_data_load == FALSE){
         this_win->wi_to_work_in_mfdb = &this_win->wi_original_mfdb;
-    } 
+    }
 
     _st_Read_BMP(this_win_handle, this_win->prefers_file_instead_mem);
 
@@ -45,7 +42,7 @@ void _st_Read_BMP(int16_t this_win_handle, boolean file_process)
     if(this_win == NULL){
         return;
     }
-    if(this_win->wi_data->wi_original_modified == FALSE){
+    if(this_win->wi_data->stop_original_data_load == FALSE){
         st_Progress_Bar_Add_Step(this_win->wi_progress_bar);
         st_Progress_Bar_Init(this_win->wi_progress_bar, (int8_t*)"BMP READING");
         st_Progress_Bar_Signal(this_win->wi_progress_bar, 15, (int8_t*)"Init");
@@ -112,7 +109,7 @@ void _st_Read_BMP(int16_t this_win_handle, boolean file_process)
                 mem_free(this_win->wi_data->original_buffer);
             }
             BMP_Free( img );
-            this_win->wi_data->wi_original_modified = TRUE;
+            this_win->wi_data->stop_original_data_load = TRUE;
         }
 
         st_Progress_Bar_Signal(this_win->wi_progress_bar, 100, (int8_t*)"Finished");

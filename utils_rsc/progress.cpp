@@ -15,7 +15,7 @@ void set_prog(int16_t value, int16_t MAXc);
 void set_text(int16_t obj, int8_t *str);
 void disp_obj(OBJECT *tree, int16_t obj);
 
-char rsc_file_name[] = "\\rsc\\progress.rsc";
+char rsc_progress_file_name[] = "\\rsc\\progress.rsc";
 char rsc_path[256] = {'\0'};
 
 #ifndef _OBJC_XYWH_
@@ -71,7 +71,7 @@ void st_Progress_Bar_Init(struct_progress_bar* progress_bar, int8_t *title){
                 rsc_path[0] = current_drive + 65;
                 rsc_path[1] = ':';
                 strcat(rsc_path,current_path);
-                strcat(rsc_path,rsc_file_name);
+                strcat(rsc_path,rsc_progress_file_name);
             }
             if(!rsrc_load((const char*)&rsc_path)){
                 form_alert(1, "[1][st_Progress_Bar_Init -> RSC Error][Okay]");

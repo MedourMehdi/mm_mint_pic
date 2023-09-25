@@ -16,26 +16,10 @@ void _st_Read_TIFF(int16_t this_win_handle, boolean file_process, int16_t img_id
 u_int16_t _st_Count_TIFF_Directories(TIFF *tiff_handler);
 void _st_Handle_Thumbs_TIFF(int16_t this_win_handle, boolean file_process);
 
-void st_Win_Print_TIFF(int16_t this_win_handle){
-    struct_window *this_win;
-    this_win = detect_window(this_win_handle);
-
-    if(this_win->wi_data->needs_refresh == TRUE){
-        this_win->wi_data->wi_original_modified = FALSE;
-        this_win->wi_data->needs_refresh = FALSE;
-        this_win->wi_to_work_in_mfdb = &this_win->wi_original_mfdb;
-    } 
-    _st_Read_TIFF(this_win_handle, this_win->prefers_file_instead_mem, this_win->wi_data->img.img_id);
-    if( st_Img32b_To_Window(this_win) == false ){
-        st_form_alert(FORM_STOP, alert_message);
-    }
-}
-
 void st_Init_TIFF(struct_window *this_win){
     this_win->wi_data->image_media = TRUE;
     this_win->wi_data->window_size_limited = TRUE;
 	this_win->refresh_win = st_Win_Print_TIFF;
-    this_win->wi_to_work_in_mfdb = &this_win->wi_original_mfdb;
     /* Progress Bar Stuff */
     this_win->wi_progress_bar = global_progress_bar;
     this_win->prefers_file_instead_mem = TRUE; /* If FALSE the original file will be copied to memory and available in this_win->wi_data->original_buffer */
@@ -48,6 +32,20 @@ void st_Init_TIFF(struct_window *this_win){
     if(this_win->wi_thumb == NULL){
         _st_Handle_Thumbs_TIFF(this_win->wi_handle, this_win->prefers_file_instead_mem);
     }    
+}
+
+void st_Win_Print_TIFF(int16_t this_win_handle){
+    struct_window *this_win;
+    this_win = detect_window(this_win_handle);
+
+    if(this_win->wi_data->stop_original_data_load == FALSE){
+        this_win->wi_to_work_in_mfdb = &this_win->wi_original_mfdb;
+    }
+
+    _st_Read_TIFF(this_win_handle, this_win->prefers_file_instead_mem, this_win->wi_data->img.img_id);
+    if( st_Img32b_To_Window(this_win) == false ){
+        st_form_alert(FORM_STOP, alert_message);
+    }
 }
 
 void st_Write_TIFF(u_int8_t* src_buffer, int width, int height, const char* filename){
@@ -99,7 +97,7 @@ void st_Write_TIFF(u_int8_t* src_buffer, int width, int height, const char* file
 void _st_Read_TIFF(int16_t this_win_handle,  boolean file_process, int16_t img_id){
     struct_window *this_win;
     this_win = detect_window(this_win_handle);
-    if(this_win->wi_data->wi_original_modified == FALSE){
+    if(this_win->wi_data->stop_original_data_load == FALSE){
 
         st_Progress_Bar_Add_Step(this_win->wi_progress_bar);
         st_Progress_Bar_Init(this_win->wi_progress_bar, (int8_t*)"TIFF READING");
@@ -169,7 +167,7 @@ void _st_Read_TIFF(int16_t this_win_handle,  boolean file_process, int16_t img_i
 
         this_win->total_length_w = this_win->wi_original_mfdb.fd_w;
         this_win->total_length_h = this_win->wi_original_mfdb.fd_h;
-        this_win->wi_data->wi_original_modified = TRUE;
+        this_win->wi_data->stop_original_data_load = TRUE;
         this_win->wi_data->wi_buffer_modified = FALSE;
 
         mem_free(raster);

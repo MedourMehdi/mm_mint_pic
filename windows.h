@@ -135,8 +135,8 @@ typedef struct {
 	boolean autoscale;
 	boolean window_size_limited;
 	boolean wi_buffer_modified;
-	boolean wi_original_modified;
-	boolean needs_refresh;
+	boolean stop_original_data_load;
+	boolean remap_displayed_mfdb;
 	FILE *file_lock;
 	struct_image_metadata img;
 	struct_rsc_metadata rsc;

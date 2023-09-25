@@ -145,7 +145,7 @@ void st_Init_Crop(struct_window *this_win){
     this_win->wi_data->img.scaled_pourcentage = 0;
     this_win->wi_data->img.rotate_degree = 0;
     this_win->wi_data->wi_buffer_modified = FALSE;
-    this_win->wi_data->wi_original_modified = FALSE;
+    this_win->wi_data->stop_original_data_load = FALSE;
 }
 
 void st_Crop_Start(int16_t this_win_handle){

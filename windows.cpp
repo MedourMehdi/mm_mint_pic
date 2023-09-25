@@ -28,6 +28,7 @@ void st_Set_Mouse(boolean status){
 }
 
 void send_message(int16_t my_win_handle, int16_t my_message){
+	TRACE(("Sending msg %d\n", my_message))
 	int16_t my_win_message[8];
 	struct_window *this_win;
 	this_win = detect_window(my_win_handle);
@@ -74,6 +75,7 @@ boolean rsc_already_loaded(const char* rsc_file_name){
 }
 
 void update_struct_window(struct_window *this_win){
+	TRACE(("update_struct_window(%d)\n", this_win->wi_handle))
 	/* working (window internal) area */
 	wind_get( this_win->wi_handle, WF_WORKXYWH, 
 		&this_win->work_area.g_x, &this_win->work_area.g_y, &this_win->work_area.g_w, &this_win->work_area.g_h );
@@ -301,7 +303,8 @@ int16_t close_window( int16_t this_win_handle ){
 void win_refresh_from_buffer(struct_window *this_win){
 
 	if(this_win->wi_to_display_mfdb->fd_addr != NULL){
-		if(msg_buffer[0] != 25 && msg_buffer[0] != 26){
+		TRACE(("win_refresh_from_buffer(%d)\n", this_win->wi_handle))
+		if(msg_buffer[0] != WM_HSLID && msg_buffer[0] != WM_VSLID){
 			win_slider_size(this_win->wi_handle, MIN(this_win->work_area.g_w, this_win->total_length_w), HORIZONTAL_MOVE);
 			if(this_win->total_length_w != this_win->work_area.g_w){
 				do_hslide(this_win->wi_handle, 1000L * this_win->current_pos_x / (this_win->total_length_w - this_win->work_area.g_w));
@@ -315,7 +318,8 @@ void win_refresh_from_buffer(struct_window *this_win){
 				do_vslide(this_win->wi_handle, 1000L * this_win->current_pos_y);	
 			}
 		}
-		buffer_to_screen(this_win->wi_handle, &this_win->work_area);
+		// buffer_to_screen(this_win->wi_handle, &this_win->work_area);
+		send_message(this_win->wi_handle, WM_REDRAW);
 	}
 
 }
@@ -532,9 +536,12 @@ void buffer_to_screen(int16_t my_win_handle, GRECT *raster_dest){
 	}
 
 	if(wipe){
+		TRACE(("wipe(%d)\n", this_win->wi_handle))
 	    vr_recfl(st_vdi_handle,this_win->work_pxy);	
     	vsf_interior(st_vdi_handle,0);
 	}
+
+	TRACE(("buffer_to_screen(%d)\n", this_win->wi_handle))
 
 	vro_cpyfm(st_vdi_handle, S_ONLY, xy, this_win->wi_to_display_mfdb, &screen_mfdb);
 
@@ -549,9 +556,10 @@ void redraw_window(int16_t my_win_handle){
 	this_win = detect_window(my_win_handle);
 
 	if(this_win != NULL){
+		TRACE(("redraw_window(%d)\n", my_win_handle))
 		st_Set_Mouse(FALSE);
 		wind_update(BEG_UPDATE);
-		update_struct_window(this_win);
+		// update_struct_window(this_win);
 		wind_get(my_win_handle, WF_FIRSTXYWH, &rect.g_x, &rect.g_y, &rect.g_w, &rect.g_h);
 		while(rect.g_h  != 0 && rect.g_w != 0){
 			if ( rc_intersect((GRECT *)&msg_buffer[4], &rect) ){
@@ -620,7 +628,7 @@ void st_Init_Default_Win(struct_window *this_win){
 	this_win->wi_data->autoscale = FALSE;
 	this_win->wi_data->window_size_limited = FALSE;
 	this_win->wi_data->wi_buffer_modified = FALSE;
-	this_win->wi_data->wi_original_modified = FALSE;
+	this_win->wi_data->stop_original_data_load = FALSE;
 	this_win->rendering_time = FALSE;
 	this_win->refresh_win = NULL;
     this_win->prefers_file_instead_mem = DO_WE_USE_FILE;
@@ -668,6 +676,7 @@ void st_Limit_Work_Area(struct_window *this_win){
 	{
 		this_win->work_area.g_h = MIN(this_win->total_length_h, this_win->work_area.g_h);
 		this_win->work_area.g_w = MIN(this_win->total_length_w, this_win->work_area.g_w);	
+		TRACE(("st_Limit_Work_Area(%d)\n", this_win->wi_handle))
 		send_message(this_win->wi_handle, WM_SIZED);
 	}
 }
