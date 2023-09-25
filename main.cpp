@@ -685,6 +685,7 @@ void *event_loop(void *result)
 					if(selected_window->wi_thumb->thumbs_cols != selected_window->wi_thumb->thumb_w_Item / selected_window->work_area.g_w){
 						TRACE(("Re compute thumbs_cols : thumbnail_master %d -> refresh_win(%d)", selected_window->wi_data->thumbnail_master, selected_window->wi_handle))
 						selected_window->refresh_win(selected_window->wi_handle);
+						send_message(selected_window->wi_handle, WM_REDRAW);
 					}
 				}
 			}
