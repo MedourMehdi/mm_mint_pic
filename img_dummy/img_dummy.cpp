@@ -10,7 +10,6 @@ void _st_Read_Dummy(int16_t this_win_handle, boolean file_process);
 void st_Init_Dummy(struct_window *this_win){
     this_win->wi_data->image_media = TRUE;
     this_win->wi_data->window_size_limited = TRUE;
-    this_win->wi_data->needs_refresh = TRUE;
 	this_win->refresh_win = st_Win_Print_Dummy;
     this_win->wi_to_work_in_mfdb = &this_win->wi_original_mfdb;
     /* Progress Bar Stuff */
@@ -26,9 +25,11 @@ void st_Win_Print_Dummy(int16_t this_win_handle){
     struct_window *this_win;
     this_win = detect_window(this_win_handle);
 
-    if(this_win->wi_data->wi_original_modified == FALSE){
+    if(this_win->wi_data->needs_refresh == TRUE){
+        this_win->wi_data->wi_original_modified = FALSE;
+        this_win->wi_data->needs_refresh = FALSE;
         this_win->wi_to_work_in_mfdb = &this_win->wi_original_mfdb;
-    }
+    } 
 
     _st_Read_Dummy(this_win_handle, this_win->prefers_file_instead_mem);
 

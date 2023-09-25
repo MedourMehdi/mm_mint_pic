@@ -526,7 +526,7 @@ void buffer_to_screen(int16_t my_win_handle, GRECT *raster_dest){
 			xy[7] = xy[5] + this_win->total_length_h - 1;
 		} 
 	}
-	TRACE(("Buffer2Screen\n"));
+
 	vro_cpyfm(st_vdi_handle, S_ONLY, xy, this_win->wi_to_display_mfdb, &screen_mfdb);
 
 	st_Set_Clipping(0,xy_clip);
@@ -656,7 +656,6 @@ void st_End_Window_Process(struct_window *this_win){
 
 void st_Limit_Work_Area(struct_window *this_win){
 	/* If image size is originaly smaller than the window size then we lock the resizing */
-
 	if( 
 		( this_win->work_area.g_h > MAX(this_win->total_length_h, MIN_WINDOWS_HSIZE)  
 		|| this_win->work_area.g_w > MAX(this_win->total_length_w, MIN_WINDOWS_WSIZE) )

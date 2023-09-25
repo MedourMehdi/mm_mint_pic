@@ -732,7 +732,6 @@ void st_Form_Events_Change_Resolution(int16_t this_win_handle) {
 
         st_Rescale_ARGB(&this_win_master->wi_original_mfdb, &this_win_master->wi_buffer_mfdb, this_win_master->wi_data->img.export_width, this_win_master->wi_data->img.export_height);
         /* We must signal refresh function that a new mfdb is available */
-        this_win_master->wi_data->needs_refresh = TRUE;
         this_win_master->wi_data->wi_buffer_modified = FALSE;
         this_win_master->wi_to_work_in_mfdb = &this_win_master->wi_buffer_mfdb;
         send_message(this_win_master->wi_handle, WM_SIZED);
@@ -765,11 +764,8 @@ void st_Form_Init_Change_Resolution(int16_t this_win_form_handle){
     // int16_t window_height = this_win_master->total_length_h;
     int16_t window_width = wdesk;
     int16_t window_height = hdesk;    
-    // int16_t original_width = this_win_master->wi_data->img.original_width;
-    // int16_t original_height = this_win_master->wi_data->img.original_height;
-    int16_t original_width = this_win_master->wi_original_mfdb.fd_w;
-    int16_t original_height = this_win_master->wi_original_mfdb.fd_h;
-
+    int16_t original_width = this_win_master->wi_data->img.original_width;
+    int16_t original_height = this_win_master->wi_data->img.original_height;
 
 	sprintf(&obj_gui_ftext_curr_width[ strlen(obj_gui_ftext_curr_width) - (original_width < 1000 ? 3 : 4) ],"%d", original_width);
 	replace_char(obj_gui_ftext_curr_width, str1[3], str1[4]);
