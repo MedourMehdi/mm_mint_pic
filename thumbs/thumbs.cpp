@@ -248,7 +248,10 @@ void* st_Thumb_MFDB_Update(void *p_param){
                 this_win_thumb->wi_original_thumbs_mfdb = mfdb_alloc_bpp((int8_t*)destination_buffer, w_nItems, h_nItems, screen_workstation_bits_per_pixel);
                 if(screen_workstation_bits_per_pixel > 16){
                     st_MFDB_Fill(this_win_thumb->wi_original_thumbs_mfdb, 0xCCCCCCCC);
-                }
+                } 
+                if(screen_workstation_bits_per_pixel == 16){
+                    st_MFDB_Fill_bpp(this_win_thumb->wi_original_thumbs_mfdb, 0xB575B575, 32);
+                } 
             }
 
             int16_t xy[8];

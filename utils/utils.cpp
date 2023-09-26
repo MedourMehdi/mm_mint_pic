@@ -308,8 +308,24 @@ void mfdb_duplicate(MFDB *src_mfdb, MFDB *dst_mfdb){
 }
 
 void st_MFDB_Fill(MFDB* this_mfdb, u_int32_t background_color){
-    u_int32_t numPixels = MFDB_STRIDE(this_mfdb->fd_w)* this_mfdb->fd_h;
+    u_int32_t numPixels = MFDB_STRIDE(this_mfdb->fd_w) * this_mfdb->fd_h;
     int16_t nb_components = this_mfdb->fd_nplanes >> 3;
+    for (u_int32_t i = 0; i < numPixels; ++i){
+        memcpy((u_int32_t*)this_mfdb->fd_addr + i, &background_color, nb_components);
+    }
+    return;
+}
+
+void st_MFDB_Fill_bpp(MFDB* this_mfdb, u_int32_t background_color, int16_t bpp){
+    u_int32_t numPixels = MFDB_STRIDE(this_mfdb->fd_w) * this_mfdb->fd_h;
+    int16_t nb_components;
+    if(bpp < 8){
+        nb_components = 1;
+        numPixels = (MFDB_STRIDE(this_mfdb->fd_w) * this_mfdb->fd_h) / (8 / bpp);
+    }else{
+        nb_components = bpp >> 3;
+    }
+
     for (u_int32_t i = 0; i < numPixels; ++i){
         memcpy((u_int32_t*)this_mfdb->fd_addr + i, &background_color, nb_components);
     }
