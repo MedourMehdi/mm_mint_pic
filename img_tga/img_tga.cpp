@@ -67,6 +67,7 @@ void _st_Read_TGA(int16_t this_win_handle, boolean file_process)
         int16_t width = tga_get_image_width(info);
         int16_t height = tga_get_image_height(info);
         int16_t depth = tga_get_bytes_per_pixel(info) << 3;
+        int16_t pix_format = tga_get_pixel_format(info);
 
         u_int8_t   a, r, g, b;
         u_int32_t  i, j;
@@ -108,16 +109,32 @@ void _st_Read_TGA(int16_t this_win_handle, boolean file_process)
                     break;
                 case 16:
                     *pix16 = (pixel[1] << 8) | pixel[0];
-                    destination_buffer[i++] = 0xFF;
-                    destination_buffer[i++] = (u_int8_t)((pix16[0] & 0x7C00) >> 10) << 3;
-                    destination_buffer[i++] = (u_int8_t)((pix16[0] & 0x03E0) >>  5) << 3;
-                    destination_buffer[i++] = (u_int8_t)(pix16[0] & 0x001F) << 3;
+                    if(pix_format == 0){
+                        /*to do verify : need targa 16bit gray*/
+                        destination_buffer[i++] = 0xFF;
+                        destination_buffer[i++] = pixel[1];
+                        destination_buffer[i++] = pixel[1];
+                        destination_buffer[i++] = pixel[1];                        
+                    }
+                    else{
+                        destination_buffer[i++] = 0xFF;
+                        destination_buffer[i++] = (u_int8_t)((pix16[0] & 0x7C00) >> 10) << 3;
+                        destination_buffer[i++] = (u_int8_t)((pix16[0] & 0x03E0) >>  5) << 3;
+                        destination_buffer[i++] = (u_int8_t)(pix16[0] & 0x001F) << 3;
+                    }
                     break;
                 case 8:
-                    destination_buffer[i++] = 0xFF;
-                    destination_buffer[i++] =  (pixel[0] >> 5) * 255 / 7;
-                    destination_buffer[i++] = ((pixel[0] >> 2) & 0x07) * 255 / 7;
-                    destination_buffer[i++] = (pixel[0] & 0x03) * 255 / 3    ;                      
+                    if(pix_format == 0){
+                        destination_buffer[i++] = 0xFF;
+                        destination_buffer[i++] = pixel[0];
+                        destination_buffer[i++] = pixel[0];
+                        destination_buffer[i++] = pixel[0];  
+                    }else{
+                        destination_buffer[i++] = 0xFF;
+                        destination_buffer[i++] =  (pixel[0] >> 5) * 255 / 7;
+                        destination_buffer[i++] = ((pixel[0] >> 2) & 0x07) * 255 / 7;
+                        destination_buffer[i++] = (pixel[0] & 0x03) * 255 / 3    ;  
+                    }
                     break;
                 default:
                     break;

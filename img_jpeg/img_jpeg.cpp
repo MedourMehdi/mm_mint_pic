@@ -199,14 +199,23 @@ void _st_Read_JPEG (int16_t this_win_handle,  boolean file_process){
             mem_free(this_win->wi_original_mfdb.fd_addr);
         }        
         mfdb_update_bpp(&this_win->wi_original_mfdb, (int8_t*)ARGB_Buffer, width, height, nb_components_32bits << 3);
-
+// printf("Colorspace %d", cinfo.out_color_space);
         u_int32_t index = 0, j = 0, x, y;
-
-        for(y = 0; y < height; y++){
-            for(x = 0; x < width; x++){
-                i = (x + y * MFDB_STRIDE(width));               
-                dst_ptr[i++] = 0XFF << 24 | ( src_ptr[j++] & 0xFF ) << 16| ( src_ptr[j++] & 0xFF ) << 8 | ( src_ptr[j++] & 0xFF );
-            }
+        if(nb_components_original == 1 && JCS_GRAYSCALE){
+                for(y = 0; y < height; y++){
+                    for(x = 0; x < width; x++){
+                        i = (x + y * MFDB_STRIDE(width));
+                        dst_ptr[i++] = 0XFF << 24 | ( src_ptr[j] & 0xFF ) << 16| ( src_ptr[j] & 0xFF ) << 8 | ( src_ptr[j] & 0xFF );
+                        j++;
+                    }
+                }
+        }else{
+                for(y = 0; y < height; y++){
+                    for(x = 0; x < width; x++){
+                        i = (x + y * MFDB_STRIDE(width));            
+                        dst_ptr[i++] = 0XFF << 24 | ( src_ptr[j++] & 0xFF ) << 16| ( src_ptr[j++] & 0xFF ) << 8 | ( src_ptr[j++] & 0xFF );
+                    }
+                }
         }
 
         mem_free(RGB_Buffer);
