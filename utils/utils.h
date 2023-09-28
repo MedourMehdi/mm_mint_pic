@@ -46,4 +46,6 @@ void remove_quotes(char* s1, char* s2);
 unsigned char reverse(unsigned char b);
 
 void dbg_printf(const char *fmt, ...);
+
+char* GetNextVaStartFileName(char* start_pos, char* filename);
 #endif

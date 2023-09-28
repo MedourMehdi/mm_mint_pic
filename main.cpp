@@ -81,6 +81,8 @@ int16_t vdi_palette[256][3]; /* Set as external in header.h */
 int16_t pix_palette[256];
 int16_t palette_ori[256] = {0};
 
+char *pfile, *va_file;
+
 int16_t	clock_unit = 5;
 u_int32_t time_start;
 u_int32_t time_end;
@@ -306,15 +308,13 @@ void* st_Img_Resize(void* p_param){
 		int16_t this_win_form_handle = new_win_form_rsc(rsc_file_to_load, window_form_title , rsc_object_index);
 		if(this_win_form_handle == NIL){
 			form_alert(1, "[1][Error opening this form|Please get the source code and debug it!][Okay]");
-		}
-		else{
+		} else {
 		struct_window* this_win_form = detect_window(this_win_form_handle);
 		this_win_form->wi_data->rsc.win_master_handle = this_win_master->wi_handle;
 		this_win_master->wi_form = &this_win_form->wi_data->rsc;
 		this_win_form->wi_data->rsc.process_function = &st_Form_Events_Change_Resolution;
 
 		st_Form_Init_Change_Resolution(this_win_form_handle);
-
 		}
 	} else { 
 		form_alert(1, "[1][There is already a form opened for this window.|Please close it before process an other task][Okay]");
@@ -402,15 +402,22 @@ int main(int argc, char *argv[]){
 
 	if (argc > 1){
 		for(int16_t i = 1; i < argc; i++) {
-				strcat(this_file, argv[i]);
-				if(i < (argc - 1)){strcat(this_file, " ");}
+			strcat(this_file, argv[i]);
+			if(i < (argc - 1)){strcat(this_file, " ");}
 		}
-		remove_quotes(this_file, this_file);
+		pfile = this_file;
 		TRACE(("File %s\n", this_file))
-		if(!new_win_img(this_file)){
-			TRACE(("Failed new_win_img()\n"))
-			goto close_ico_png;
-		}
+		do {
+			va_file = (char*)mem_alloc(128);
+			memset(va_file, 0, 128);
+			pfile = GetNextVaStartFileName( pfile, va_file ) ;
+			remove_quotes(va_file, va_file);
+			if(!new_win_img(va_file)){
+				TRACE(("Failed new_win_img()\n"))
+				goto close_ico_png;
+			}				
+			mem_free(va_file);
+		} while ( pfile ) ;
 	} else {
 		if(!st_Ico_PNG_Init(control_bar_winstart_list)){
 			TRACE(("Failed st_Ico_PNG_Init()\n"))
@@ -585,8 +592,15 @@ void *event_loop(void *result)
 		TRACE(("msg_buffer[0] = %d\n", msg_buffer[0]))
 		switch (msg_buffer[0])
 		{
-		case 0x4711:
-			new_win_img(*((char **)&msg_buffer[3]));
+		case 0x4711: /*VA_START*/
+			pfile = *(char **)&msg_buffer[3];
+			do {
+				va_file = (char*)mem_alloc(128);
+				memset(va_file, 0, 128);
+				pfile = GetNextVaStartFileName( pfile, va_file ) ;
+				new_win_img(va_file);
+				mem_free(va_file);
+			} while ( pfile ) ;
 			break;
 		case AP_TERM:	
 			break;
