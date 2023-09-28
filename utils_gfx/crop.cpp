@@ -81,7 +81,7 @@ bool st_Crop_To_MFDB(struct_crop* this_crop){
             MFDB32 = st_MFDB8bpp_to_MFDB32(tmp_mfdb);
 
             mfdb_update_bpp(this_crop->wi_crop_original, (int8_t*)MFDB32->fd_addr, MFDB32->fd_w, MFDB32->fd_h, 32);
-
+            this_crop->wi_crop_original->fd_r3 = 1;
             mem_free(MFDB32); /* This free MFDB structure and keep fd_addr buffer */
             mfdb_free(tmp_mfdb);
             return true;
@@ -164,7 +164,10 @@ bool st_Crop_Finish(int16_t this_win_handle, int16_t mouse_x, int16_t mouse_y){
     int16_t rubber_h = 0;
 				
     graf_rubberbox( mouse_x, mouse_y, 64, 64, &rubber_w, &rubber_h );
-				
+
+    rubber_w = MAX(rubber_w, 64);
+    rubber_h = MAX(rubber_h, 64);
+
     wind_update(END_MCTRL);
 	
     graf_mouse(ARROW,0L);
