@@ -54,11 +54,10 @@ void _st_Read_TGA(int16_t this_win_handle, boolean file_process)
         uint8_t *data;
         tga_info *info;
         enum tga_error error_code;
-
         if(file_process == TRUE){
             error_code = tga_load(&data, &info, image_name);
             if(error_code != TGA_NO_ERROR){
-            sprintf(alert_message, "%s\ncan't be opened\n", image_name);
+            sprintf(alert_message, "%s\nTGA_NO_ERROR %d\n", image_name, TGA_NO_ERROR);
             st_form_alert(FORM_EXCLAM, alert_message); 
             }
         }
@@ -85,7 +84,7 @@ void _st_Read_TGA(int16_t this_win_handle, boolean file_process)
             st_form_alert(FORM_EXCLAM, alert_message);
         }
         uint8_t* pixel;
-        uint16_t* pix16;
+        uint16_t pix16;
 
         for (y = 0; y < height; y++)
         {
@@ -108,7 +107,7 @@ void _st_Read_TGA(int16_t this_win_handle, boolean file_process)
                     destination_buffer[i++] = pixel[0];
                     break;
                 case 16:
-                    *pix16 = (pixel[1] << 8) | pixel[0];
+                    pix16 = ((pixel[1] << 8) | pixel[0]);
                     if(pix_format == 0){
                         /*to do verify : need targa 16bit gray*/
                         destination_buffer[i++] = 0xFF;
@@ -118,9 +117,9 @@ void _st_Read_TGA(int16_t this_win_handle, boolean file_process)
                     }
                     else{
                         destination_buffer[i++] = 0xFF;
-                        destination_buffer[i++] = (u_int8_t)((pix16[0] & 0x7C00) >> 10) << 3;
-                        destination_buffer[i++] = (u_int8_t)((pix16[0] & 0x03E0) >>  5) << 3;
-                        destination_buffer[i++] = (u_int8_t)(pix16[0] & 0x001F) << 3;
+                        destination_buffer[i++] = (u_int8_t)((pix16 & 0x7C00) >> 10) << 3;
+                        destination_buffer[i++] = (u_int8_t)((pix16 & 0x03E0) >>  5) << 3;
+                        destination_buffer[i++] = (u_int8_t)(pix16 & 0x001F) << 3;
                     }
                     break;
                 case 8:
@@ -137,6 +136,7 @@ void _st_Read_TGA(int16_t this_win_handle, boolean file_process)
                     }
                     break;
                 default:
+                printf("Debug XXX\n");
                     break;
                 }
             }
