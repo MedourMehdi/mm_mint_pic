@@ -3,6 +3,9 @@
 
 #include "../utils/utils.h"
 
+#define MIN_CROPW 64
+#define MIN_CROPH 64
+
 void st_Crop_Refresh_Img32b(int16_t this_win_handle);
 
 bool st_Crop_To_MFDB(struct_crop* this_crop){
@@ -22,10 +25,11 @@ bool st_Crop_To_MFDB(struct_crop* this_crop){
 	if(this_crop->wi_crop_original != NULL){
 		mfdb_free(this_crop->wi_crop_original);
 	}
-
+    
+    TRACE(("this_crop->rect_crop_array.g_w %d, this_crop->rect_crop_array.g_h %d\n", this_crop->rect_crop_array.g_w, this_crop->rect_crop_array.g_h))
 	u_int8_t* crop_buffer = st_ScreenBuffer_Alloc_bpp(this_crop->rect_crop_array.g_w, this_crop->rect_crop_array.g_h, nb_components_32bits << 3);
 	this_crop->wi_crop_original = mfdb_alloc_bpp((int8_t*)crop_buffer, this_crop->rect_crop_array.g_w, this_crop->rect_crop_array.g_h, nb_components_32bits << 3);
-
+ 
 	u_int8_t* tmp_buffer;
     MFDB* tmp_mfdb;
 
@@ -36,8 +40,8 @@ bool st_Crop_To_MFDB(struct_crop* this_crop){
 
 	xy[0] = this_crop->rect_crop_array.g_x ;
 	xy[1] = this_crop->rect_crop_array.g_y ;
-	xy[2] = xy[0] + this_crop->wi_crop_original->fd_w ;
-	xy[3] = xy[1] + this_crop->wi_crop_original->fd_h ;
+	xy[2] = xy[0] + this_crop->wi_crop_original->fd_w - 1 ;
+	xy[3] = xy[1] + this_crop->wi_crop_original->fd_h - 1;
 
 	xy[4] = 0; xy[5] = 0;
 	xy[6] = this_crop->wi_crop_original->fd_w; xy[7] = this_crop->wi_crop_original->fd_h;
@@ -61,10 +65,13 @@ bool st_Crop_To_MFDB(struct_crop* this_crop){
         case 4:
             tmp_buffer = st_ScreenBuffer_Alloc_bpp(this_crop->rect_crop_array.g_w, this_crop->rect_crop_array.g_h, screen_workstation_bits_per_pixel);
             tmp_mfdb = mfdb_alloc_bpp((int8_t*)tmp_buffer, this_crop->rect_crop_array.g_w, this_crop->rect_crop_array.g_h, screen_workstation_bits_per_pixel);
+
             vro_cpyfm(st_vdi_handle, S_ONLY, xy, &screen_mfdb, tmp_mfdb);
 
-            MFDB32 = st_MFDB4bpp_to_MFDB32(tmp_mfdb, palette_ori);
+            tmp_mfdb->fd_w = MAX(tmp_mfdb->fd_w, MIN_CROPW);
+            tmp_mfdb->fd_h = MAX(tmp_mfdb->fd_h, MIN_CROPH);
 
+            MFDB32 = st_MFDB4bpp_to_MFDB32(tmp_mfdb, palette_ori);
             mfdb_update_bpp(this_crop->wi_crop_original, (int8_t*)MFDB32->fd_addr, MFDB32->fd_w, MFDB32->fd_h, 32);
             /* Trix to signal "no dithering" to st_MFDB4bpp_to_MFDB32 function */
             this_crop->wi_crop_original->fd_r3 = 1;
@@ -74,12 +81,14 @@ bool st_Crop_To_MFDB(struct_crop* this_crop){
             
             break;                 
         case 8:
+            printf("debug 0\n");
             tmp_buffer = st_ScreenBuffer_Alloc_bpp(this_crop->rect_crop_array.g_w, this_crop->rect_crop_array.g_h, screen_workstation_bits_per_pixel);
+            printf("debug 1\n");
             tmp_mfdb = mfdb_alloc_bpp((int8_t*)tmp_buffer, this_crop->rect_crop_array.g_w, this_crop->rect_crop_array.g_h, screen_workstation_bits_per_pixel);
             vro_cpyfm(st_vdi_handle, S_ONLY, xy, &screen_mfdb, tmp_mfdb);
-
+            printf("debug 2\n");
             MFDB32 = st_MFDB8bpp_to_MFDB32(tmp_mfdb);
-
+            printf("debug 3\n");
             mfdb_update_bpp(this_crop->wi_crop_original, (int8_t*)MFDB32->fd_addr, MFDB32->fd_w, MFDB32->fd_h, 32);
             this_crop->wi_crop_original->fd_r3 = 1;
             mem_free(MFDB32); /* This free MFDB structure and keep fd_addr buffer */
@@ -160,13 +169,10 @@ void st_Crop_Start(int16_t this_win_handle){
 bool st_Crop_Finish(int16_t this_win_handle, int16_t mouse_x, int16_t mouse_y){
 	struct_window*	this_win = detect_window(this_win_handle);
 
-    int16_t rubber_w = 0;
-    int16_t rubber_h = 0;
+    int16_t rubber_w = MIN_CROPW;
+    int16_t rubber_h = MIN_CROPH;
 				
     graf_rubberbox( mouse_x, mouse_y, 64, 64, &rubber_w, &rubber_h );
-
-    rubber_w = MAX(rubber_w, 64);
-    rubber_h = MAX(rubber_h, 64);
 
     wind_update(END_MCTRL);
 	
