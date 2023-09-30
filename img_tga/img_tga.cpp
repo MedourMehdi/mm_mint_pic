@@ -136,7 +136,6 @@ void _st_Read_TGA(int16_t this_win_handle, boolean file_process)
                     }
                     break;
                 default:
-                printf("Debug XXX\n");
                     break;
                 }
             }

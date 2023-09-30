@@ -81,14 +81,14 @@ bool st_Crop_To_MFDB(struct_crop* this_crop){
             
             break;                 
         case 8:
-            printf("debug 0\n");
+
             tmp_buffer = st_ScreenBuffer_Alloc_bpp(this_crop->rect_crop_array.g_w, this_crop->rect_crop_array.g_h, screen_workstation_bits_per_pixel);
-            printf("debug 1\n");
+
             tmp_mfdb = mfdb_alloc_bpp((int8_t*)tmp_buffer, this_crop->rect_crop_array.g_w, this_crop->rect_crop_array.g_h, screen_workstation_bits_per_pixel);
             vro_cpyfm(st_vdi_handle, S_ONLY, xy, &screen_mfdb, tmp_mfdb);
-            printf("debug 2\n");
+
             MFDB32 = st_MFDB8bpp_to_MFDB32(tmp_mfdb);
-            printf("debug 3\n");
+
             mfdb_update_bpp(this_crop->wi_crop_original, (int8_t*)MFDB32->fd_addr, MFDB32->fd_w, MFDB32->fd_h, 32);
             this_crop->wi_crop_original->fd_r3 = 1;
             mem_free(MFDB32); /* This free MFDB structure and keep fd_addr buffer */
@@ -169,10 +169,10 @@ void st_Crop_Start(int16_t this_win_handle){
 bool st_Crop_Finish(int16_t this_win_handle, int16_t mouse_x, int16_t mouse_y){
 	struct_window*	this_win = detect_window(this_win_handle);
 
-    int16_t rubber_w = MIN_CROPW;
-    int16_t rubber_h = MIN_CROPH;
+    int16_t rubber_w = 0;
+    int16_t rubber_h = 0;
 				
-    graf_rubberbox( mouse_x, mouse_y, 64, 64, &rubber_w, &rubber_h );
+    graf_rubberbox( mouse_x, mouse_y, MIN_CROPW, MIN_CROPH, &rubber_w, &rubber_h );
 
     wind_update(END_MCTRL);
 	
@@ -182,6 +182,9 @@ bool st_Crop_Finish(int16_t this_win_handle, int16_t mouse_x, int16_t mouse_y){
     if(this_win->wi_crop != NULL){
         mem_free(this_win->wi_crop);
     }
+
+    rubber_w = MAX(rubber_w, MIN_CROPW);
+    rubber_h = MAX(rubber_h, MIN_CROPH);
 
     this_win->wi_crop = (struct_crop*)mem_alloc(sizeof(struct_crop));
     this_win->wi_crop->master_win_handle = this_win_handle;

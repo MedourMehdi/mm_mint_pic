@@ -387,7 +387,7 @@ BMP* BMP_ReadFile( const char* filename )
 
 
 	/* Allocate and read palette */
-	printf("bmp->Header.BitsPerPixel %d\n", bmp->Header.BitsPerPixel);
+	// printf("bmp->Header.BitsPerPixel %d\n", bmp->Header.BitsPerPixel);
 	if ( bmp->Header.BitsPerPixel == 8 || bmp->Header.BitsPerPixel == 4 )
 	{
 		bmp->Palette = (_UINT8*) malloc( palette_size * sizeof( _UINT8 ) );
