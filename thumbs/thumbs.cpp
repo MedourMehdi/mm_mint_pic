@@ -240,12 +240,12 @@ void* st_Thumb_MFDB_Update(void *p_param){
             int16_t h_nItems = ( this_win_thumb->thumb_h_Item * (this_win_thumb->thumbs_nb) ) + this_win_thumb->pady << 1;
 
             if(this_win_thumb->thumbs_selected_nb < 0){
-                u_int8_t* destination_buffer = st_ScreenBuffer_Alloc_bpp(w_nItems, h_nItems, screen_workstation_bits_per_pixel);
+                u_int8_t* destination_buffer = st_ScreenBuffer_Alloc_bpp((nb_total_cols * this_win_thumb->thumb_w_Item) + (this_win_thumb->padx << 1), (nb_total_rows * this_win_thumb->thumb_h_Item) + (this_win_thumb->pady << 1), screen_workstation_bits_per_pixel);
 
                 if(this_win_thumb->wi_original_thumbs_mfdb != NULL){
                     mfdb_free(this_win_thumb->wi_original_thumbs_mfdb);
                 }
-                this_win_thumb->wi_original_thumbs_mfdb = mfdb_alloc_bpp((int8_t*)destination_buffer, w_nItems, h_nItems, screen_workstation_bits_per_pixel);
+                this_win_thumb->wi_original_thumbs_mfdb = mfdb_alloc_bpp((int8_t*)destination_buffer, (nb_total_cols * this_win_thumb->thumb_w_Item) + (this_win_thumb->padx << 1), (nb_total_rows * this_win_thumb->thumb_h_Item) + (this_win_thumb->pady << 1), screen_workstation_bits_per_pixel);
                 if(screen_workstation_bits_per_pixel > 16){
                     st_MFDB_Fill(this_win_thumb->wi_original_thumbs_mfdb, 0xCCCCCCCC);
                 } 
@@ -319,7 +319,7 @@ void st_Thumb_Refresh(int16_t win_thumb_handle){
         this_win->wi_thumb->thumbs_area_w = this_win->work_area.g_w;
         this_win->wi_thumb->thumbs_area_h = this_win->work_area.g_h;
         this_win->wi_to_display_mfdb = (MFDB*)st_Thumb_MFDB_Update((void*)this_win->wi_thumb);
-        this_win->total_length_w = (this_win->wi_thumb->thumb_w_Item * this_win->wi_thumb->thumbs_cols ) + this_win->wi_thumb->padx;
+        this_win->total_length_w = (this_win->wi_thumb->thumb_w_Item * this_win->wi_thumb->thumbs_cols ) + (this_win->wi_thumb->padx << 1);
         this_win->total_length_h = (this_win->wi_thumb->thumb_h_Item * this_win->wi_thumb->thumbs_rows ) + this_win->wi_thumb->pady;
         st_Thumb_Desk_PXY_Update(this_win->wi_thumb, this_win->work_pxy);
     st_End_Window_Process(this_win);
