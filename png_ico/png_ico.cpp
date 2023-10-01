@@ -344,12 +344,12 @@ void st_Control_Bar_Buffer_to_Screen(struct_st_control_bar* control_bar, GRECT* 
 	cliph = raster_dest->g_h - 1;
 
 	if((clipw != 0) && ( cliph != 0)) {
-		xy_clip[0] = clipx; xy_clip[1] = clipy; xy_clip[2] = clipx + clipw ; xy_clip[3] = clipy + cliph;
+		xy_clip[0] = clipx; xy_clip[1] = clipy; xy_clip[2] = clipx + clipw; xy_clip[3] = clipy + cliph;
 		vs_clip( *my_vdi_handle, TRUE, xy_clip );
 	}
 
 	/* Source buffer */
-	xy[0] = x; xy[1] = y; xy[2] = w; xy[3] = h;
+	xy[0] = x; xy[1] = y; xy[2] = w - 1; xy[3] = h - 1;
 	/* Destination Buffer */
 	xy[4] = xy_clip[0]; xy[5] = xy_clip[1]; xy[6] = xy_clip[2]; xy[7] = xy_clip[3];
 
@@ -388,10 +388,10 @@ void st_Control_Bar_Refresh_MFDB(struct_st_control_bar *control_bar,  MFDB *back
 	int16_t xy[8];
 	/* Source MFDB */
 	xy[0] = elevator_posx; xy[1] = elevator_posy + win_work_area_height - control_bar_height;
-	xy[2] = xy[0] + win_work_area_width - 1; xy[3] = xy[1] + control_bar_height - 1;
+	xy[2] = xy[0] + win_work_area_width; xy[3] = xy[1] + control_bar_height;
 	/* Destination MFDB */
 	xy[4] = 0; xy[5] = 0; 
-	xy[6] = control_bar->st_control_bar_mfdb.fd_w - 1; xy[7] = control_bar_height - 1;
+	xy[6] = control_bar->st_control_bar_mfdb.fd_w; xy[7] = control_bar_height;
 	
 	graf_mouse(M_OFF,0L);
 	vro_cpyfm(st_vdi_handle, S_ONLY, xy, control_bar->background_mfdb, &control_bar->st_control_bar_mfdb);	
@@ -438,7 +438,7 @@ void st_Control_Bar_Redraw(struct_st_control_bar* control_bar, int16_t my_win_ha
 
 void st_Control_Bar_Refresh_Classic(struct_st_control_bar *control_bar, int16_t control_bar_requested_width, int16_t bpp){
 
-	if(control_bar->need_to_reload_control_mfdb == TRUE){
+	if(control_bar->need_to_reload_control_mfdb){
 		u_int32_t fill_color = 0xFFB7ADAD;
 		if(bpp < 8){
 			fill_color = 0xFFFFFFFF;
