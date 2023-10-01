@@ -48,4 +48,6 @@ unsigned char reverse(unsigned char b);
 void dbg_printf(const char *fmt, ...);
 
 char* GetNextVaStartFileName(char* start_pos, char* filename);
+
+void st_Get_Current_Dir(char* dst_char);
 #endif
