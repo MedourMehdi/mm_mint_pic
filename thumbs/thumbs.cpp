@@ -77,6 +77,8 @@ struct_thumbs* st_Thumb_Alloc(int16_t thumbs_nb, int16_t slave_win_handle, int16
     this_win_thumb->thumb_background_mfdb = st_Init_Outline_MFDB(this_win_thumb, this_win_thumb->thumb_background_color);
     this_win_thumb->thumb_selected_mfdb = st_Init_Outline_MFDB(this_win_thumb, this_win_thumb->thumb_selected_color);
 
+    this_win_thumb->thumbs_open_new_win = TRUE; /* If set to TRUE then each images in thumbs win will open a new window */
+
     this_win_thumb->thumbs_selected_nb = NIL;
 
     return this_win_thumb;
@@ -201,8 +203,34 @@ void st_Handle_Click_Thumbnail(struct_window *this_win, int16_t mouse_x, int16_t
             this_win->wi_data->img.img_id = this_thumb_struct->thumbs_list_array[i].thumb_id;
             this_win->wi_data->img.img_index = this_thumb_struct->thumbs_list_array[i].thumb_index;
             this_thumb_struct->thumbs_selected_nb = this_thumb_struct->thumbs_list_array[i].thumb_index;
-            this_win->wi_thumb->open_win_func(this_win->wi_data->path);
-            
+
+            if(this_thumb_struct->thumbs_open_new_win){
+                this_win->wi_thumb->open_win_func(this_win->wi_data->path);
+            } else {
+                dest_win = detect_window(this_win->wi_thumb->slave_win_handle);
+                if(dest_win == NULL){
+                    form_alert(1, "[1][ERROR WHILE OPENING IMAGE][Okay]");
+                    return;
+                }
+
+                /* Disable old selected thumbs */
+                dest_win->wi_data->img.img_id = NIL;
+                this_win->wi_thumb->thumbs_selected_nb = dest_win->wi_data->img.img_index;
+                this_win->wi_thumb->thumbs_area_refresh = TRUE;
+                st_Start_Window_Process(this_win);
+                this_win->refresh_win(this_win->wi_handle);
+                st_End_Window_Process(this_win);
+                /* Enable new selected thumbs */
+                dest_win->wi_data->img.img_id = this_thumb_struct->thumbs_list_array[i].thumb_id;
+                dest_win->wi_data->stop_original_data_load = FALSE;
+                dest_win->wi_data->fx_on = FALSE;
+                dest_win->wi_data->remap_displayed_mfdb = TRUE;
+                dest_win->wi_data->img.scaled_pourcentage = 0;
+                dest_win->wi_data->img.rotate_degree = 0;	
+                dest_win->refresh_win(dest_win->wi_handle);
+                send_message(dest_win->wi_handle, WM_REDRAW);
+            }
+
             st_Start_Window_Process(this_win);
             this_win->wi_thumb->thumbs_area_refresh = TRUE;
             st_Thumb_Refresh(this_win->wi_handle);
@@ -319,8 +347,10 @@ void st_Thumb_Refresh(int16_t win_thumb_handle){
         this_win->wi_thumb->thumbs_area_w = this_win->work_area.g_w;
         this_win->wi_thumb->thumbs_area_h = this_win->work_area.g_h;
         this_win->wi_to_display_mfdb = (MFDB*)st_Thumb_MFDB_Update((void*)this_win->wi_thumb);
-        this_win->total_length_w = (this_win->wi_thumb->thumb_w_Item * this_win->wi_thumb->thumbs_cols ) + (this_win->wi_thumb->padx << 1);
-        this_win->total_length_h = (this_win->wi_thumb->thumb_h_Item * this_win->wi_thumb->thumbs_rows ) + this_win->wi_thumb->pady;
+        // this_win->total_length_w = (this_win->wi_thumb->thumb_w_Item * this_win->wi_thumb->thumbs_cols ) + this_win->wi_thumb->padx;
+        // this_win->total_length_h = (this_win->wi_thumb->thumb_h_Item * this_win->wi_thumb->thumbs_rows ) + this_win->wi_thumb->pady;
+        this_win->total_length_w = this_win->wi_to_display_mfdb->fd_w;
+        this_win->total_length_h = this_win->wi_to_display_mfdb->fd_h;        
         st_Thumb_Desk_PXY_Update(this_win->wi_thumb, this_win->work_pxy);
     st_End_Window_Process(this_win);
     

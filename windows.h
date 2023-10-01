@@ -76,6 +76,7 @@ typedef struct {
     int16_t		thumbs_max_area_h;
 	int16_t		thumbs_selected_nb;
     boolean		thumbs_area_refresh;
+	boolean		thumbs_open_new_win;
 	MFDB*		thumb_selected_mfdb;
     u_int32_t   thumb_selected_color;
 	MFDB*		thumb_background_mfdb;
