@@ -9,7 +9,9 @@ boolean st_Img32b_To_Window(struct_window *this_win){
 
     boolean ret = true;
     st_Start_Window_Process(this_win);
-        if(this_win->wi_data->remap_displayed_mfdb == TRUE || this_win->wi_data->autoscale == TRUE || this_win->wi_data->fx_requested == TRUE){
+        if( this_win->wi_data->remap_displayed_mfdb == TRUE  || this_win->wi_data->fx_requested == TRUE ){
+        u_int16_t work_area_w = this_win->work_area.g_w;
+        u_int16_t work_area_h = this_win->work_area.g_h;
         switch (screen_workstation_bits_per_pixel) {
         case 32:
             if(this_win->wi_data->fx_requested == TRUE){
@@ -21,7 +23,7 @@ boolean st_Img32b_To_Window(struct_window *this_win){
                 }
             }
             if(this_win->wi_data->autoscale == TRUE){
-                st_Rescale_ARGB(this_win->wi_to_work_in_mfdb, &this_win->wi_rendered_mfdb, this_win->work_area.g_w, this_win->work_area.g_h);
+                st_Rescale_ARGB(this_win->wi_to_work_in_mfdb, &this_win->wi_rendered_mfdb, work_area_w, work_area_h);
                 this_win->wi_to_display_mfdb = &this_win->wi_rendered_mfdb;
             } else {
                 this_win->wi_to_display_mfdb = this_win->wi_to_work_in_mfdb;
@@ -41,7 +43,7 @@ boolean st_Img32b_To_Window(struct_window *this_win){
                 if(this_win->wi_rendered_bitdepth_mfdb != NULL){
                     mfdb_free(this_win->wi_rendered_bitdepth_mfdb);
                 }                        
-                st_Rescale_ARGB(this_win->wi_to_work_in_mfdb, &this_win->wi_rendered_mfdb, this_win->work_area.g_w, this_win->work_area.g_h);
+                st_Rescale_ARGB(this_win->wi_to_work_in_mfdb, &this_win->wi_rendered_mfdb, work_area_w, work_area_h);
                 this_win->wi_rendered_bitdepth_mfdb = this_win->render_win(&this_win->wi_rendered_mfdb);
                 this_win->wi_to_display_mfdb = this_win->wi_rendered_bitdepth_mfdb;
             } else {
@@ -61,6 +63,7 @@ boolean st_Img32b_To_Window(struct_window *this_win){
         this_win->total_length_h = this_win->wi_to_display_mfdb->fd_h;
 
         if(!this_win->wi_data->autoscale){st_Limit_Work_Area(this_win);}
+        this_win->wi_data->remap_displayed_mfdb = FALSE;
     }
     st_End_Window_Process(this_win);
     return ret;

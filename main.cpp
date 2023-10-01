@@ -115,7 +115,7 @@ u_int32_t grey_color = 0x7AC0C0C0;
 void* st_Img_Open(void*);
 void* st_Img_Windowed(void*);
 void* st_Img_Reload(void* p_param);
-void* st_Restart(void* p_param);
+
 void* st_Img_Resize(void* p_param);
 void* st_Img_Export(void* p_param);
 void* st_Img_Crop(void* p_param);
@@ -231,7 +231,7 @@ void st_Reload_Control_Bar(struct_window *this_win, struct_st_control_bar* contr
 	if( this_win->wi_to_display_mfdb->fd_addr != NULL && this_win->wi_control_bar != NULL ){
 		if(this_win->wi_control_bar->control_bar_h > 0){
 			if( this_win->wi_data->control_bar_media || screen_workstation_bits_per_pixel <= 8 || this_win->work_area.g_w > this_win->total_length_w || this_win->work_area.g_h > this_win->total_length_h || cpu_type < 30){
-				control_bar->need_to_reload_control_mfdb = control_bar->st_control_bar_mfdb.fd_w == wrez ? false : true;
+				control_bar->need_to_reload_control_mfdb = control_bar->st_control_bar_mfdb.fd_w == wrez ? control_bar->need_to_reload_control_mfdb : true;
 				st_Control_Bar_Refresh_Classic(control_bar, wrez, screen_workstation_bits_per_pixel);
 			} else {
 				st_Control_Bar_Refresh_MFDB(control_bar, this_win->wi_to_display_mfdb, this_win->current_pos_x, this_win->current_pos_y, this_win->work_area.g_w, this_win->work_area.g_h);
@@ -275,16 +275,19 @@ void* st_Img_ZoomOut(void* p_param){
 	struct_window*	this_win = (struct_window*)p_param;
 	this_win->wi_data->autoscale = FALSE;
 	this_win->wi_data->fx_requested = TRUE;
+	/* Blocked to a resonable resolution */
+	if((this_win->wi_data->img.scaled_width > MIN_WINDOWS_WSIZE && this_win->wi_data->img.scaled_height > MIN_WINDOWS_HSIZE) || this_win->wi_data->img.scaled_pourcentage > 0){
 	this_win->wi_data->img.scaled_pourcentage = this_win->wi_data->img.scaled_pourcentage > -90 ? this_win->wi_data->img.scaled_pourcentage - 10 : -90;
-	if(this_win->wi_data->resized){
-		this_win->wi_data->img.scaled_width = (this_win->wi_data->img.export_width * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
-		this_win->wi_data->img.scaled_height = (this_win->wi_data->img.export_height * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
-	}else{
-		this_win->wi_data->img.scaled_width = (this_win->wi_data->img.original_width * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
-		this_win->wi_data->img.scaled_height = (this_win->wi_data->img.original_height * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
+		if(this_win->wi_data->resized){
+			this_win->wi_data->img.scaled_width = (this_win->wi_data->img.export_width * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
+			this_win->wi_data->img.scaled_height = (this_win->wi_data->img.export_height * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
+		}else{
+			this_win->wi_data->img.scaled_width = (this_win->wi_data->img.original_width * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
+			this_win->wi_data->img.scaled_height = (this_win->wi_data->img.original_height * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
+		}
+		this_win->refresh_win(this_win->wi_handle);
+		send_message(this_win->wi_handle, WM_REDRAW);
 	}
-	this_win->refresh_win(this_win->wi_handle);
-	send_message(this_win->wi_handle, WM_REDRAW);
 	return NULL;
 }
 
@@ -362,6 +365,7 @@ void* st_Img_Reload(void* param){
 	struct_window *this_win = (struct_window*)param;
 	this_win->wi_data->stop_original_data_load = FALSE;
 	this_win->wi_data->fx_on = FALSE;
+	this_win->wi_data->remap_displayed_mfdb = TRUE;
     this_win->wi_data->img.scaled_pourcentage = 0;
     this_win->wi_data->img.rotate_degree = 0;	
 	this_win->refresh_win(this_win->wi_handle);
@@ -372,6 +376,7 @@ void* st_Img_Reload(void* param){
 void* st_Img_Windowed(void* param){
 	struct_window *this_win = (struct_window*)param;
 	this_win->wi_data->autoscale = this_win->wi_data->autoscale == TRUE ? FALSE : TRUE;
+	this_win->wi_data->remap_displayed_mfdb = TRUE;
 	this_win->wi_data->img.scaled_pourcentage = 0;
 	this_win->refresh_win(this_win->wi_handle);
 	send_message(this_win->wi_handle, WM_REDRAW);
@@ -407,15 +412,15 @@ int main(int argc, char *argv[]){
 		}
 		pfile = this_file;
 		TRACE(("File %s\n", this_file))
+		va_file = (char*)mem_alloc(128);
 		do {
-			va_file = (char*)mem_alloc(128);
 			memset(va_file, 0, 128);
 			pfile = GetNextVaStartFileName( pfile, va_file ) ;
-			remove_quotes(va_file, va_file);
+			// remove_quotes(va_file, va_file);
 			if(!new_win_img(va_file)){
 				TRACE(("Failed new_win_img()\n"))
 				goto close_ico_png;
-			}				
+			}
 			mem_free(va_file);
 		} while ( pfile ) ;
 	} else {
@@ -652,6 +657,9 @@ void *event_loop(void *result)
 		case WM_FULLED:
 			selected_window = detect_window(msg_buffer[3]);
 			if(selected_window != NULL){
+				if( selected_window->wi_data->autoscale ){
+					selected_window->wi_data->remap_displayed_mfdb = TRUE;
+				}
 				full_size_window(selected_window->wi_handle);
 				selected_window->refresh_win(selected_window->wi_handle);
 				if(selected_window->wi_control_bar != NULL){
@@ -665,8 +673,8 @@ void *event_loop(void *result)
 			selected_window = detect_window(msg_buffer[3]);
 			if(selected_window != NULL){
 				wind_set(msg_buffer[3],WF_TOP,0,0,0,0);
-				msg_buffer[6] = MAX(msg_buffer[6], min_win_wsize);
-				msg_buffer[7] = MAX(msg_buffer[7], min_win_hsize);
+				// msg_buffer[6] = MAX(msg_buffer[6], min_win_wsize);
+				// msg_buffer[7] = MAX(msg_buffer[7], min_win_hsize);
 				wind_calc(WC_WORK,selected_window->wi_style, msg_buffer[4], msg_buffer[5], msg_buffer[6], msg_buffer[7],&window_area_buffer[0],&window_area_buffer[1],&window_area_buffer[2],&window_area_buffer[3]);
 				if(selected_window->wi_data->window_size_limited == TRUE && selected_window->wi_data->autoscale == FALSE){
 					if(selected_window->wi_data->thumbnail_master == TRUE){
@@ -680,6 +688,9 @@ void *event_loop(void *result)
 						window_area_buffer[3] = MAX( MIN(selected_window->total_length_h, window_area_buffer[3]), MIN_WINDOWS_HSIZE);
 					}
 				}
+				if(selected_window->wi_data->autoscale){					
+					selected_window->wi_data->remap_displayed_mfdb = TRUE;
+				}
 				wind_calc(WC_BORDER,selected_window->wi_style, window_area_buffer[0], window_area_buffer[1], window_area_buffer[2], window_area_buffer[3],&window_area_buffer[0],&window_area_buffer[1],&window_area_buffer[2],&window_area_buffer[3]);
 				wind_set(msg_buffer[3],WF_CURRXYWH, window_area_buffer[0], window_area_buffer[1], window_area_buffer[2], window_area_buffer[3]);
 
@@ -691,6 +702,8 @@ void *event_loop(void *result)
 
 				if(selected_window->wi_control_bar != NULL){
 					TRACE(("st_Control_Bar_PXY_Update(%d) / st_Reload_Control_Bar(%d)\n", selected_window->wi_handle, selected_window->wi_handle))
+					GRECT *rect = &selected_window->wi_control_bar->rect_control_bar;
+					form_dial(FMD_FINISH, 0, 0, 0, 0, rect->g_x, rect->g_y, rect->g_w, rect->g_h);
 					st_Control_Bar_PXY_Update(selected_window->wi_control_bar, &selected_window->work_area);
 					st_Reload_Control_Bar(selected_window, selected_window->wi_control_bar);
 					send_message(selected_window->wi_handle, WM_REDRAW);
