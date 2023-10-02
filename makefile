@@ -3,8 +3,17 @@ SRC_DIR := ./
 OBJ_DIR := ./build
 BIN_DIR := ./bin
 
+LIB_XPDF := -lxpdf -lfofi -lgoo -lsplash 
+LIB_FREETYPE := -lfreetype -lbz2
 
-SRC := $(wildcard $(SRC_DIR)/*.cpp) $(wildcard $(SRC_DIR)/*/*.cpp) $(wildcard $(SRC_DIR)/*/*/*.cpp)
+SRC := $(wildcard $(SRC_DIR)/*.cpp) \
+  $(wildcard $(SRC_DIR)/*/*.cpp) \
+  $(wildcard $(SRC_DIR)/*/zview/*.cpp) \
+  $(wildcard $(SRC_DIR)/*/dither/*.cpp) \
+  $(wildcard $(SRC_DIR)/*/nanosvg/*.cpp) \
+  $(wildcard $(SRC_DIR)/*/qdbmp/*.cpp) \
+  $(wildcard $(SRC_DIR)/*/rgb2lab/*.cpp) \
+  $(wildcard $(SRC_DIR)/*/tgafunc/*.cpp)
 
 BIN := $(BIN_DIR)/mm_pic.prg
 
@@ -16,7 +25,8 @@ _CFLAGS   := -m68020-60 -fomit-frame-pointer -fno-strict-aliasing -O2
 
 _LDFLAGS  :=
 
-_LDLIBS   := -lgem -lpng -lz -lyuv -lheif -lwebp -ljpeg -ltiff -llzma -lzstd -lde265 -lx265 -lpthread 
+_LDLIBS   := -lgem -lpng -lz -lyuv -lheif -lwebp -ljpeg -ltiff -llzma -lde265 -lx265 -lpthread $(LIB_XPDF) $(LIB_FREETYPE)
+# _LDLIBS   := -lgem -lpng -lz -lyuv -lheif -lwebp -ljpeg -ltiff -llzma -lzstd -lde265 -lx265 -lpthread 
 
 .PHONY: all clean
 
