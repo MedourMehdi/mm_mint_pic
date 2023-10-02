@@ -411,18 +411,19 @@ int main(int argc, char *argv[]){
 			if(i < (argc - 1)){strcat(this_file, " ");}
 		}
 		pfile = this_file;
+		
 		TRACE(("File %s\n", this_file))
-		va_file = (char*)mem_alloc(128);
+		va_file = (char*)mem_alloc(256);
 		do {
-			memset(va_file, 0, 128);
+			memset(va_file, 0, 256);
 			pfile = GetNextVaStartFileName( pfile, va_file ) ;
-			// remove_quotes(va_file, va_file);
+			// printf("# %s #\n",va_file);
 			if(!new_win_img(va_file)){
 				TRACE(("Failed new_win_img()\n"))
 				goto close_ico_png;
 			}
-			mem_free(va_file);
 		} while ( pfile ) ;
+		mem_free(va_file);
 	} else {
 		if(!st_Ico_PNG_Init(control_bar_winstart_list)){
 			TRACE(("Failed st_Ico_PNG_Init()\n"))
