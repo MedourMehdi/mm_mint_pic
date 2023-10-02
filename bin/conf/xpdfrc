@@ -1,0 +1,54 @@
+# These map the Base-14 fonts to the Type 1 fonts that ship with
+# ghostscript.  You'll almost certainly want to use something like
+# this, but you'll need to adjust this to point to wherever
+# ghostscript is installed on your system.  (But if the fonts are
+# installed in a "standard" location, xpdf will find them
+# automatically.)
+
+fontFile Times-Roman		./fonts/n021003l.pfb
+fontFile Times-Italic		./fonts/n021023l.pfb
+fontFile Times-Bold		./fonts/n021004l.pfb
+fontFile Times-BoldItalic	./fonts/n021024l.pfb
+fontFile Helvetica		./fonts/n019003l.pfb
+fontFile Helvetica-Oblique	./fonts/n019023l.pfb
+fontFile Helvetica-Bold		./fonts/n019004l.pfb
+fontFile Helvetica-BoldOblique	./fonts/n019024l.pfb
+fontFile Courier		./fonts/n022003l.pfb
+fontFile Courier-Oblique	./fonts/n022023l.pfb
+fontFile Courier-Bold		./fonts/n022004l.pfb
+fontFile Courier-BoldOblique	./fonts/n022024l.pfb
+fontFile Symbol			./fonts/s050000l.pfb
+fontFile ZapfDingbats		./fonts/d050000l.pfb
+
+# fontFile Times-Roman           /usr/share/fonts/msttcore/times.ttf
+# fontFile Times-Italic          /usr/share/fonts/msttcore/timesi.ttf
+# fontFile Times-Bold            /usr/share/fonts/msttcore/timesbd.ttf
+# fontFile Times-BoldItalic      /usr/share/fonts/msttcore/timesbi.ttf
+# fontFile Helvetica             /usr/share/fonts/msttcore/cour.ttf
+# fontFile Helvetica-Oblique     /usr/share/fonts/msttcore/cour.ttf
+# fontFile Helvetica-Bold        /usr/share/fonts/msttcore/cour.ttf
+# fontFile Helvetica-BoldOblique /usr/share/fonts/msttcore/cour.ttf
+# fontFile Courier               /usr/share/fonts/msttcore/cour.ttf
+# fontFile Courier-Oblique       /usr/share/fonts/msttcore/couri.ttf
+# fontFile Courier-Bold          /usr/share/fonts/msttcore/courbd.ttf
+# fontFile Courier-BoldOblique   /usr/share/fonts/msttcore/courbi.ttf
+# fontFile Symbol                /usr/share/fonts/msttcore/cour.ttf
+# fontFile ZapfDingbats          /usr/share/fonts/msttcore/cour.ttf
+
+# fontFile Times-Roman		/usr/local/share/ghostscript/fonts/n021003l.pfb
+# fontFile Times-Italic		/usr/local/share/ghostscript/fonts/n021023l.pfb
+# fontFile Times-Bold		/usr/local/share/ghostscript/fonts/n021004l.pfb
+# fontFile Times-BoldItalic	/usr/local/share/ghostscript/fonts/n021024l.pfb
+# fontFile Helvetica		/usr/local/share/ghostscript/fonts/n019003l.pfb
+# fontFile Helvetica-Oblique	/usr/local/share/ghostscript/fonts/n019023l.pfb
+# fontFile Helvetica-Bold		/usr/local/share/ghostscript/fonts/n019004l.pfb
+# fontFile Helvetica-BoldOblique	/usr/local/share/ghostscript/fonts/n019024l.pfb
+# fontFile Courier		/usr/local/share/ghostscript/fonts/n022003l.pfb
+# fontFile Courier-Oblique	/usr/local/share/ghostscript/fonts/n022023l.pfb
+# fontFile Courier-Bold		/usr/local/share/ghostscript/fonts/n022004l.pfb
+# fontFile Courier-BoldOblique	/usr/local/share/ghostscript/fonts/n022024l.pfb
+# fontFile Symbol			/usr/local/share/ghostscript/fonts/s050000l.pfb
+# fontFile ZapfDingbats		/usr/local/share/ghostscript/fonts/d050000l.pfb
+
+# psPaperSize match
+psPaperSize A4

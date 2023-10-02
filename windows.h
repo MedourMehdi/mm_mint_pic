@@ -132,6 +132,7 @@ typedef struct {
 	boolean thumbnail_slave;
 	boolean control_bar_media;	
 	boolean image_media;
+	boolean doc_media;
 	boolean rsc_media;
 	boolean autoscale;
 	boolean resized;

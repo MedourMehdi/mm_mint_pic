@@ -538,12 +538,12 @@ void buffer_to_screen(int16_t my_win_handle, GRECT *raster_dest){
 	}
 
 	if(wipe){
-		TRACE(("wipe(%d)\n", this_win->wi_handle))
+		// printf("wipe(%d)\n", this_win->wi_handle);
 	    vr_recfl(st_vdi_handle,this_win->work_pxy);	
     	vsf_interior(st_vdi_handle,0);
 	}
 
-	TRACE(("buffer_to_screen(%d)\n", this_win->wi_handle))
+	// printf("buffer_to_screen(%d)\n", this_win->wi_handle);
 
 	vro_cpyfm(st_vdi_handle, S_ONLY, xy, this_win->wi_to_display_mfdb, &screen_mfdb);
 
@@ -620,6 +620,7 @@ void st_Init_Default_Win(struct_window *this_win){
 /* Default is to set everything to FALSE */
     this_win->x_unit = 10; this_win->y_unit = 10;
     this_win->wi_data->image_media = FALSE;
+	this_win->wi_data->doc_media = FALSE;
 	this_win->wi_data->crop_requested = FALSE;
 	this_win->wi_data->fx_on = FALSE;
 	this_win->wi_data->fx_requested = FALSE;

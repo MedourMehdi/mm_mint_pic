@@ -1,0 +1,543 @@
+#include "img_pdf.h"
+#include "../img_handler.h"
+
+#include "../utils/utils.h"
+#include "../thumbs/thumbs.h"
+#include "../utils_gfx/pix_convert.h"
+#include "../utils_gfx/ttf.h"
+
+#define PRIMARY_IMAGE_ID    -1
+#define TTF_DEFAULT_PATH "./fonts/arial.ttf"
+
+/* XPDF */
+// typedef struct {
+//     char *generic;
+//     char *fontname;
+//     char *fontpath;
+// } struct_img_pdf_fonts_array;
+
+
+#include <xpdf_mint/goo/GString.h>
+
+#include <xpdf_mint/splash/SplashBitmap.h>
+#include <xpdf_mint/splash/Splash.h>
+
+#include <xpdf_mint/xpdf/GlobalParams.h>
+#include <xpdf_mint/xpdf/Object.h>
+#include <xpdf_mint/xpdf/PDFDoc.h>
+#include <xpdf_mint/xpdf/SplashOutputDev.h>
+#include <xpdf_mint/xpdf/Error.h>
+#include <xpdf_mint/xpdf/config.h>
+
+// static double resolution = 180;
+static double resolution_w = 180;
+static double resolution_h = 180;
+
+static int rotate = 0;
+static char ownerPassword[33] = "";
+static char userPassword[33] = "";
+
+// struct_img_pdf_fonts_array this_fonts_array[] = {
+//     { "fontFile", "Times-Roman", "/fonts/n021003l.pfb"},
+//     { "fontFile", "Times-Italic", "/fonts/n021023l.pfb"},
+//     { "fontFile", "Times-Bold", "/fonts/n021004l.pfb"},
+//     { "fontFile", "Times-BoldItalic", "/fonts/n021024l.pfb"},
+//     { "fontFile", "Helvetica", "/fonts/n019003l.pfb"},
+//     { "fontFile", "Helvetica-Oblique", "/fonts/n019023l.pfb"},
+//     { "fontFile", "Helvetica-Bold", "/fonts/n019004l.pfb"},
+//     { "fontFile", "Helvetica-BoldOblique", "/fonts/n019024l.pfb"},
+//     { "fontFile", "Courier", "/fonts/n022003l.pfb"},
+//     { "fontFile", "Courier-Oblique", "/fonts/n022023l.pfb"},
+//     { "fontFile", "Courier-Bold", "/fonts/n022004l.pfb"},
+//     { "fontFile", "Courier-BoldOblique", "/fonts/n022024l.pfb"},
+//     { "fontFile", "Symbol", "/fonts/s050000l.pfb"},
+//     { "fontFile", "ZapfDingbats", "/fonts/d050000l.pfb"},
+// };
+/* XPDF */
+/*
+
+*/
+void st_Win_Print_PDF(int16_t this_win_handle);
+void _st_Read_PDF(int16_t this_win_handle, boolean file_process, int16_t img_id);
+void _st_Handle_Thumbs_PDF(int16_t this_win_handle, boolean file_process);
+void _st_Handle_Thumbs_Generic(int16_t this_win_handle, boolean file_process);
+
+void st_Init_PDF(struct_window *this_win){
+    this_win->wi_data->image_media = TRUE;
+    this_win->wi_data->doc_media = TRUE;
+    this_win->wi_data->autoscale = TRUE;
+    this_win->wi_data->window_size_limited = TRUE;
+    this_win->wi_data->remap_displayed_mfdb = TRUE;
+	this_win->refresh_win = st_Win_Print_PDF;
+    this_win->wi_progress_bar = global_progress_bar;
+    this_win->prefers_file_instead_mem = TRUE;
+
+
+    if(!st_Set_Renderer(this_win)){
+        sprintf(alert_message, "screen_format: %d\nscreen_bits_per_pixel: %d", screen_workstation_format, screen_workstation_bits_per_pixel);
+        st_form_alert(FORM_STOP, alert_message);
+        return;
+    }
+    /* Pages stuff */
+    if(this_win->wi_thumb == NULL){
+        if(cpu_type < 40){
+            _st_Handle_Thumbs_Generic(this_win->wi_handle, this_win->prefers_file_instead_mem);
+        }else{
+            _st_Handle_Thumbs_PDF(this_win->wi_handle, this_win->prefers_file_instead_mem);
+        }
+        
+    }        
+}
+
+void st_Win_Print_PDF(int16_t this_win_handle){
+    struct_window *this_win;
+    this_win = detect_window(this_win_handle);
+
+    if(this_win->wi_data->stop_original_data_load == FALSE){
+        this_win->wi_to_work_in_mfdb = &this_win->wi_original_mfdb;
+    }
+
+    _st_Read_PDF(this_win_handle, this_win->prefers_file_instead_mem, this_win->wi_data->img.img_id);
+
+    if( st_Img32b_To_Window(this_win) == false ){
+        st_form_alert(FORM_STOP, alert_message);
+    }
+}
+
+void _st_Read_PDF(int16_t this_win_handle, boolean file_process, int16_t img_id){
+    struct_window *this_win;
+    this_win = detect_window(this_win_handle);
+
+    if(this_win->wi_data->stop_original_data_load == FALSE){
+        st_Progress_Bar_Add_Step(this_win->wi_progress_bar);
+        st_Progress_Bar_Init(this_win->wi_progress_bar, (int8_t*)"PDF READING");
+/* XPDF */
+        GString *ownerPW = NULL;
+        GString *userPW = NULL;
+        PDFDoc *doc;
+        int this_page = 1;
+
+        if(img_id > PRIMARY_IMAGE_ID){
+            this_page = img_id + 1;
+        }
+
+        const char *fileName = this_win->wi_data->path;
+        
+        SplashColor paperColor;
+        SplashOutputDev *splashOut;
+        st_Progress_Bar_Signal(this_win->wi_progress_bar, 15, (int8_t*)"Opening file");
+        if(!(st_FileExistsAccess(fileName))){
+            printf("File not found %s\n", fileName);
+        }
+        st_Progress_Bar_Signal(this_win->wi_progress_bar, 35, (int8_t*)"Check for fonts");
+        /* Global Parameters */
+        char conf_file[256] = {0};
+        char current_dir[256] = {0};
+        st_Get_Current_Dir(conf_file);
+        strcat(conf_file, "\\conf\\xpdfrc");
+        if(st_FileExistsAccess(conf_file)){
+            globalParams = new GlobalParams(conf_file);
+        }else{
+            sprintf(alert_message,"Conf file not found\n%s", conf_file);
+            st_form_alert_choice(FORM_STOP, alert_message);
+        }
+        st_Progress_Bar_Signal(this_win->wi_progress_bar, 45, (int8_t*)"Setting global parameters");
+        st_Get_Current_Dir(current_dir);
+        globalParams->setupBaseFonts(current_dir);
+
+        globalParams->setEnableFreeType((char*)"yes");
+        globalParams->setAntialias((char*)"yes");
+        globalParams->setVectorAntialias((char*)"yes");
+
+        globalParams->setPrintStatusInfo(gFalse);
+        globalParams->setErrQuiet(gTrue);
+        // globalParams->setPrintStatusInfo(gTrue);
+        // globalParams->setErrQuiet(gFalse);
+
+/* User/Password */
+        // if (ownerPassword[0]) {
+        //     ownerPW = new GString(ownerPassword);
+        // }
+        // if (userPassword[0]) {
+        //     userPW = new GString(userPassword);
+        // }
+        st_Progress_Bar_Signal(this_win->wi_progress_bar, 65, (int8_t*)"Parsing document");
+        doc = new PDFDoc((char*)fileName, ownerPW, userPW);
+        if(doc->isEncrypted()){
+            sprintf(alert_message, "User/Password doc not supported yet!");
+            st_form_alert(FORM_STOP, alert_message);
+            return;
+        }
+        // if (userPW) {
+        //     delete userPW;
+        // }
+        // if (ownerPW) {
+        //     delete ownerPW;
+        // }
+        if (!doc->isOk()) {
+            sprintf(alert_message, "Error opening PDF document %s\n", fileName);
+            st_form_alert(FORM_STOP, alert_message);
+            return;            
+        }
+        double hDPI, vDPI;
+        double page_width = doc->getPageMediaWidth(this_page);
+        double page_height = doc->getPageMediaHeight(this_page);
+
+        sprintf(this_win->wi_name, "%s %d/%d", basename(this_win->wi_data->path), this_page, doc->getNumPages());
+        wind_set_str(this_win->wi_handle, WF_NAME, this_win->wi_name);
+
+        u_int16_t wanted_width = 480;
+        u_int16_t wanted_height = 621;
+        uint16_t this_win_height;
+        uint16_t this_win_width;
+        if(page_width < page_height){
+            this_win_height = wanted_height;
+            this_win_width = wanted_width;
+        }else{
+            this_win_height = wanted_width;
+            this_win_width = wanted_height;
+        }
+        hDPI = MAX( (double)((72 * this_win_width) / page_width ) - 0.5, resolution_h );
+        vDPI = MAX( (double)((72 * this_win_height) / page_height ) - 0.5, resolution_w);
+       
+/* Splash */
+        st_Progress_Bar_Signal(this_win->wi_progress_bar, 85, (int8_t*)"Rendering document");
+        paperColor[0] = paperColor[1] = paperColor[2] = 0xff;
+        splashOut = new SplashOutputDev(splashModeRGB8, 1, gFalse, paperColor);
+        splashOut->setNoComposite(gTrue);
+        splashOut->startDoc(doc->getXRef());
+        doc->displayPage(splashOut, this_page, hDPI, vDPI, 0, gFalse, gTrue, gFalse);
+        SplashBitmap *bitmap = splashOut->getBitmap();
+/* Splash */
+
+/* XPDF */
+
+		u_int16_t width = bitmap->getWidth();
+		u_int16_t height = bitmap->getHeight();
+        st_Progress_Bar_Signal(this_win->wi_progress_bar, 95, (int8_t*)"Convert document to ARGB");
+        u_int8_t* destination_buffer = st_ScreenBuffer_Alloc_bpp(width, height, 32);
+        if(destination_buffer == NULL){
+            sprintf(alert_message, "Out Of Mem Error\nAsked for %doctets", width * height * 4);
+            st_form_alert(FORM_EXCLAM, alert_message);
+        }
+        if(this_win->wi_original_mfdb.fd_addr != NULL){
+            mem_free(this_win->wi_original_mfdb.fd_addr);
+        }
+
+        uint32_t *dst_ptr = (uint32_t*)destination_buffer;
+        uint8_t *src_ptr = (uint8_t*)bitmap->getDataPtr();
+        uint32_t i, j = 0, x, y;
+     
+        for(y = 0; y < height; y++){
+            for(x = 0; x < width; x++){
+                i = (x + y * MFDB_STRIDE(width));            
+                dst_ptr[i++] = 0xFF << 24 | ( src_ptr[j++] & 0xFF ) << 16| ( src_ptr[j++] & 0xFF ) << 8 | ( src_ptr[j++] & 0xFF );
+            }
+        }
+
+		mfdb_update_bpp(&this_win->wi_original_mfdb, (int8_t *)destination_buffer, width, height, 32);
+
+        this_win->wi_data->img.scaled_pourcentage = 0;
+        this_win->wi_data->img.rotate_degree = 0;
+        this_win->wi_data->resized = FALSE;
+        this_win->wi_data->img.original_width = width;
+        this_win->wi_data->img.original_height = height;
+        this_win->total_length_w = this_win->wi_original_mfdb.fd_w;
+        this_win->total_length_h = this_win->wi_original_mfdb.fd_h;     
+        this_win->wi_data->stop_original_data_load = TRUE;
+        this_win->wi_data->wi_buffer_modified = FALSE;
+
+        st_Progress_Bar_Signal(this_win->wi_progress_bar, 100, (int8_t*)"Finished");
+        st_Progress_Bar_Step_Done(this_win->wi_progress_bar);
+        st_Progress_Bar_Finish(this_win->wi_progress_bar);
+
+    	delete splashOut;
+        delete doc;
+        delete globalParams;    
+           
+	}
+}
+
+void _st_Handle_Thumbs_PDF(int16_t this_win_handle, boolean file_process){
+
+	struct_window *this_win;
+	this_win = detect_window(this_win_handle);
+    if(this_win == NULL){
+        return;
+    }
+
+/* XPDF */
+    GString *ownerPW = NULL;
+    GString *userPW = NULL;
+    PDFDoc *doc;
+    u_int16_t idx = 0;
+
+    const char *fileName = this_win->wi_data->path;
+    
+    SplashColor paperColor;
+    SplashOutputDev *splashOut;
+    if(!(st_FileExistsAccess(fileName))){
+        printf("File not found %s\n", fileName);
+    }
+    /* Global Parameters */
+    char conf_file[256] = {0};
+    st_Get_Current_Dir(conf_file);
+    strcat(conf_file, "\\conf\\xpdfrc");
+    if(st_FileExistsAccess(conf_file)){
+        globalParams = new GlobalParams(conf_file);
+    }else{
+        sprintf(alert_message,"Conf file not found\n%s", conf_file);
+        st_form_alert_choice(FORM_STOP, alert_message);
+    }
+    globalParams->setPrintStatusInfo(gFalse);
+    globalParams->setErrQuiet(gTrue);
+    if(ownerPassword[0]){ ownerPW = new GString(ownerPassword); }
+    if(userPassword[0]){ userPW = new GString(userPassword); }
+    doc = new PDFDoc((char*)fileName, ownerPW, userPW);
+    if(userPW){delete userPW;}
+    if(ownerPW){delete ownerPW;}
+    if(!doc->isOk()){printf("Error opening PDF document %s\n", fileName);}
+
+    this_win->wi_data->img.img_total = doc->getNumPages();
+    this_win->wi_data->img.img_id = idx;
+    this_win->wi_data->img.img_index = idx + 1;
+
+    if(this_win->wi_data->img.img_total > 1){
+
+        st_Progress_Bar_Add_Step(this_win->wi_progress_bar);
+        st_Progress_Bar_Init(this_win->wi_progress_bar, (int8_t*)"PDF Building pages index");
+        st_Progress_Bar_Signal(this_win->wi_progress_bar, 1, (int8_t*)"Init");
+
+        paperColor[0] = paperColor[1] = paperColor[2] = 0xff;
+        splashOut = new SplashOutputDev(splashModeRGB8, 1, gFalse, paperColor);
+        splashOut->setNoComposite(gTrue);
+        splashOut->startDoc(doc->getXRef());
+
+        double page_width = doc->getPageMediaWidth(1);
+        double page_height = doc->getPageMediaHeight(1);
+
+        u_int16_t wanted_width = 100;
+        u_int16_t wanted_height = 140;
+        if(page_height < page_width){
+            wanted_width = 140;
+            wanted_height = 100;            
+        }
+        u_int16_t wanted_padx = 8;
+        u_int16_t wanted_pady = 8;
+
+        this_win->wi_data->thumbnail_slave = true;
+        this_win->wi_thumb = st_Thumb_Alloc(this_win->wi_data->img.img_total, this_win_handle, wanted_padx, wanted_pady, wanted_width, wanted_height);
+
+        this_win->wi_thumb->thumbs_open_new_win = FALSE;
+        
+        this_win->wi_thumb->thumbs_area_w = 0;
+        this_win->wi_thumb->thumbs_area_h = this_win->wi_thumb->pady;
+        this_win->wi_thumb->thumbs_nb = this_win->wi_data->img.img_total;
+
+        for (int16_t i = 0; i < this_win->wi_thumb->thumbs_nb; i++) {
+
+            this_win->wi_thumb->thumbs_list_array[i].thumb_id = i;
+            this_win->wi_thumb->thumbs_list_array[i].thumb_index = i + 1;
+
+            char progess_bar_indication[96];
+            sprintf(progess_bar_indication, "Thumbnail rendering for page %d/%d", i+1, this_win->wi_thumb->thumbs_nb, this_win->wi_thumb->thumbs_list_array[i].thumb_id);
+            st_Progress_Bar_Signal(this_win->wi_progress_bar, (mul_100_fast(i) / this_win->wi_thumb->thumbs_nb), (int8_t*)progess_bar_indication);
+
+            page_width = doc->getPageMediaWidth(this_win->wi_thumb->thumbs_list_array[i].thumb_index);
+            page_height = doc->getPageMediaHeight(this_win->wi_thumb->thumbs_list_array[i].thumb_index);
+
+            u_int16_t this_win_height;
+            u_int16_t this_win_width;
+            if(page_width < page_height){
+                this_win_height = wanted_height;
+                this_win_width = wanted_width;
+            }else{
+                this_win_height = wanted_width;
+                this_win_width = wanted_height;
+            }
+
+            // double hDPI = MAX( (double)((72 * this_win_width) / page_width ) - 0.5, 72 );
+            // double vDPI = MAX( (double)((72 * this_win_height) / page_height ) - 0.5, 72);
+            double hDPI = 72;
+            double vDPI = 72;
+
+            doc->displayPage(splashOut, this_win->wi_thumb->thumbs_list_array[i].thumb_index, hDPI, vDPI, 0, gFalse, gTrue, gFalse);
+            SplashBitmap *bitmap = splashOut->getBitmap();
+
+            int16_t old_width  = bitmap->getWidth();
+            int16_t old_height = bitmap->getHeight();
+
+            int16_t new_width = old_width;
+            int16_t new_height = old_height;
+
+            if (old_width  > this_win->wi_thumb->thumb_w_size || old_height > this_win->wi_thumb->thumb_h_size){
+                float factor_h, factor_v;
+                factor_h = old_width  / (float)this_win->wi_thumb->thumb_w_size;
+                factor_v = old_height / (float)this_win->wi_thumb->thumb_h_size;
+
+                if (factor_v > factor_h) {
+                    new_height = this_win->wi_thumb->thumb_h_size;
+                    new_width  = old_width / factor_v;
+                } else {
+                    new_height = old_height / factor_h;
+                    new_width  = this_win->wi_thumb->thumb_w_size;
+                }
+            }
+
+            u_int8_t* temp_buffer = st_ScreenBuffer_Alloc_bpp(old_width, old_height, 32);
+            MFDB* temp_mfdb = mfdb_alloc_bpp((int8_t*)temp_buffer, old_width, old_height, 32);
+            u_int32_t *dst_ptr = (u_int32_t *)temp_buffer;
+            u_int8_t *src_ptr = (uint8_t*)bitmap->getDataPtr();
+            u_int32_t ii, jj = 0, x, y;            
+            for(y = 0; y < old_height; y++){
+                for(x = 0; x < old_width; x++){
+                    ii = (x + y * MFDB_STRIDE(old_width));            
+                    dst_ptr[ii++] = 0XFF << 24 | ( src_ptr[jj++] & 0xFF ) << 16| ( src_ptr[jj++] & 0xFF ) << 8 | ( src_ptr[jj++] & 0xFF );
+                }
+            }
+
+            u_int8_t* destination_buffer = st_ScreenBuffer_Alloc_bpp(new_width, new_height, 32);
+            MFDB* thumb_original_mfdb = mfdb_alloc_bpp( (int8_t*)destination_buffer, new_width, new_height, 32);
+
+            st_Rescale_ARGB(temp_mfdb, thumb_original_mfdb, new_width, new_height);
+            MFDB* thumb_final_mfdb = thumb_original_mfdb;
+
+            char thumb_txt[10] = {'\0'};
+            sprintf(thumb_txt,"%d", this_win->wi_thumb->thumbs_list_array[i].thumb_index );
+            print_ft_simple((thumb_original_mfdb->fd_w >> 1) - 4, thumb_original_mfdb->fd_h - 4, thumb_original_mfdb, (char*)TTF_DEFAULT_PATH, 14, thumb_txt);
+
+            if(screen_workstation_bits_per_pixel != 32){
+                this_win->wi_thumb->thumbs_list_array[i].thumb_mfdb = this_win->render_win(thumb_final_mfdb);
+                mfdb_free(thumb_final_mfdb);
+            } else {
+                this_win->wi_thumb->thumbs_list_array[i].thumb_mfdb = thumb_final_mfdb;
+            }
+
+            mfdb_free(temp_mfdb);
+
+            this_win->wi_thumb->thumbs_list_array[i].thumb_mfdb_stride = MFDB_STRIDE(wanted_width) - wanted_width;  
+
+            this_win->wi_thumb->thumbs_area_w = MAX( (this_win->wi_thumb->padx << 1) + wanted_width, this_win->wi_thumb->thumbs_area_w);
+            this_win->wi_thumb->thumbs_area_h += wanted_height + this_win->wi_thumb->pady;
+            this_win->wi_thumb->thumbs_list_array[i].thumb_selected = FALSE;
+        }
+        st_Progress_Bar_Step_Done(this_win->wi_progress_bar);
+        st_Progress_Bar_Finish(this_win->wi_progress_bar);
+        this_win->wi_thumb->thumbs_area_h += this_win->wi_thumb->pady;
+        this_win->wi_thumb->thumbs_list_array[0].thumb_selected = TRUE;
+        delete splashOut;
+    } else {
+        this_win->wi_data->thumbnail_slave = false;
+        this_win->wi_data->img.img_id = PRIMARY_IMAGE_ID;
+    }
+    delete doc;
+    delete globalParams; 
+}
+
+/* If the computer have not enought power to render the thumbnails in a reasonable time we prefer show the page number */
+void _st_Handle_Thumbs_Generic(int16_t this_win_handle, boolean file_process){
+	struct_window *this_win;
+	this_win = detect_window(this_win_handle);
+    if(this_win == NULL){
+        return;
+    }
+
+/* XPDF */
+    GString *ownerPW = NULL;
+    GString *userPW = NULL;
+    PDFDoc *doc;
+    u_int16_t idx = 0;
+
+    const char *fileName = this_win->wi_data->path;
+    
+    if(!(st_FileExistsAccess(fileName))){
+        printf("File not found %s\n", fileName);
+    }
+    /* Global Parameters */
+    char conf_file[256] = {0};
+    st_Get_Current_Dir(conf_file);
+    strcat(conf_file, "\\conf\\xpdfrc");
+    if(st_FileExistsAccess(conf_file)){
+        globalParams = new GlobalParams(conf_file);
+    }else{
+        sprintf(alert_message,"Conf file not found\n%s", conf_file);
+        st_form_alert_choice(FORM_STOP, alert_message);
+    }
+    globalParams->setPrintStatusInfo(gFalse);
+    globalParams->setErrQuiet(gTrue);
+    if(ownerPassword[0]){ ownerPW = new GString(ownerPassword); }
+    if(userPassword[0]){ userPW = new GString(userPassword); }
+    doc = new PDFDoc((char*)fileName, ownerPW, userPW);
+    if(userPW){delete userPW;}
+    if(ownerPW){delete ownerPW;}
+    if(!doc->isOk()){printf("Error opening PDF document %s\n", fileName);}
+
+    this_win->wi_data->img.img_total = doc->getNumPages();
+    this_win->wi_data->img.img_id = idx;
+    this_win->wi_data->img.img_index = idx + 1;
+
+    if(this_win->wi_data->img.img_total > 1){
+
+        st_Progress_Bar_Add_Step(this_win->wi_progress_bar);
+        st_Progress_Bar_Init(this_win->wi_progress_bar, (int8_t*)"PDF Building pages index");
+        st_Progress_Bar_Signal(this_win->wi_progress_bar, 1, (int8_t*)"Init");
+
+        u_int16_t wanted_width = 80;
+        u_int16_t wanted_height = 20;
+
+        u_int16_t wanted_padx = 4;
+        u_int16_t wanted_pady = 4;
+
+        this_win->wi_data->thumbnail_slave = true;
+        this_win->wi_thumb = st_Thumb_Alloc(this_win->wi_data->img.img_total, this_win_handle, wanted_padx, wanted_pady, wanted_width, wanted_height);
+
+        this_win->wi_thumb->thumbs_open_new_win = FALSE;
+        
+        this_win->wi_thumb->thumbs_area_w = 0;
+        this_win->wi_thumb->thumbs_area_h = this_win->wi_thumb->pady;
+        this_win->wi_thumb->thumbs_nb = this_win->wi_data->img.img_total;
+
+        for (int16_t i = 0; i < this_win->wi_thumb->thumbs_nb; i++) {
+
+            this_win->wi_thumb->thumbs_list_array[i].thumb_id = i;
+            this_win->wi_thumb->thumbs_list_array[i].thumb_index = i + 1;
+
+            char progess_bar_indication[96];
+            sprintf(progess_bar_indication, "Thumbnail rendering for page %d/%d", i+1, this_win->wi_thumb->thumbs_nb, this_win->wi_thumb->thumbs_list_array[i].thumb_id);
+            st_Progress_Bar_Signal(this_win->wi_progress_bar, (mul_100_fast(i) / this_win->wi_thumb->thumbs_nb), (int8_t*)progess_bar_indication);
+
+            MFDB* thumb_original_mfdb;
+
+            u_int8_t* destination_buffer = st_ScreenBuffer_Alloc_bpp(wanted_width, wanted_height, 32);
+            thumb_original_mfdb = mfdb_alloc_bpp( (int8_t*)destination_buffer, wanted_width, wanted_height, 32);
+
+            st_MFDB_Fill(thumb_original_mfdb,0xFFFFFFFF);
+
+            char thumb_txt[10] = {'\0'};
+            sprintf(thumb_txt,"Page %d", this_win->wi_thumb->thumbs_list_array[i].thumb_index );
+            print_ft_simple(4, thumb_original_mfdb->fd_h - 4, thumb_original_mfdb, (char*)TTF_DEFAULT_PATH, 14, thumb_txt);
+
+            if(screen_workstation_bits_per_pixel != 32){
+                this_win->wi_thumb->thumbs_list_array[i].thumb_mfdb = this_win->render_win(thumb_original_mfdb);
+                mfdb_free(thumb_original_mfdb);
+            } else {
+                this_win->wi_thumb->thumbs_list_array[i].thumb_mfdb = thumb_original_mfdb;
+            }
+
+            this_win->wi_thumb->thumbs_list_array[i].thumb_mfdb_stride = MFDB_STRIDE(wanted_width) - wanted_width;  
+
+            this_win->wi_thumb->thumbs_area_w = MAX( (this_win->wi_thumb->padx << 1) + wanted_width, this_win->wi_thumb->thumbs_area_w);
+            this_win->wi_thumb->thumbs_area_h += wanted_height + this_win->wi_thumb->pady;
+            this_win->wi_thumb->thumbs_list_array[i].thumb_selected = FALSE;
+        }
+        st_Progress_Bar_Step_Done(this_win->wi_progress_bar);
+        st_Progress_Bar_Finish(this_win->wi_progress_bar);
+        this_win->wi_thumb->thumbs_area_h += this_win->wi_thumb->pady;
+        this_win->wi_thumb->thumbs_list_array[0].thumb_selected = TRUE;
+    } else {
+        this_win->wi_data->thumbnail_slave = false;
+        this_win->wi_data->img.img_id = PRIMARY_IMAGE_ID;
+    }
+    delete doc;
+    delete globalParams; 
+}

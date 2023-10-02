@@ -12,6 +12,11 @@ boolean st_Img32b_To_Window(struct_window *this_win){
         if( this_win->wi_data->remap_displayed_mfdb == TRUE  || this_win->wi_data->fx_requested == TRUE ){
         u_int16_t work_area_w = this_win->work_area.g_w;
         u_int16_t work_area_h = this_win->work_area.g_h;
+        if(this_win->wi_data->doc_media && this_win->wi_data->autoscale && this_win->wi_data->image_media){
+            float factor_h;
+            factor_h = this_win->wi_data->img.original_width  / (float)work_area_w;
+            work_area_h = this_win->wi_data->img.original_height / factor_h;
+        }
         switch (screen_workstation_bits_per_pixel) {
         case 32:
             if(this_win->wi_data->fx_requested == TRUE){
