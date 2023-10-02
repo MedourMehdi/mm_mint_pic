@@ -81,7 +81,7 @@ void st_Progress_Bar_Init(struct_progress_bar* progress_bar, int8_t *title){
             progress_bar->max_value = 100;
             beg_prog(&progress_bar->form_rect);
         }
-        if(progress_bar->progress_bar_enabled){
+        if(progress_bar->progress_bar_enabled && progress_bar->current_nb_functions == 1){
             set_prog(progress_bar->current_value, progress_bar->max_value);
             set_text(PROTITLE, title);
         }
@@ -92,10 +92,10 @@ void st_Progress_Bar_Signal(struct_progress_bar* progress_bar, int16_t current_v
     if(progress_bar != NULL){
         if(progress_bar->progress_bar_in_use && progress_bar->progress_bar_enabled ){
             
-            if( progress_bar->initial_nb_functions ){
-                progress_bar->current_value += ( (progress_bar->max_value - progress_bar->current_value) * current_value ) / 100;
-            }
-
+            // if( progress_bar->initial_nb_functions ){
+            //     progress_bar->current_value += ( (progress_bar->max_value - progress_bar->current_value) * current_value ) / 100;
+            // }
+            progress_bar->current_value = current_value;
             set_text(PLINE, progress_txt);
             set_prog(progress_bar->current_value, progress_bar->max_value);
         }
