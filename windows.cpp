@@ -566,7 +566,7 @@ void redraw_window(int16_t my_win_handle){
 		while(rect.g_h  != 0 && rect.g_w != 0){
 			if ( rc_intersect((GRECT *)&msg_buffer[4], &rect) ){
 				grect_to_array(&rect,pxy_dest);
-				wipe_pxy_area(pxy_dest);
+				// wipe_pxy_area(pxy_dest);
 				if(this_win->wi_to_display_mfdb != NULL){
 					if(this_win->wi_to_display_mfdb->fd_addr != NULL){
 						buffer_to_screen(this_win->wi_handle, &rect);
@@ -672,10 +672,10 @@ void st_End_Window_Process(struct_window *this_win){
 
 void st_Limit_Work_Area(struct_window *this_win){
 	/* If image size is originaly smaller than the window size then we lock the resizing */
-	if( 
-		( this_win->work_area.g_h > MAX(this_win->total_length_h, MIN_WINDOWS_HSIZE)  
-		|| this_win->work_area.g_w > MAX(this_win->total_length_w, MIN_WINDOWS_WSIZE) )
-		)
+	if( ( this_win->work_area.g_h > MAX(this_win->total_length_h, MIN_WINDOWS_HSIZE) || 
+		this_win->work_area.g_w > MAX(this_win->total_length_w, MIN_WINDOWS_WSIZE) )
+		// && (!this_win->wi_data->window_size_limited)
+	)
 	{
 		TRACE(("st_Limit_Work_Area(%d)\n", this_win->wi_handle))
 		int16_t window_area_buffer[4];

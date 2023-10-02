@@ -676,7 +676,7 @@ void *event_loop(void *result)
 				// msg_buffer[6] = MAX(msg_buffer[6], min_win_wsize);
 				// msg_buffer[7] = MAX(msg_buffer[7], min_win_hsize);
 				wind_calc(WC_WORK,selected_window->wi_style, msg_buffer[4], msg_buffer[5], msg_buffer[6], msg_buffer[7],&window_area_buffer[0],&window_area_buffer[1],&window_area_buffer[2],&window_area_buffer[3]);
-				if(selected_window->wi_data->window_size_limited == TRUE && selected_window->wi_data->autoscale == FALSE){
+				if(selected_window->wi_data->window_size_limited == TRUE ){
 					if(selected_window->wi_data->thumbnail_master == TRUE){
 						window_area_buffer[2] = MIN(selected_window->wi_thumb->thumbs_max_area_w, window_area_buffer[2]);
 						window_area_buffer[3] = MIN(selected_window->wi_thumb->thumbs_max_area_h, window_area_buffer[3]);
