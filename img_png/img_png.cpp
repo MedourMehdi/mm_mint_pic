@@ -257,44 +257,46 @@ int16_t st_Save_PNG(const char* filename, int width, int height, int bitdepth, i
     png_structp png_ptr = NULL;
     png_infop info_ptr = NULL;
     png_bytep* row_pointers = NULL;
+    st_Progress_Bar_Add_Step(global_progress_bar);
+    st_Progress_Bar_Init(global_progress_bar, (int8_t*)"PNG WRITING");
+    st_Progress_Bar_Signal(global_progress_bar, 10, (int8_t*)"PNG image encoding");
+    if (NULL == data) {
+        sprintf(alert_message, "Error: failed to save the png because the given data is NULL.");
+        r = -1;
+        goto error;
+    }
+    if (0 == strlen(filename)) {
+        sprintf(alert_message, "Error: failed to save the png because the given filename length is 0.");
+        r = -2;
+        goto error;
+    }
 
-  if (NULL == data) {
-    sprintf(alert_message, "Error: failed to save the png because the given data is NULL.");
-    r = -1;
-    goto error;
-  }
-  if (0 == strlen(filename)) {
-    sprintf(alert_message, "Error: failed to save the png because the given filename length is 0.");
-    r = -2;
-    goto error;
-  }
+    if (0 == pitch) {
+        sprintf(alert_message, "Error: failed to save the png because the given pitch is 0.");
+        r = -3;
+        goto error;
+    }
 
-  if (0 == pitch) {
-    sprintf(alert_message, "Error: failed to save the png because the given pitch is 0.");
-    r = -3;
-    goto error;
-  }
-
-  fp = fopen(filename, "wb");
-  if (NULL == fp) {
-    sprintf(alert_message, "Error: failed to open the png file: %s", filename);
-    r = -4;
-    goto error;
-  }
-
-  png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-  if (NULL == png_ptr) {
-    sprintf(alert_message, "Error: failed to create the png write struct.");
-    r = -5;
-    goto error;
-  }
-
-  info_ptr = png_create_info_struct(png_ptr);
-  if (NULL == info_ptr) {
-    sprintf(alert_message, "Error: failed to create the png info struct.");
-    r = -6;
-    goto error;
-  }
+    fp = fopen(filename, "wb");
+    if (NULL == fp) {
+        sprintf(alert_message, "Error: failed to open the png file: %s", filename);
+        r = -4;
+        goto error;
+    }
+    st_Progress_Bar_Signal(global_progress_bar, 30, (int8_t*)"PNG: Create Write Structure");
+    png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    if (NULL == png_ptr) {
+        sprintf(alert_message, "Error: failed to create the png write struct.");
+        r = -5;
+        goto error;
+    }
+    st_Progress_Bar_Signal(global_progress_bar, 40, (int8_t*)"PNG: Create Info Structure");
+    info_ptr = png_create_info_struct(png_ptr);
+    if (NULL == info_ptr) {
+        sprintf(alert_message, "Error: failed to create the png info struct.");
+        r = -6;
+        goto error;
+    }
 
   /* Set the image information here.  Width and height are up to 2^31,
   * bit_depth is one of 1, 2, 4, 8, or 16, but valid values also depend on
@@ -304,53 +306,60 @@ int16_t st_Save_PNG(const char* filename, int width, int height, int bitdepth, i
   * PNG_INTERLACE_ADAM7, and the compression_type and filter_type MUST
   * currently be PNG_COMPRESSION_TYPE_BASE and PNG_FILTER_TYPE_BASE. REQUIRED
   */
-
-  png_set_IHDR(png_ptr,
-              info_ptr,
-              width,
-              height,
-              bitdepth,                 /* e.g. 8 */
-              colortype,                /* PNG_COLOR_TYPE_{GRAY, PALETTE, RGB, RGB_ALPHA, GRAY_ALPHA, RGBA, GA} */
-              PNG_INTERLACE_NONE,       /* PNG_INTERLACE_{NONE, ADAM7 } */
-              PNG_COMPRESSION_TYPE_BASE,
-              PNG_FILTER_TYPE_BASE);
-  row_pointers = (png_bytep*)malloc(sizeof(png_bytep) * height);
-  for (i = 0; i < height; ++i) {
-    row_pointers[i] = data + i * pitch;
-  }
-  png_init_io(png_ptr, fp);
-  png_set_rows(png_ptr, info_ptr, row_pointers);
-  png_write_png(png_ptr, info_ptr, transform, NULL);
+    st_Progress_Bar_Signal(global_progress_bar, 50, (int8_t*)"PNG: Set IHDR");
+    png_set_IHDR(png_ptr,
+                info_ptr,
+                width,
+                height,
+                bitdepth,                 /* e.g. 8 */
+                colortype,                /* PNG_COLOR_TYPE_{GRAY, PALETTE, RGB, RGB_ALPHA, GRAY_ALPHA, RGBA, GA} */
+                PNG_INTERLACE_NONE,       /* PNG_INTERLACE_{NONE, ADAM7 } */
+                PNG_COMPRESSION_TYPE_BASE,
+                PNG_FILTER_TYPE_BASE);
+    row_pointers = (png_bytep*)malloc(sizeof(png_bytep) * height);
+    for (i = 0; i < height; ++i) {
+        row_pointers[i] = data + i * pitch;
+    }
+    st_Progress_Bar_Signal(global_progress_bar, 60, (int8_t*)"PNG: Init I/O");
+    png_init_io(png_ptr, fp);
+    st_Progress_Bar_Signal(global_progress_bar, 70, (int8_t*)"PNG: Set Rows");
+    png_set_rows(png_ptr, info_ptr, row_pointers);
+    st_Progress_Bar_Signal(global_progress_bar, 90, (int8_t*)"PNG: Write Data");
+    png_write_png(png_ptr, info_ptr, transform, NULL);
 
 
 error:
 
-  if (NULL != fp) {
-    fclose(fp);
-    fp = NULL;
-  }
+    if (NULL != fp) {
+        fclose(fp);
+        fp = NULL;
+    }
 
-  if (NULL != png_ptr) {
+    if (NULL != png_ptr) {
 
     if (NULL == info_ptr) {
-      sprintf(alert_message, "Error: info ptr is null. not supposed to happen here.\n");
+        sprintf(alert_message, "Error: info ptr is null. not supposed to happen here.\n");
     }
 
     png_destroy_write_struct(&png_ptr, &info_ptr);
     png_ptr = NULL;
     info_ptr = NULL;
-  }
+    }
 
-  if (NULL != row_pointers) {
-    free(row_pointers);
-    row_pointers = NULL;
-  }
+    if (NULL != row_pointers) {
+        free(row_pointers);
+        row_pointers = NULL;
+    }
 
-  if(r > 0){
-    st_form_alert(FORM_STOP, alert_message);
-  }
-  
-  return r;
+    if(r > 0){
+        st_form_alert(FORM_STOP, alert_message);
+    }
+
+    st_Progress_Bar_Signal(global_progress_bar, 100, (int8_t*)"Finished");
+    st_Progress_Bar_Step_Done(global_progress_bar);
+    st_Progress_Bar_Finish(global_progress_bar); 
+
+    return r;
  }
 
 void _st_Read_PNG_Callback(png_structp _pngptr, png_bytep _data, png_size_t _len){
