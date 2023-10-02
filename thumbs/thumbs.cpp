@@ -274,12 +274,15 @@ void* st_Thumb_MFDB_Update(void *p_param){
                     mfdb_free(this_win_thumb->wi_original_thumbs_mfdb);
                 }
                 this_win_thumb->wi_original_thumbs_mfdb = mfdb_alloc_bpp((int8_t*)destination_buffer, (nb_total_cols * this_win_thumb->thumb_w_Item) + (this_win_thumb->padx << 1), (nb_total_rows * this_win_thumb->thumb_h_Item) + (this_win_thumb->pady << 1), screen_workstation_bits_per_pixel);
-                if(screen_workstation_bits_per_pixel > 16){
+                if(screen_workstation_bits_per_pixel == 32){
                     st_MFDB_Fill(this_win_thumb->wi_original_thumbs_mfdb, 0xCCCCCCCC);
                 } 
-                // if(screen_workstation_bits_per_pixel == 16){
-                //     st_MFDB_Fill_bpp(this_win_thumb->wi_original_thumbs_mfdb, 0xB575B575, 32);
-                // } 
+                if(screen_workstation_bits_per_pixel == 24){
+                    st_MFDB_Fill_bpp(this_win_thumb->wi_original_thumbs_mfdb, 0xCCCCCCCC, 24);
+                }                 
+                if(screen_workstation_bits_per_pixel == 16){
+                    st_MFDB_Fill_bpp(this_win_thumb->wi_original_thumbs_mfdb, 0x0000B575, 16);
+                }
             }
 
             int16_t xy[8];
@@ -302,7 +305,7 @@ void* st_Thumb_MFDB_Update(void *p_param){
                             }else{
                                 this_win_thumb->thumbs_list_array[i].thumb_selected = FALSE;
                             }
-                        }                       
+                        }
 
                         int16_t thumb_xy[2];
                         thumb_xy[0] = (this_win_thumb->thumb_w_Item * k) + this_win_thumb->padx;
@@ -318,9 +321,7 @@ void* st_Thumb_MFDB_Update(void *p_param){
                         xy[7] = this_win_thumb->thumbs_list_array[i].thumb_win_pxy[3] + this_win_thumb->pady; 
                         // printf("i %d x%d y%d w%d h%d\n",i, xy[4], xy[5], xy[6], xy[7]);
                         vro_cpyfm(st_vdi_handle, S_ONLY, xy, thumb_mfdb, this_win_thumb->wi_original_thumbs_mfdb);
-
                         mfdb_free(thumb_mfdb);
-
                         i++;
                     }
                 }

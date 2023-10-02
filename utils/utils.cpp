@@ -318,7 +318,15 @@ void st_MFDB_Fill(MFDB* this_mfdb, u_int32_t background_color){
 
 void st_MFDB_Fill_bpp(MFDB* this_mfdb, u_int32_t background_color, int16_t bpp){
     u_int32_t numPixels = MFDB_STRIDE(this_mfdb->fd_w) * this_mfdb->fd_h;
+    u_int32_t *ptr_32 = (u_int32_t*)this_mfdb->fd_addr;
+    u_int16_t  *ptr_16 = (u_int16_t*)this_mfdb->fd_addr;
+    u_int8_t  *ptr_8 = (u_int8_t*)this_mfdb->fd_addr;
+    u_int8_t  *color = (u_int8_t*)&background_color;
     int16_t nb_components;
+    u_int8_t a = color[0];
+    u_int8_t r = color[1];
+    u_int8_t g = color[2];
+    u_int8_t b = color[3];
     if(bpp < 8){
         nb_components = 1;
         numPixels = (MFDB_STRIDE(this_mfdb->fd_w) * this_mfdb->fd_h) / (8 / bpp);
@@ -326,9 +334,34 @@ void st_MFDB_Fill_bpp(MFDB* this_mfdb, u_int32_t background_color, int16_t bpp){
         nb_components = bpp >> 3;
     }
 
-    for (u_int32_t i = 0; i < numPixels; ++i){
-        memcpy((u_int32_t*)this_mfdb->fd_addr + i, &background_color, nb_components);
+    switch (bpp)
+    {
+    case 32:
+        for (u_int32_t i = 0; i < numPixels; ++i){
+            memcpy(ptr_32 + i, &background_color, 1);
+        }
+        break;
+    case 24:
+        for (u_int32_t i = 0; i < numPixels; ++i){
+            *ptr_8++ = r;
+            *ptr_8++ = g;
+            *ptr_8++ = b;
+        }
+        break;
+    case 16:
+        for (u_int32_t i = 0; i < numPixels; ++i){
+            *ptr_16++ = (g << 8) | b;
+        }
+        break;
+    case 8:
+        for (u_int32_t i = 0; i < numPixels; ++i){
+            *ptr_8++ = b;
+        }
+        break;
+    default:
+        break;
     }
+
     return;
 }
 
