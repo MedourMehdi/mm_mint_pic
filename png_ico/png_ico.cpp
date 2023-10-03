@@ -326,8 +326,10 @@ void st_Control_Bar_Buffer_to_Screen(struct_st_control_bar* control_bar, GRECT* 
 	VdiHdl*	my_vdi_handle = control_bar->vdi_handle;
 	MFDB*	screen = control_bar->virtual_screen_mfdb;
 
-	w = control_bar->st_control_bar_mfdb.fd_w - 1;
-	h = control_bar->st_control_bar_mfdb.fd_h - 1;
+	// w = control_bar->st_control_bar_mfdb.fd_w - 1;
+	// h = control_bar->st_control_bar_mfdb.fd_h - 1;
+	w = raster_dest->g_w ;
+	h = raster_dest->g_h ;
 	x = 0;
 	y = 0;
 
@@ -340,8 +342,8 @@ void st_Control_Bar_Buffer_to_Screen(struct_st_control_bar* control_bar, GRECT* 
 
 	clipx = raster_dest->g_x;
 	clipy = raster_dest->g_y;
-	clipw = raster_dest->g_w - 1;
-	cliph = raster_dest->g_h - 1;
+	clipw = raster_dest->g_w - 2;
+	cliph = raster_dest->g_h - 2;
 
 	if((clipw != 0) && ( cliph != 0)) {
 		xy_clip[0] = clipx; xy_clip[1] = clipy; xy_clip[2] = clipx + clipw; xy_clip[3] = clipy + cliph;
@@ -375,7 +377,7 @@ void st_Control_Bar_Refresh_MFDB(struct_st_control_bar *control_bar,  MFDB *back
 
 	int16_t nb_components = background_mfdb->fd_nplanes >> 3;
 	u_int16_t control_bar_height = CONTROLBAR_H;
-	u_int8_t* dst_buffer = st_ScreenBuffer_Alloc_bpp(win_work_area_width, control_bar_height + 1, nb_components << 3);
+	u_int8_t* dst_buffer = st_ScreenBuffer_Alloc_bpp(win_work_area_width, control_bar_height, nb_components << 3);
 	if(dst_buffer == NULL){
 		sprintf(alert_message,"Error\nOut of memory");
 		st_form_alert(FORM_STOP, alert_message);
@@ -387,11 +389,11 @@ void st_Control_Bar_Refresh_MFDB(struct_st_control_bar *control_bar,  MFDB *back
 
 	int16_t xy[8];
 	/* Source MFDB */
-	xy[0] = elevator_posx; xy[1] = elevator_posy + win_work_area_height - control_bar_height;
-	xy[2] = xy[0] + win_work_area_width; xy[3] = xy[1] + control_bar_height;
+	xy[0] = elevator_posx; xy[1] = elevator_posy + win_work_area_height - control_bar->st_control_bar_mfdb.fd_h;
+	xy[2] = xy[0] + win_work_area_width; xy[3] = xy[1] + control_bar->st_control_bar_mfdb.fd_h;
 	/* Destination MFDB */
 	xy[4] = 0; xy[5] = 0; 
-	xy[6] = control_bar->st_control_bar_mfdb.fd_w; xy[7] = control_bar_height;
+	xy[6] = control_bar->st_control_bar_mfdb.fd_w; xy[7] = control_bar->st_control_bar_mfdb.fd_h;
 	
 	graf_mouse(M_OFF,0L);
 	vro_cpyfm(st_vdi_handle, S_ONLY, xy, control_bar->background_mfdb, &control_bar->st_control_bar_mfdb);	

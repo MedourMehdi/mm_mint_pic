@@ -197,7 +197,8 @@ void st_Init_WinImage_Control_Bar(void* p_param){
 	/* When control_bar_h is equal to zero the control bar was hidden - this value represent the height of the control bar */
 	this_win->wi_control_bar->control_bar_h = 0;
 	/* If you want some transparency filter set transparency to TRUE */
-	this_win->wi_control_bar->transparency = TRUE;
+	this_win->wi_control_bar->transparency = FALSE;
+	// this_win->wi_control_bar->transparency = TRUE;
 	if(cpu_type < 40 || computer_type < 5){
 		this_win->wi_control_bar->transparency = FALSE;
 		/* Disabling transparency computing on ST */
@@ -287,7 +288,14 @@ void st_Reload_Control_Bar(struct_window *this_win, struct_st_control_bar* contr
 			} else {
 				uint16_t elevator_x = this_win->work_area.g_w == this_win->total_length_w ? this_win->current_pos_x - 1 : this_win->current_pos_x ;
 				uint16_t elevator_y = this_win->work_area.g_h == this_win->total_length_h ? this_win->current_pos_y - 1 : this_win->current_pos_y ;
-				st_Control_Bar_Refresh_MFDB(control_bar, this_win->wi_to_display_mfdb, elevator_x, elevator_y, this_win->work_area.g_w, this_win->work_area.g_h);
+				// uint16_t work_w = this_win->work_area.g_w == this_win->total_length_w ? this_win->work_area.g_w + 1 : this_win->work_area.g_w - 1;
+				// uint16_t work_h = this_win->work_area.g_h == this_win->total_length_h ? this_win->work_area.g_h + 1 : this_win->work_area.g_h ;
+				uint16_t work_w = this_win->work_area.g_w;
+				uint16_t work_h = this_win->work_area.g_h;				
+
+				st_Control_Bar_Refresh_MFDB(control_bar, this_win->wi_to_display_mfdb, elevator_x, elevator_y, work_w, work_h);
+				// st_Control_Bar_Refresh_MFDB(control_bar, this_win->wi_to_display_mfdb, this_win->current_pos_x, this_win->current_pos_y, this_win->work_area.g_w, this_win->work_area.g_h);
+
 			}
 			if(msg_buffer[0] != WM_VSLID && msg_buffer[0] != WM_HSLID){
 				st_Control_Bar_Buffer_to_Screen(control_bar, &control_bar->rect_control_bar);
