@@ -326,10 +326,10 @@ void st_Control_Bar_Buffer_to_Screen(struct_st_control_bar* control_bar, GRECT* 
 	VdiHdl*	my_vdi_handle = control_bar->vdi_handle;
 	MFDB*	screen = control_bar->virtual_screen_mfdb;
 
-	// w = control_bar->st_control_bar_mfdb.fd_w - 1;
-	// h = control_bar->st_control_bar_mfdb.fd_h - 1;
-	w = raster_dest->g_w ;
-	h = raster_dest->g_h ;
+	w = control_bar->st_control_bar_mfdb.fd_w;
+	h = control_bar->st_control_bar_mfdb.fd_h;
+	// w = raster_dest->g_w ;
+	// h = raster_dest->g_h ;
 	x = 0;
 	y = 0;
 
@@ -342,8 +342,8 @@ void st_Control_Bar_Buffer_to_Screen(struct_st_control_bar* control_bar, GRECT* 
 
 	clipx = raster_dest->g_x;
 	clipy = raster_dest->g_y;
-	clipw = raster_dest->g_w - 2;
-	cliph = raster_dest->g_h - 2;
+	clipw = raster_dest->g_w - 1;
+	cliph = raster_dest->g_h - 1;
 
 	if((clipw != 0) && ( cliph != 0)) {
 		xy_clip[0] = clipx; xy_clip[1] = clipy; xy_clip[2] = clipx + clipw; xy_clip[3] = clipy + cliph;
