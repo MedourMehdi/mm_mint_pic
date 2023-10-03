@@ -380,7 +380,7 @@ void st_MFDB_Fill_8bits(MFDB* this_mfdb, u_int32_t background_color){
     return;
 }
 
-u_int8_t* st_ScreenBuffer_Alloc_bpp(int16_t width, int16_t height, int16_t bpp){
+u_int8_t* st_ScreenBuffer_Alloc_bpp(u_int16_t width, u_int16_t height, int16_t bpp){
     int16_t width_stride;
 	width_stride = MFDB_STRIDE(width) - width;
     u_int32_t destination_size_in_bytes;

@@ -32,7 +32,7 @@ void mfdb_duplicate(MFDB *src_mfdb, MFDB *dst_mfdb);
 void st_MFDB_Fill(MFDB* this_mfdb, u_int32_t background_color);
 void st_MFDB_Fill_bpp(MFDB* this_mfdb, u_int32_t background_color, int16_t bpp);
 void st_MFDB_Fill_8bits(MFDB* this_mfdb, u_int32_t background_color);
-u_int8_t* st_ScreenBuffer_Alloc_bpp(int16_t width, int16_t height, int16_t bpp);
+u_int8_t* st_ScreenBuffer_Alloc_bpp(u_int16_t width, u_int16_t height, int16_t bpp);
 void mfdb_free(MFDB* my_mfdb);
 
 void st_Save_Pal(int16_t* paletteBuffer, int16_t max_colors);
