@@ -325,13 +325,10 @@ void st_Control_Bar_Buffer_to_Screen(struct_st_control_bar* control_bar, GRECT* 
 
 	VdiHdl*	my_vdi_handle = control_bar->vdi_handle;
 	MFDB*	screen = control_bar->virtual_screen_mfdb;
-
-	w = control_bar->st_control_bar_mfdb.fd_w;
-	h = control_bar->st_control_bar_mfdb.fd_h;
-	// w = raster_dest->g_w ;
-	// h = raster_dest->g_h ;
 	x = 0;
 	y = 0;
+	w = control_bar->st_control_bar_mfdb.fd_w;
+	h = control_bar->st_control_bar_mfdb.fd_h;
 
 	if( control_bar->rect_control_bar.g_x < raster_dest->g_x){
 		x = raster_dest->g_x - control_bar->rect_control_bar.g_x;
@@ -354,7 +351,8 @@ void st_Control_Bar_Buffer_to_Screen(struct_st_control_bar* control_bar, GRECT* 
 	xy[0] = x; xy[1] = y; xy[2] = w - 1; xy[3] = h - 1;
 	/* Destination Buffer */
 	xy[4] = xy_clip[0]; xy[5] = xy_clip[1]; xy[6] = xy_clip[2]; xy[7] = xy_clip[3];
-
+printf("xy[0] %d, xy[1] %d, xy[2] %d, xy[3]%d\n", xy[0], xy[1], xy[2], xy[3]);
+printf("xy[4] %d, xy[5] %d, xy[6] %d, xy[7]%d\n", xy[4], xy[5], xy[6], xy[7]);
 	graf_mouse(M_OFF,0L);
 	vro_cpyfm(*my_vdi_handle, S_ONLY, xy, &control_bar->st_control_bar_mfdb, screen);
 	graf_mouse(M_ON,0L);
@@ -389,8 +387,7 @@ void st_Control_Bar_Refresh_MFDB(struct_st_control_bar *control_bar,  MFDB *back
 
 	int16_t xy[8];
 	/* Source MFDB */
-	printf("elevator_posx %d elevator_posy %d\n", elevator_posx, elevator_posy);
-	xy[0] = MAX(elevator_posx, 0); xy[1] = MAX(elevator_posy, 0) + win_work_area_height - control_bar->st_control_bar_mfdb.fd_h;
+	xy[0] = MAX(elevator_posx , 0); xy[1] = MAX(elevator_posy , 0) + win_work_area_height - control_bar->st_control_bar_mfdb.fd_h;
 	xy[2] = xy[0] + win_work_area_width; xy[3] = xy[1] + control_bar->st_control_bar_mfdb.fd_h;
 	/* Destination MFDB */
 	xy[4] = 0; xy[5] = 0; 
@@ -428,7 +425,6 @@ void st_Control_Bar_Redraw(struct_st_control_bar* control_bar, int16_t my_win_ha
 	while(rect.g_h  != 0 && rect.g_w != 0){
 		if ( rc_intersect((GRECT *)&msg_buffer[4], &rect) ){
 			if ( rc_intersect(&control_bar->rect_control_bar, &rect) ){
-				// rect.g_h = rect.g_h - 1;
 				st_Control_Bar_Buffer_to_Screen(control_bar, &rect);
 			}
 		}
@@ -452,6 +448,8 @@ void st_Control_Bar_Refresh_Classic(struct_st_control_bar *control_bar, int16_t 
 			sprintf(alert_message,"Error\nOut of memory");
 			st_form_alert(FORM_STOP, alert_message);
 		}
+
+		void* old_ptr = control_bar->st_control_bar_mfdb.fd_addr;
 
 		MFDB* MFDB32 = mfdb_alloc_bpp((int8_t *)dst_buffer, control_bar_requested_width, CONTROLBAR_H, 32);
 		st_MFDB_Fill(MFDB32, fill_color);
@@ -494,7 +492,7 @@ void st_Control_Bar_Refresh_Classic(struct_st_control_bar *control_bar, int16_t 
 		default:
 			break;
 		}
-
+		if(old_ptr != NULL){mem_free(old_ptr);}
 		control_bar->need_to_reload_control_mfdb = FALSE;
 	}
 }

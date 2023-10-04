@@ -356,10 +356,10 @@ void win_slider_size(int16_t my_win_handle, int16_t length_seen, int16_t directi
 void do_hslide(int16_t my_win_handle, int16_t new_hposition){
 	struct_window *this_win;
 	this_win = detect_window(my_win_handle);
-	int16_t old_position =  1000L * this_win->current_pos_x / (this_win->total_length_w - this_win->work_area.g_w);
+	int16_t old_position = 1000L * this_win->current_pos_x / (this_win->total_length_w - this_win->work_area.g_w);
 	new_hposition = MAX(1, MIN(new_hposition, 1000));
 	if(old_position != new_hposition){
-		this_win->current_pos_x = (this_win->total_length_w - this_win->work_area.g_w) * (long)new_hposition / 1000L;
+		this_win->current_pos_x = MAX(0, (this_win->total_length_w - this_win->work_area.g_w) * (long)new_hposition / 1000L);
 	}
 	wind_set(my_win_handle, WF_HSLIDE, new_hposition, 0, 0, 0);
 }
@@ -370,7 +370,7 @@ void do_vslide(int16_t my_win_handle, int16_t new_vposition){
 	int16_t old_position =  1000L * this_win->current_pos_y / (this_win->total_length_h - this_win->work_area.g_h);
 	new_vposition = MAX(1, MIN(new_vposition, 1000));
 	if(old_position != new_vposition){
-		this_win->current_pos_y = (this_win->total_length_h - this_win->work_area.g_h) * (long)new_vposition / 1000L;
+		this_win->current_pos_y = MAX(0, (this_win->total_length_h - this_win->work_area.g_h) * (long)new_vposition / 1000L);
 	}
 	wind_set(my_win_handle, WF_VSLIDE, new_vposition, 0, 0, 0);
 }
@@ -637,7 +637,7 @@ void st_Init_Default_Win(struct_window *this_win){
 	this_win->refresh_win = NULL;
     this_win->prefers_file_instead_mem = DO_WE_USE_FILE;
    
-	this_win->current_pos_x = 1; this_win->current_pos_y = 1;
+	this_win->current_pos_x = 0; this_win->current_pos_y = 0;
 	this_win->wi_control_bar = NULL;
 	this_win->wi_progress_bar = NULL;
 	this_win->wi_form = NULL;

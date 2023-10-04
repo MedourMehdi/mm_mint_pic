@@ -825,6 +825,7 @@ void *event_loop(void *result)
 				}
 				if(selected_window->wi_data->autoscale){					
 					selected_window->wi_data->remap_displayed_mfdb = TRUE;
+					send_message(selected_window->wi_handle, WM_REDRAW);
 				}
 				wind_calc(WC_BORDER,selected_window->wi_style, window_area_buffer[0], window_area_buffer[1], window_area_buffer[2], window_area_buffer[3],&window_area_buffer[0],&window_area_buffer[1],&window_area_buffer[2],&window_area_buffer[3]);
 				wind_set(msg_buffer[3],WF_CURRXYWH, window_area_buffer[0], window_area_buffer[1], window_area_buffer[2], window_area_buffer[3]);
@@ -840,7 +841,7 @@ void *event_loop(void *result)
 					form_dial(FMD_FINISH, 0, 0, 0, 0, rect->g_x, rect->g_y, rect->g_w, rect->g_h);
 					st_Control_Bar_PXY_Update(selected_window->wi_control_bar, &selected_window->work_area);
 					st_Reload_Control_Bar(selected_window, selected_window->wi_control_bar);
-					send_message(selected_window->wi_handle, WM_REDRAW);
+					// send_message(selected_window->wi_handle, WM_REDRAW);
 				}
 				if(selected_window->wi_data->thumbnail_master == TRUE){
 					if(selected_window->wi_thumb->thumbs_cols != selected_window->wi_thumb->thumb_w_Item / selected_window->work_area.g_w){
