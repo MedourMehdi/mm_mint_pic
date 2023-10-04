@@ -828,7 +828,10 @@ void *event_loop(void *result)
 				selected_window->refresh_win(selected_window->wi_handle);
 				if(selected_window->wi_control_bar != NULL){
 					st_Control_Bar_PXY_Update(selected_window->wi_control_bar, &selected_window->work_area);
-					st_Reload_Control_Bar(selected_window, selected_window->wi_control_bar);
+					st_Control_Bar_Redraw( selected_window->wi_control_bar, msg_buffer[3]);
+
+					// st_Control_Bar_PXY_Update(selected_window->wi_control_bar, &selected_window->work_area);
+					// st_Reload_Control_Bar(selected_window, selected_window->wi_control_bar);
 				}
 			}
 			break;
