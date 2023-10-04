@@ -37,63 +37,6 @@ void st_Win_Print_JPEG(int16_t this_win_handle){
     }
 }
 
-void st_Write_JPEG(u_int8_t* src_buffer, int width, int height, const char* filename)
-{
-
-    st_Progress_Bar_Add_Step(global_progress_bar);
-    st_Progress_Bar_Init(global_progress_bar, (int8_t*)"JPEG WRITING");
-    st_Progress_Bar_Signal(global_progress_bar, 10, (int8_t*)"JPEG image encoding");
-
-    J_COLOR_SPACE color_space = JCS_RGB;
-    struct jpeg_compress_struct cinfo;
-    struct jpeg_error_mgr jerr;
-
-    /* this is a pointer to one row of image data */
-    JSAMPROW row_pointer[1];
-    FILE *outfile = fopen( filename, "wb" );
-
-    if ( !outfile )
-    {
-        sprintf(alert_message, "Error opening output jpeg file %s\n!", filename );
-        st_form_alert(FORM_STOP, alert_message);
-        return;
-    }
-
-    st_Progress_Bar_Signal(global_progress_bar, 40, (int8_t*)"JPEG compression");
-    cinfo.err = jpeg_std_error( &jerr );
-    jpeg_create_compress(&cinfo);
-    jpeg_stdio_dest(&cinfo, outfile);
-
-    /* Setting the parameters of the output file here */
-    cinfo.image_width = width;  
-    cinfo.image_height = height;
-    cinfo.input_components = 3;
-    cinfo.in_color_space = color_space;
-    /* default compression parameters, we shouldn't be worried about these */
-    jpeg_set_defaults( &cinfo );
-    /* Now do the compression .. */
-    jpeg_start_compress( &cinfo, TRUE );
-    /* like reading a file, this time write one row at a time */
-    st_Progress_Bar_Signal(global_progress_bar, 70, (int8_t*)"Writing scanlines");
-    while( cinfo.next_scanline < cinfo.image_height )
-    {
-        row_pointer[0] = &src_buffer[ cinfo.next_scanline * MFDB_STRIDE(cinfo.image_width) *  cinfo.input_components];
-        jpeg_write_scanlines( &cinfo, row_pointer, 1 );
-    }
-
-    /* similar to read file, clean up after we're done compressing */
-    jpeg_finish_compress( &cinfo );
-    jpeg_destroy_compress( &cinfo );
-    fclose( outfile );
-    
-    st_Progress_Bar_Signal(global_progress_bar, 100, (int8_t*)"Finished");
-    st_Progress_Bar_Step_Done(global_progress_bar);
-    st_Progress_Bar_Finish(global_progress_bar); 
-
-    /* success code is 1! */
-    return;
-}
-
 void _st_Read_JPEG (int16_t this_win_handle,  boolean file_process){
 
     struct_window *this_win;
@@ -182,6 +125,7 @@ void _st_Read_JPEG (int16_t this_win_handle,  boolean file_process){
         jpeg_destroy_decompress(&cinfo);
 
         st_Progress_Bar_Signal(this_win->wi_progress_bar, 90, (int8_t*)"Building ARGB buffer");
+
         u_int8_t* ARGB_Buffer = st_ScreenBuffer_Alloc_bpp(width, height, nb_components_32bits << 3);
         if(ARGB_Buffer == NULL){
             sprintf(alert_message, "Out Of Mem Error\nAsked for %doctets", width * height * nb_components_32bits);
@@ -189,7 +133,6 @@ void _st_Read_JPEG (int16_t this_win_handle,  boolean file_process){
             return;
         }
         
-
         const size_t totalPixels = width * height;
         u_int32_t i = 0;
         u_int8_t* src_ptr = (u_int8_t*)RGB_Buffer;
@@ -199,7 +142,7 @@ void _st_Read_JPEG (int16_t this_win_handle,  boolean file_process){
             mem_free(this_win->wi_original_mfdb.fd_addr);
         }        
         mfdb_update_bpp(&this_win->wi_original_mfdb, (int8_t*)ARGB_Buffer, width, height, nb_components_32bits << 3);
-// printf("Colorspace %d", cinfo.out_color_space);
+
         u_int32_t index = 0, j = 0, x, y;
         if(nb_components_original == 1 && JCS_GRAYSCALE){
                 for(y = 0; y < height; y++){
@@ -236,3 +179,59 @@ void _st_Read_JPEG (int16_t this_win_handle,  boolean file_process){
         this_win->wi_data->wi_buffer_modified = FALSE;
     }    
 }
+
+void st_Write_JPEG(u_int8_t* src_buffer, int width, int height, const char* filename) {
+
+    st_Progress_Bar_Add_Step(global_progress_bar);
+    st_Progress_Bar_Init(global_progress_bar, (int8_t*)"JPEG WRITING");
+    st_Progress_Bar_Signal(global_progress_bar, 10, (int8_t*)"JPEG image encoding");
+
+    J_COLOR_SPACE color_space = JCS_RGB;
+    struct jpeg_compress_struct cinfo;
+    struct jpeg_error_mgr jerr;
+
+    /* this is a pointer to one row of image data */
+    JSAMPROW row_pointer[1];
+    FILE *outfile = fopen( filename, "wb" );
+
+    if ( !outfile ) {
+        sprintf(alert_message, "Error opening output jpeg file %s\n!", filename );
+        st_form_alert(FORM_STOP, alert_message);
+        return;
+    }
+
+    st_Progress_Bar_Signal(global_progress_bar, 40, (int8_t*)"JPEG compression");
+    cinfo.err = jpeg_std_error( &jerr );
+    jpeg_create_compress(&cinfo);
+    jpeg_stdio_dest(&cinfo, outfile);
+
+    /* Setting the parameters of the output file here */
+    cinfo.image_width = width;  
+    cinfo.image_height = height;
+    cinfo.input_components = 3;
+    cinfo.in_color_space = color_space;
+    /* default compression parameters, we shouldn't be worried about these */
+    jpeg_set_defaults( &cinfo );
+    /* Now do the compression .. */
+    jpeg_start_compress( &cinfo, TRUE );
+    /* like reading a file, this time write one row at a time */
+    st_Progress_Bar_Signal(global_progress_bar, 70, (int8_t*)"Writing scanlines");
+    while( cinfo.next_scanline < cinfo.image_height )
+    {
+        row_pointer[0] = &src_buffer[ cinfo.next_scanline * MFDB_STRIDE(cinfo.image_width) *  cinfo.input_components];
+        jpeg_write_scanlines( &cinfo, row_pointer, 1 );
+    }
+
+    /* similar to read file, clean up after we're done compressing */
+    jpeg_finish_compress( &cinfo );
+    jpeg_destroy_compress( &cinfo );
+    fclose( outfile );
+    
+    st_Progress_Bar_Signal(global_progress_bar, 100, (int8_t*)"Finished");
+    st_Progress_Bar_Step_Done(global_progress_bar);
+    st_Progress_Bar_Finish(global_progress_bar); 
+
+    /* success code is 1! */
+    return;
+}
+

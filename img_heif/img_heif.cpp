@@ -70,9 +70,11 @@ void _st_Read_HEIF(int16_t this_win_handle, boolean file_process, u_int32_t img_
         st_Progress_Bar_Add_Step(this_win->wi_progress_bar);
         st_Progress_Bar_Init(this_win->wi_progress_bar, (int8_t*)"HEIF READING");
         st_Progress_Bar_Signal(this_win->wi_progress_bar, 15, (int8_t*)"Init");
-#if LIBHEIF_HAVE_VERSION(1,13,0)
+
+        #if LIBHEIF_HAVE_VERSION(1,13,0)
         heif_init(NULL);
-#endif
+        #endif
+
         st_Progress_Bar_Signal(this_win->wi_progress_bar, 25, (int8_t*)"Context read");
 
         struct heif_context *ctx = heif_context_alloc();
@@ -128,13 +130,13 @@ void _st_Read_HEIF(int16_t this_win_handle, boolean file_process, u_int32_t img_
             mem_free(this_win->wi_original_mfdb.fd_addr);
         }
 
-        uint8_t* destination_buffer = st_ScreenBuffer_Alloc_bpp(width, height, nb_components_32bits << 3);
+        uint8_t* destination_buffer = st_ScreenBuffer_Alloc_bpp(width, height, 32);
         if(destination_buffer == NULL){
-            sprintf(alert_message, "Out Of Mem Error\nAsked for %doctets", width * height * nb_components_32bits);
+            sprintf(alert_message, "Out Of Mem Error\nAsked for %doctets", (width * height) << 2);
             st_form_alert(FORM_EXCLAM, alert_message);
         } else {
             _st_Heif_RGBA_To_ARGB((u_int8_t *)data, destination_buffer, width, height);
-            mfdb_update_bpp(&this_win->wi_original_mfdb, (int8_t*)destination_buffer, width, height, nb_components_32bits << 3);
+            mfdb_update_bpp(&this_win->wi_original_mfdb, (int8_t*)destination_buffer, width, height, 32);
             this_win->total_length_w = this_win->wi_original_mfdb.fd_w;
             this_win->total_length_h = this_win->wi_original_mfdb.fd_h;
             this_win->wi_data->stop_original_data_load = TRUE;
@@ -147,9 +149,11 @@ void _st_Read_HEIF(int16_t this_win_handle, boolean file_process, u_int32_t img_
         heif_image_release(img);
         heif_context_free(ctx);
         heif_image_handle_release(handle);
-#if LIBHEIF_HAVE_VERSION(1,13,0)
+
+        #if LIBHEIF_HAVE_VERSION(1,13,0)
         heif_deinit();
-#endif
+        #endif
+        
         mem_free(img);
         mem_free((void*)data);
     }

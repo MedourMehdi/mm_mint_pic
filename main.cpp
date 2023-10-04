@@ -114,7 +114,7 @@ u_int32_t grey_color = 0x7AC0C0C0;
 /* Functions executed when you click an icon from the control bar */
 
 void* st_Img_Open(void*);
-void* st_Img_Windowed(void*);
+void* st_Img_Autoscale(void*);
 void* st_Img_Reload(void* p_param);
 
 void* st_Img_Resize(void* p_param);
@@ -147,7 +147,7 @@ struct_st_ico_png st_ico_21_mfdb, st_ico_22_mfdb, st_ico_23_mfdb, st_ico_24_mfdb
 struct_st_ico_png_list control_bar_winimage_list[] = {
 	{	1,		 "ico24/open.png",		NULL,		&st_ico_1_mfdb,		NULL,		st_Img_Open, 	12,		4 ,		FALSE	},
 	{	2,		 "ico24/export.png",		NULL,		&st_ico_2_mfdb,		NULL,		st_Img_Export, 	48,		4 ,		FALSE	},
-	{	3,		 "ico24/collapse.png",		"ico24/expand.png",		&st_ico_3_mfdb,		&st_ico_4_mfdb,		st_Img_Windowed, 	80,		4 ,		FALSE	},
+	{	3,		 "ico24/collapse.png",		"ico24/expand.png",		&st_ico_3_mfdb,		&st_ico_4_mfdb,		st_Img_Autoscale, 	80,		4 ,		FALSE	},
 	{	4,		 "ico24/reload.png",		NULL,		&st_ico_5_mfdb,		NULL,		st_Img_Reload, 	112,		4 ,		FALSE	},
 	{	5,		 "ico24/resize.png",		NULL,		&st_ico_6_mfdb,		NULL,		st_Img_Resize, 	144,		4 ,		FALSE	},
 	{	6,		 "ico24/cut.png",		NULL,		&st_ico_7_mfdb,		NULL,		st_Img_Crop, 	176,		4 ,		FALSE	},
@@ -166,7 +166,7 @@ struct_st_ico_png_list control_bar_winstart_list[] = {
 struct_st_ico_png_list control_bar_windocument_list[] = {
 	{	1,		 "ico24/open.png",		NULL,		&st_ico_21_mfdb,		NULL,		st_Img_Open, 	12,		4 ,		FALSE	},
 	{	2,		 "ico24/export.png",		NULL,		&st_ico_22_mfdb,		NULL,		st_Img_Export, 	48,		4 ,		FALSE	},
-	{	3,		 "ico24/collapse.png",		"ico24/expand.png",		&st_ico_23_mfdb,		&st_ico_24_mfdb,		st_Img_Windowed, 	80,		4 ,		FALSE	},
+	{	3,		 "ico24/collapse.png",		"ico24/expand.png",		&st_ico_23_mfdb,		&st_ico_24_mfdb,		st_Img_Autoscale, 	80,		4 ,		FALSE	},
 	{	4,		 "ico24/up.png", NULL,		&st_ico_25_mfdb,		NULL,		st_Img_up, 	112,		4 ,		FALSE	},
 	{	5,		 "ico24/down.png",		NULL,		&st_ico_26_mfdb,		NULL,		st_Img_down, 	144,		4 ,		FALSE	},
 	{	6,		 "ico24/cut.png",		NULL,		&st_ico_27_mfdb,		NULL,		st_Img_Crop, 	176,		4 ,		FALSE	},
@@ -286,17 +286,6 @@ void st_Reload_Control_Bar(struct_window *this_win, struct_st_control_bar* contr
 				control_bar->need_to_reload_control_mfdb = control_bar->st_control_bar_mfdb.fd_w == wrez ? control_bar->need_to_reload_control_mfdb : true;
 				st_Control_Bar_Refresh_Classic(control_bar, wrez, screen_workstation_bits_per_pixel);
 			} else {
-				// uint16_t elevator_x = this_win->work_area.g_w == this_win->total_length_w ? this_win->current_pos_x - 1 : this_win->current_pos_x ;
-				// uint16_t elevator_y = this_win->work_area.g_h == this_win->total_length_h ? this_win->current_pos_y - 1 : this_win->current_pos_y ;				
-				// uint16_t work_w = this_win->work_area.g_w == this_win->total_length_w ? this_win->work_area.g_w + 1 : this_win->work_area.g_w - 1;
-				// uint16_t work_h = this_win->work_area.g_h == this_win->total_length_h ? this_win->work_area.g_h + 1 : this_win->work_area.g_h ;
-				// uint16_t elevator_x = this_win->current_pos_x - 1;
-				// uint16_t elevator_y = this_win->current_pos_y - 1;				
-				// uint16_t work_w = this_win->work_area.g_w;
-				// uint16_t work_h = this_win->work_area.g_h;				
-
-				// st_Control_Bar_Refresh_MFDB(control_bar, this_win->wi_to_display_mfdb, elevator_x, elevator_y, work_w, work_h);
-				// st_Control_Bar_Refresh_MFDB(control_bar, this_win->wi_to_display_mfdb, this_win->current_pos_x, this_win->current_pos_y, this_win->work_area.g_w, this_win->work_area.g_h);
 				st_Control_Bar_Refresh_MFDB(control_bar, this_win->wi_to_display_mfdb, this_win->current_pos_x, this_win->current_pos_y, this_win->work_area.g_w, this_win->work_area.g_h);
 			}
 			if(msg_buffer[0] != WM_VSLID && msg_buffer[0] != WM_HSLID){
@@ -531,7 +520,7 @@ void* st_Img_Reload(void* param){
 	return NULL;
 }
 
-void* st_Img_Windowed(void* param){
+void* st_Img_Autoscale(void* param){
 	struct_window *this_win = (struct_window*)param;
 	this_win->wi_data->autoscale = this_win->wi_data->autoscale == TRUE ? FALSE : TRUE;
 	this_win->wi_data->remap_displayed_mfdb = TRUE;
@@ -546,27 +535,17 @@ void* st_Img_Windowed(void* param){
 /* Main */
 
 int main(int argc, char *argv[]){
-	TRACE(("Starting App\n"))
+
 	char* this_file = (char*)mem_alloc(256);
 	memset(this_file, 0, 256);
 
-    if(!init_app()){
-		TRACE(("Failed Init App\n"))
-		goto quit;
-	}
+    if(!init_app()){ goto quit;	}
 	
-	TRACE(("st_Progress_Bar_Alloc_Enable()\n"))
 	global_progress_bar = st_Progress_Bar_Alloc_Enable();
 
-	if(!st_Ico_PNG_Init(control_bar_winimage_list)){
-		TRACE(("Failed st_Ico_PNG_Init()\n"))
-		goto quit;
-	}
+	if(!st_Ico_PNG_Init(control_bar_winimage_list)){ goto quit;	}
 
-	if(!st_Ico_PNG_Init(control_bar_windocument_list)){
-		TRACE(("Failed st_Ico_PNG_Init()\n"))
-		goto quit;
-	}
+	if(!st_Ico_PNG_Init(control_bar_windocument_list)){ goto quit; }
 
 	if (argc > 1){
 		for(int16_t i = 1; i < argc; i++) {
@@ -588,14 +567,8 @@ int main(int argc, char *argv[]){
 		} while ( pfile ) ;
 		mem_free(va_file);
 	} else {
-		if(!st_Ico_PNG_Init(control_bar_winstart_list)){
-			TRACE(("Failed st_Ico_PNG_Init()\n"))
-			goto close_ico_png;
-		}
-		if(!new_win_start()){
-			TRACE(("Failed new_win_start()\n"))
-			goto close_ico_png;
-		}		
+		if(!st_Ico_PNG_Init(control_bar_winstart_list)){goto close_ico_png;}
+		if(!new_win_start()){goto close_ico_png;}		
 	}
 
 	while (!exit_call) {
@@ -829,9 +802,6 @@ void *event_loop(void *result)
 				if(selected_window->wi_control_bar != NULL){
 					st_Control_Bar_PXY_Update(selected_window->wi_control_bar, &selected_window->work_area);
 					st_Control_Bar_Redraw( selected_window->wi_control_bar, msg_buffer[3]);
-
-					// st_Control_Bar_PXY_Update(selected_window->wi_control_bar, &selected_window->work_area);
-					// st_Reload_Control_Bar(selected_window, selected_window->wi_control_bar);
 				}
 			}
 			break;
@@ -840,8 +810,6 @@ void *event_loop(void *result)
 			selected_window = detect_window(msg_buffer[3]);
 			if(selected_window != NULL){
 				wind_set(msg_buffer[3],WF_TOP,0,0,0,0);
-				// msg_buffer[6] = MAX(msg_buffer[6], min_win_wsize);
-				// msg_buffer[7] = MAX(msg_buffer[7], min_win_hsize);
 				wind_calc(WC_WORK,selected_window->wi_style, msg_buffer[4], msg_buffer[5], msg_buffer[6], msg_buffer[7],&window_area_buffer[0],&window_area_buffer[1],&window_area_buffer[2],&window_area_buffer[3]);
 				if(selected_window->wi_data->window_size_limited && !selected_window->wi_data->autoscale){
 					if(selected_window->wi_data->thumbnail_master == TRUE){
@@ -990,7 +958,6 @@ void *event_loop(void *result)
 						if(selected_window->wi_control_bar != NULL && !selected_window->wi_control_bar->force_unhide){
 							selected_window->wi_control_bar->control_bar_h = selected_window->wi_control_bar->control_bar_h > 0 ? 0 : CONTROLBAR_H;
 							st_Control_Bar_PXY_Update(selected_window->wi_control_bar, &selected_window->work_area);
-							// wipe_pxy_area(selected_window->work_pxy);
 							win_refresh_from_buffer(selected_window);
 						}
 						break;
