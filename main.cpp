@@ -18,6 +18,7 @@
 #include "img_pi/img_pi.h"
 #include "img_svg/img_svg.h"
 #include "img_pdf/img_pdf.h"
+#include "img_gif/img_gif.h"
 
 #include "img_dummy/img_dummy.h"
 
@@ -1090,6 +1091,8 @@ bool new_win_img(const char *new_file){
 					st_Init_SVG(&win_struct_array[i]);
 				} else if (check_ext(file_extension, "PDF")){
 					st_Init_PDF(&win_struct_array[i]);
+				} else if (check_ext(file_extension, "GIF")){
+					st_Init_GIF(&win_struct_array[i]);
 				} 
 
 				else {
