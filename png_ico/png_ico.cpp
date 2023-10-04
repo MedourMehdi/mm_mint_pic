@@ -342,8 +342,8 @@ void st_Control_Bar_Buffer_to_Screen(struct_st_control_bar* control_bar, GRECT* 
 
 	clipx = raster_dest->g_x;
 	clipy = raster_dest->g_y;
-	clipw = raster_dest->g_w - 1;
-	cliph = raster_dest->g_h - 1;
+	clipw = raster_dest->g_w;
+	cliph = raster_dest->g_h;
 
 	if((clipw != 0) && ( cliph != 0)) {
 		xy_clip[0] = clipx; xy_clip[1] = clipy; xy_clip[2] = clipx + clipw; xy_clip[3] = clipy + cliph;
@@ -389,7 +389,8 @@ void st_Control_Bar_Refresh_MFDB(struct_st_control_bar *control_bar,  MFDB *back
 
 	int16_t xy[8];
 	/* Source MFDB */
-	xy[0] = elevator_posx; xy[1] = elevator_posy + win_work_area_height - control_bar->st_control_bar_mfdb.fd_h;
+	printf("elevator_posx %d elevator_posy %d\n", elevator_posx, elevator_posy);
+	xy[0] = MAX(elevator_posx, 0); xy[1] = MAX(elevator_posy, 0) + win_work_area_height - control_bar->st_control_bar_mfdb.fd_h;
 	xy[2] = xy[0] + win_work_area_width; xy[3] = xy[1] + control_bar->st_control_bar_mfdb.fd_h;
 	/* Destination MFDB */
 	xy[4] = 0; xy[5] = 0; 

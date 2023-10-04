@@ -286,16 +286,18 @@ void st_Reload_Control_Bar(struct_window *this_win, struct_st_control_bar* contr
 				control_bar->need_to_reload_control_mfdb = control_bar->st_control_bar_mfdb.fd_w == wrez ? control_bar->need_to_reload_control_mfdb : true;
 				st_Control_Bar_Refresh_Classic(control_bar, wrez, screen_workstation_bits_per_pixel);
 			} else {
-				uint16_t elevator_x = this_win->work_area.g_w == this_win->total_length_w ? this_win->current_pos_x - 1 : this_win->current_pos_x ;
-				uint16_t elevator_y = this_win->work_area.g_h == this_win->total_length_h ? this_win->current_pos_y - 1 : this_win->current_pos_y ;
+				// uint16_t elevator_x = this_win->work_area.g_w == this_win->total_length_w ? this_win->current_pos_x - 1 : this_win->current_pos_x ;
+				// uint16_t elevator_y = this_win->work_area.g_h == this_win->total_length_h ? this_win->current_pos_y - 1 : this_win->current_pos_y ;				
 				// uint16_t work_w = this_win->work_area.g_w == this_win->total_length_w ? this_win->work_area.g_w + 1 : this_win->work_area.g_w - 1;
 				// uint16_t work_h = this_win->work_area.g_h == this_win->total_length_h ? this_win->work_area.g_h + 1 : this_win->work_area.g_h ;
-				uint16_t work_w = this_win->work_area.g_w;
-				uint16_t work_h = this_win->work_area.g_h;				
+				// uint16_t elevator_x = this_win->current_pos_x - 1;
+				// uint16_t elevator_y = this_win->current_pos_y - 1;				
+				// uint16_t work_w = this_win->work_area.g_w;
+				// uint16_t work_h = this_win->work_area.g_h;				
 
-				st_Control_Bar_Refresh_MFDB(control_bar, this_win->wi_to_display_mfdb, elevator_x, elevator_y, work_w, work_h);
+				// st_Control_Bar_Refresh_MFDB(control_bar, this_win->wi_to_display_mfdb, elevator_x, elevator_y, work_w, work_h);
 				// st_Control_Bar_Refresh_MFDB(control_bar, this_win->wi_to_display_mfdb, this_win->current_pos_x, this_win->current_pos_y, this_win->work_area.g_w, this_win->work_area.g_h);
-
+				st_Control_Bar_Refresh_MFDB(control_bar, this_win->wi_to_display_mfdb, this_win->current_pos_x, this_win->current_pos_y, this_win->work_area.g_w, this_win->work_area.g_h);
 			}
 			if(msg_buffer[0] != WM_VSLID && msg_buffer[0] != WM_HSLID){
 				st_Control_Bar_Buffer_to_Screen(control_bar, &control_bar->rect_control_bar);
