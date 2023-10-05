@@ -17,6 +17,26 @@ You can change the icons to suit your needs by simply replacing the files under 
 No shared library or module is required to run it.
 </div>
 
+## Supported formats
+
+### Read & Write
+* Degas PI1/PI3
+* JPEG 
+* PNG
+* TIFF
+* TARGA
+* BMP
+* WEBP
+* HEIF/HEIC
+
+### Read
+* PDF (Password not managed yet)
+* SVG
+* GIF (No player yet)
+
+### Write
+* MFD (Screen memory RAW format)
+
 ## Getting Started
 
 ### Build Dependencies
@@ -26,11 +46,13 @@ No shared library or module is required to run it.
 * PNGLib
 * ZLib
 * LibYuv
-* LibHeif (min v1.15)
+* LibHeif
 * Libde265 HEVC
 * x265 HEVC Encoder
 * LibWebp
 * LibJpeg
+* GifLib
+* [Xpdf](https://github.com/MedourMehdi/xpdf)
 
 You should found most of these libraries here: https://tho-otto.de/crossmint.php or you can read https://www.atari-forum.com/viewforum.php?f=70 if you want to rebuild them.
 
