@@ -402,16 +402,23 @@ void* st_Img_ZoomIn(void* p_param){
 	if(this_win->wi_data->resized){
 		this_win->wi_data->img.scaled_width = (this_win->wi_data->img.export_width * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
 		this_win->wi_data->img.scaled_height = (this_win->wi_data->img.export_height * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
-	}else if(this_win->wi_data->doc_media){
+	}
+	// else if(this_win->wi_data->doc_media){
+	// 		this_win->wi_data->img.scaled_pourcentage = +10;
+	// 		this_win->wi_data->img.scaled_width = (this_win->total_length_w * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
+	// 		this_win->wi_data->img.scaled_height = (this_win->total_length_h * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
+	// }else{
+	// 	this_win->wi_data->img.scaled_width = (this_win->wi_data->img.original_width * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
+	// 	this_win->wi_data->img.scaled_height = (this_win->wi_data->img.original_height * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
+	// }
+	else{
 			this_win->wi_data->img.scaled_pourcentage = +10;
 			this_win->wi_data->img.scaled_width = (this_win->total_length_w * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
 			this_win->wi_data->img.scaled_height = (this_win->total_length_h * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
-	}else{
-		this_win->wi_data->img.scaled_width = (this_win->wi_data->img.original_width * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
-		this_win->wi_data->img.scaled_height = (this_win->wi_data->img.original_height * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
 	}
+	
 	this_win->refresh_win(this_win->wi_handle);
-	send_message(this_win->wi_handle, WM_REDRAW);	
+	send_message(this_win->wi_handle, WM_REDRAW);
 	return NULL;
 }
 
@@ -425,15 +432,23 @@ void* st_Img_ZoomOut(void* p_param){
 		if(this_win->wi_data->resized){
 			this_win->wi_data->img.scaled_width = (this_win->wi_data->img.export_width * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
 			this_win->wi_data->img.scaled_height = (this_win->wi_data->img.export_height * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
-		}else if(this_win->wi_data->doc_media){
+		}
+		// else if(this_win->wi_data->doc_media){
+		// 	this_win->wi_data->img.scaled_pourcentage = -10;
+		// 	this_win->wi_data->img.scaled_width = (this_win->total_length_w * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
+		// 	this_win->wi_data->img.scaled_height = (this_win->total_length_h * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
+		// }else{
+		// 	this_win->wi_data->img.scaled_width = (this_win->wi_data->img.original_width * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
+		// 	this_win->wi_data->img.scaled_height = (this_win->wi_data->img.original_height * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
+		// }
+		else{
 			this_win->wi_data->img.scaled_pourcentage = -10;
 			this_win->wi_data->img.scaled_width = (this_win->total_length_w * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
 			this_win->wi_data->img.scaled_height = (this_win->total_length_h * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
-		}else{
-			this_win->wi_data->img.scaled_width = (this_win->wi_data->img.original_width * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
-			this_win->wi_data->img.scaled_height = (this_win->wi_data->img.original_height * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
 		}
+		
 		this_win->refresh_win(this_win->wi_handle);
+		
 		send_message(this_win->wi_handle, WM_REDRAW);
 	}
 	return NULL;
@@ -824,7 +839,7 @@ void *event_loop(void *result)
 						window_area_buffer[3] = MAX( MIN(selected_window->total_length_h, window_area_buffer[3]), MIN_WINDOWS_HSIZE);
 					}
 				}
-				if(selected_window->wi_data->autoscale){					
+				if(selected_window->wi_data->autoscale || selected_window->wi_data->fx_on){					
 					selected_window->wi_data->remap_displayed_mfdb = TRUE;
 					send_message(selected_window->wi_handle, WM_REDRAW);
 				}

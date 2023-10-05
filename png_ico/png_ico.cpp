@@ -343,7 +343,7 @@ void st_Control_Bar_Buffer_to_Screen(struct_st_control_bar* control_bar, GRECT* 
 	cliph = raster_dest->g_h;
 
 	if((clipw != 0) && ( cliph != 0)) {
-		xy_clip[0] = clipx; xy_clip[1] = clipy; xy_clip[2] = clipx + clipw; xy_clip[3] = clipy + cliph;
+		xy_clip[0] = clipx; xy_clip[1] = clipy; xy_clip[2] = clipx + clipw - 1; xy_clip[3] = clipy + cliph;
 		vs_clip( *my_vdi_handle, TRUE, xy_clip );
 	}
 
@@ -351,8 +351,8 @@ void st_Control_Bar_Buffer_to_Screen(struct_st_control_bar* control_bar, GRECT* 
 	xy[0] = x; xy[1] = y; xy[2] = w - 1; xy[3] = h - 1;
 	/* Destination Buffer */
 	xy[4] = xy_clip[0]; xy[5] = xy_clip[1]; xy[6] = xy_clip[2]; xy[7] = xy_clip[3];
-printf("xy[0] %d, xy[1] %d, xy[2] %d, xy[3]%d\n", xy[0], xy[1], xy[2], xy[3]);
-printf("xy[4] %d, xy[5] %d, xy[6] %d, xy[7]%d\n", xy[4], xy[5], xy[6], xy[7]);
+// printf("xy[0] %d, xy[1] %d, xy[2] %d, xy[3]%d\n", xy[0], xy[1], xy[2], xy[3]);
+// printf("xy[4] %d, xy[5] %d, xy[6] %d, xy[7]%d\n", xy[4], xy[5], xy[6], xy[7]);
 	graf_mouse(M_OFF,0L);
 	vro_cpyfm(*my_vdi_handle, S_ONLY, xy, &control_bar->st_control_bar_mfdb, screen);
 	graf_mouse(M_ON,0L);
@@ -422,7 +422,7 @@ void st_Control_Bar_Redraw(struct_st_control_bar* control_bar, int16_t my_win_ha
 	graf_mouse(M_OFF,0L);
 	wind_update(BEG_UPDATE);
 	wind_get(my_win_handle, WF_FIRSTXYWH, &rect.g_x, &rect.g_y, &rect.g_w, &rect.g_h);
-	while(rect.g_h  != 0 && rect.g_w != 0){
+	while(rect.g_h != 0 && rect.g_w != 0){
 		if ( rc_intersect((GRECT *)&msg_buffer[4], &rect) ){
 			if ( rc_intersect(&control_bar->rect_control_bar, &rect) ){
 				st_Control_Bar_Buffer_to_Screen(control_bar, &rect);
