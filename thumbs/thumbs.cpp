@@ -2,6 +2,14 @@
 #include "../utils_gfx/pix_convert.h"
 #include "../utils/utils.h"
 
+#include "../utils_gfx/ttf.h"
+#ifndef TTF_DEFAULT_PATH
+#define TTF_DEFAULT_PATH "./fonts/arial.ttf"
+#endif
+#ifndef PRIMARY_IMAGE_ID
+#define PRIMARY_IMAGE_ID    -1
+#endif
+
 void st_Thumb_Win_PXY_Update(struct_st_thumbs_list *thumbs_list_array, int16_t new_pos_x, int16_t new_pos_y);
 MFDB* st_Init_Outline_MFDB(struct_thumbs *this_win_thumb, u_int32_t background_color);
 MFDB* st_Outline_MFDB(struct_thumbs *this_win_thumb, u_int16_t thumb_idx);
@@ -356,4 +364,68 @@ void st_Thumb_Refresh(int16_t win_thumb_handle){
     st_End_Window_Process(this_win);
     
 	return;
+}
+
+void st_Thumb_List_Generic(struct_window *this_win, 
+                            const char* title, const char* media_type, 
+                            u_int16_t wanted_width, u_int16_t wanted_height,
+                            u_int16_t wanted_padx, u_int16_t wanted_pady,
+                            bool open_new_win){
+
+    if(this_win->wi_data->img.img_total > 1){
+        st_Progress_Bar_Add_Step(this_win->wi_progress_bar);
+        st_Progress_Bar_Init(this_win->wi_progress_bar, (int8_t*)title);
+        st_Progress_Bar_Signal(this_win->wi_progress_bar, 1, (int8_t*)"Init");
+
+        this_win->wi_data->thumbnail_slave = true;
+        this_win->wi_thumb = st_Thumb_Alloc(this_win->wi_data->img.img_total, this_win->wi_handle, wanted_padx, wanted_pady, wanted_width, wanted_height);
+
+        this_win->wi_thumb->thumbs_open_new_win = open_new_win;
+        
+        this_win->wi_thumb->thumbs_area_w = 0;
+        this_win->wi_thumb->thumbs_area_h = this_win->wi_thumb->pady;
+        this_win->wi_thumb->thumbs_nb = this_win->wi_data->img.img_total;
+
+        for (int16_t i = 0; i < this_win->wi_thumb->thumbs_nb; i++) {
+
+            this_win->wi_thumb->thumbs_list_array[i].thumb_id = i;
+            this_win->wi_thumb->thumbs_list_array[i].thumb_index = i + 1;
+
+            char progess_bar_indication[96];
+            sprintf(progess_bar_indication, "Indexing media list: %s %d/%d", media_type, i+1, this_win->wi_thumb->thumbs_nb);
+            st_Progress_Bar_Signal(this_win->wi_progress_bar, (mul_100_fast(i) / this_win->wi_thumb->thumbs_nb), (int8_t*)progess_bar_indication);
+
+            MFDB* thumb_original_mfdb;
+
+            u_int8_t* destination_buffer = st_ScreenBuffer_Alloc_bpp(wanted_width, wanted_height, 32);
+            thumb_original_mfdb = mfdb_alloc_bpp( (int8_t*)destination_buffer, wanted_width, wanted_height, 32);
+
+            st_MFDB_Fill(thumb_original_mfdb,0xFFFFFFFF);
+
+            char thumb_txt[10] = {'\0'};
+            sprintf(thumb_txt,"%s %d", media_type, this_win->wi_thumb->thumbs_list_array[i].thumb_index );
+            print_ft_simple(4, thumb_original_mfdb->fd_h - 4, thumb_original_mfdb, (char*)TTF_DEFAULT_PATH, 14, thumb_txt);
+
+            if(screen_workstation_bits_per_pixel != 32){
+                this_win->wi_thumb->thumbs_list_array[i].thumb_mfdb = this_win->render_win(thumb_original_mfdb);
+                mfdb_free(thumb_original_mfdb);
+            } else {
+                this_win->wi_thumb->thumbs_list_array[i].thumb_mfdb = thumb_original_mfdb;
+            }
+
+            this_win->wi_thumb->thumbs_list_array[i].thumb_mfdb_stride = MFDB_STRIDE(wanted_width) - wanted_width;  
+
+            this_win->wi_thumb->thumbs_area_w = MAX( (this_win->wi_thumb->padx << 1) + wanted_width, this_win->wi_thumb->thumbs_area_w);
+            this_win->wi_thumb->thumbs_area_h += wanted_height + this_win->wi_thumb->pady;
+            this_win->wi_thumb->thumbs_list_array[i].thumb_selected = FALSE;
+        }
+        st_Progress_Bar_Step_Done(this_win->wi_progress_bar);
+        st_Progress_Bar_Finish(this_win->wi_progress_bar);
+        this_win->wi_thumb->thumbs_area_h += this_win->wi_thumb->pady;
+        this_win->wi_thumb->thumbs_list_array[0].thumb_selected = TRUE;
+    } else {
+        this_win->wi_data->thumbnail_slave = false;
+        this_win->wi_data->img.img_id = PRIMARY_IMAGE_ID;
+    }
+
 }

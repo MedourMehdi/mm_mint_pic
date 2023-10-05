@@ -60,7 +60,7 @@ static char userPassword[33] = "";
 void st_Win_Print_PDF(int16_t this_win_handle);
 void _st_Read_PDF(int16_t this_win_handle, boolean file_process, int16_t img_id);
 void _st_Handle_Thumbs_PDF(int16_t this_win_handle, boolean file_process);
-void _st_Handle_Thumbs_Generic(int16_t this_win_handle, boolean file_process);
+void _st_Handle_Thumbs_PDF_Generic(int16_t this_win_handle, boolean file_process);
 
 void st_Init_PDF(struct_window *this_win){
     this_win->wi_data->image_media = TRUE;
@@ -72,7 +72,6 @@ void st_Init_PDF(struct_window *this_win){
     this_win->wi_progress_bar = global_progress_bar;
     this_win->prefers_file_instead_mem = TRUE;
 
-
     if(!st_Set_Renderer(this_win)){
         sprintf(alert_message, "screen_format: %d\nscreen_bits_per_pixel: %d", screen_workstation_format, screen_workstation_bits_per_pixel);
         st_form_alert(FORM_STOP, alert_message);
@@ -81,12 +80,11 @@ void st_Init_PDF(struct_window *this_win){
     /* Pages stuff */
     if(this_win->wi_thumb == NULL){
         if(cpu_type < 40){
-            _st_Handle_Thumbs_Generic(this_win->wi_handle, this_win->prefers_file_instead_mem);
+            _st_Handle_Thumbs_PDF_Generic(this_win->wi_handle, this_win->prefers_file_instead_mem);
         }else{
             _st_Handle_Thumbs_PDF(this_win->wi_handle, this_win->prefers_file_instead_mem);
-        }
-        
-    }        
+        }   
+    }
 }
 
 void st_Win_Print_PDF(int16_t this_win_handle){
@@ -435,7 +433,7 @@ void _st_Handle_Thumbs_PDF(int16_t this_win_handle, boolean file_process){
 }
 
 /* If the computer have not enought power to render the thumbnails in a reasonable time we prefer show the page number */
-void _st_Handle_Thumbs_Generic(int16_t this_win_handle, boolean file_process){
+void _st_Handle_Thumbs_PDF_Generic(int16_t this_win_handle, boolean file_process){
 	struct_window *this_win;
 	this_win = detect_window(this_win_handle);
     if(this_win == NULL){
@@ -476,68 +474,8 @@ void _st_Handle_Thumbs_Generic(int16_t this_win_handle, boolean file_process){
     this_win->wi_data->img.img_id = idx;
     this_win->wi_data->img.img_index = idx + 1;
 
-    if(this_win->wi_data->img.img_total > 1){
+    st_Thumb_List_Generic(this_win, "PDF Building pages index", "Page", 80, 20, 4, 4, FALSE);
 
-        st_Progress_Bar_Add_Step(this_win->wi_progress_bar);
-        st_Progress_Bar_Init(this_win->wi_progress_bar, (int8_t*)"PDF Building pages index");
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 1, (int8_t*)"Init");
-
-        u_int16_t wanted_width = 80;
-        u_int16_t wanted_height = 20;
-
-        u_int16_t wanted_padx = 4;
-        u_int16_t wanted_pady = 4;
-
-        this_win->wi_data->thumbnail_slave = true;
-        this_win->wi_thumb = st_Thumb_Alloc(this_win->wi_data->img.img_total, this_win_handle, wanted_padx, wanted_pady, wanted_width, wanted_height);
-
-        this_win->wi_thumb->thumbs_open_new_win = FALSE;
-        
-        this_win->wi_thumb->thumbs_area_w = 0;
-        this_win->wi_thumb->thumbs_area_h = this_win->wi_thumb->pady;
-        this_win->wi_thumb->thumbs_nb = this_win->wi_data->img.img_total;
-
-        for (int16_t i = 0; i < this_win->wi_thumb->thumbs_nb; i++) {
-
-            this_win->wi_thumb->thumbs_list_array[i].thumb_id = i;
-            this_win->wi_thumb->thumbs_list_array[i].thumb_index = i + 1;
-
-            char progess_bar_indication[96];
-            sprintf(progess_bar_indication, "Thumbnail rendering for page %d/%d", i+1, this_win->wi_thumb->thumbs_nb, this_win->wi_thumb->thumbs_list_array[i].thumb_id);
-            st_Progress_Bar_Signal(this_win->wi_progress_bar, (mul_100_fast(i) / this_win->wi_thumb->thumbs_nb), (int8_t*)progess_bar_indication);
-
-            MFDB* thumb_original_mfdb;
-
-            u_int8_t* destination_buffer = st_ScreenBuffer_Alloc_bpp(wanted_width, wanted_height, 32);
-            thumb_original_mfdb = mfdb_alloc_bpp( (int8_t*)destination_buffer, wanted_width, wanted_height, 32);
-
-            st_MFDB_Fill(thumb_original_mfdb,0xFFFFFFFF);
-
-            char thumb_txt[10] = {'\0'};
-            sprintf(thumb_txt,"Page %d", this_win->wi_thumb->thumbs_list_array[i].thumb_index );
-            print_ft_simple(4, thumb_original_mfdb->fd_h - 4, thumb_original_mfdb, (char*)TTF_DEFAULT_PATH, 14, thumb_txt);
-
-            if(screen_workstation_bits_per_pixel != 32){
-                this_win->wi_thumb->thumbs_list_array[i].thumb_mfdb = this_win->render_win(thumb_original_mfdb);
-                mfdb_free(thumb_original_mfdb);
-            } else {
-                this_win->wi_thumb->thumbs_list_array[i].thumb_mfdb = thumb_original_mfdb;
-            }
-
-            this_win->wi_thumb->thumbs_list_array[i].thumb_mfdb_stride = MFDB_STRIDE(wanted_width) - wanted_width;  
-
-            this_win->wi_thumb->thumbs_area_w = MAX( (this_win->wi_thumb->padx << 1) + wanted_width, this_win->wi_thumb->thumbs_area_w);
-            this_win->wi_thumb->thumbs_area_h += wanted_height + this_win->wi_thumb->pady;
-            this_win->wi_thumb->thumbs_list_array[i].thumb_selected = FALSE;
-        }
-        st_Progress_Bar_Step_Done(this_win->wi_progress_bar);
-        st_Progress_Bar_Finish(this_win->wi_progress_bar);
-        this_win->wi_thumb->thumbs_area_h += this_win->wi_thumb->pady;
-        this_win->wi_thumb->thumbs_list_array[0].thumb_selected = TRUE;
-    } else {
-        this_win->wi_data->thumbnail_slave = false;
-        this_win->wi_data->img.img_id = PRIMARY_IMAGE_ID;
-    }
     delete doc;
     delete globalParams; 
 }

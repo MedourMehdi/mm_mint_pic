@@ -9,12 +9,16 @@
 #include "../utils_rsc/progress.h"
 #include "../thumbs/thumbs.h"
 
+#ifndef TTF_DEFAULT_PATH
 #define TTF_DEFAULT_PATH "./fonts/arial.ttf"
-
+#endif
+#ifndef PRIMARY_IMAGE_ID
 #define PRIMARY_IMAGE_ID    -1
+#endif
 
 void _st_Read_GIF(int16_t this_win_handle, boolean file_processing, int32_t img_id);
 void _st_Handle_Thumbs_GIF(int16_t this_win_handle, boolean file_process);
+void _st_Handle_Thumbs_GIF_Generic(int16_t this_win_handle, boolean file_process);
 
 void st_Win_Print_GIF(int16_t);
 
@@ -33,7 +37,12 @@ void st_Init_GIF(struct_window *this_win){
     }    
     /* thumbnails stuff */
     if(this_win->wi_thumb == NULL){
-        _st_Handle_Thumbs_GIF(this_win->wi_handle, this_win->prefers_file_instead_mem);
+        if(cpu_type < 40){
+            _st_Handle_Thumbs_GIF_Generic(this_win->wi_handle, this_win->prefers_file_instead_mem);
+        }else{
+            _st_Handle_Thumbs_GIF(this_win->wi_handle, this_win->prefers_file_instead_mem);
+        }
+        
     }
 }
 
@@ -319,6 +328,45 @@ void _st_Handle_Thumbs_GIF(int16_t this_win_handle, boolean file_process){
         this_win->wi_data->thumbnail_slave = false;
         this_win->wi_data->img.img_id = PRIMARY_IMAGE_ID;
     }
+
+    if(file_process){DGifCloseFile(gifFile, &error);} 
+}
+
+void _st_Handle_Thumbs_GIF_Generic(int16_t this_win_handle, boolean file_process){
+
+	struct_window *this_win;
+	this_win = detect_window(this_win_handle);
+    if(this_win == NULL){
+        return;
+    }
+
+	const char *file_name;
+    GifFileType* gifFile;
+    int error;
+    u_int16_t idx = 0;
+
+    if( file_process == TRUE ){
+        file_name = this_win->wi_data->path;
+        gifFile = DGifOpenFileName(file_name, &error);
+        
+        if (!gifFile) {
+            sprintf(alert_message, "DGifOpenFileName() failed - %d", error);
+            st_form_alert(FORM_STOP, alert_message);        
+            // return false;
+        }
+        if (DGifSlurp(gifFile) == GIF_ERROR) {
+            sprintf(alert_message, "DGifSlurp() failed - %d", gifFile->Error);
+            st_form_alert(FORM_STOP, alert_message);        
+            DGifCloseFile(gifFile, &error);
+            // return false;
+        }
+    }
+
+    this_win->wi_data->img.img_total = gifFile->ImageCount;
+    this_win->wi_data->img.img_id = idx;
+    this_win->wi_data->img.img_index = idx + 1;
+
+    st_Thumb_List_Generic(this_win, "GIF Building images index", "GIF", 80, 20, 4, 4, TRUE);
 
     if(file_process){DGifCloseFile(gifFile, &error);} 
 }

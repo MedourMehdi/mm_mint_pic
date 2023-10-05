@@ -16,4 +16,10 @@ void* st_Thumb_Free(void *this_win_thumb);
 void st_Thumb_Refresh(int16_t win_thumb_handle);
 
 void st_Handle_Click_Thumbnail(struct_window *this_win, int16_t mouse_x, int16_t mouse_y, int16_t mouse_button);
+
+void st_Thumb_List_Generic(struct_window *this_win, 
+                            const char* title, const char* media_type, 
+                            u_int16_t wanted_width, u_int16_t wanted_height,
+                            u_int16_t wanted_padx, u_int16_t wanted_pady,
+                            bool open_new_win);
 #endif
