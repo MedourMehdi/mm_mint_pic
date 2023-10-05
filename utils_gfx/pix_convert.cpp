@@ -753,13 +753,13 @@ void* st_Floyd_Dithering(MFDB* MFDB24, int16_t bpp){
     switch (bpp)
     {
     case 1:
-        makeDitherFS((u_int8_t*)MFDB24->fd_addr, MFDB24->fd_w, MFDB24->fd_h);
+        makeDitherFS((u_int8_t*)MFDB24->fd_addr, MFDB_STRIDE(MFDB24->fd_w), MFDB24->fd_h);
         break;        
     case 4:
-        makeDitherFSRgb3bpp((u_int8_t*)MFDB24->fd_addr, MFDB24->fd_w, MFDB24->fd_h);
+        makeDitherFSRgb3bpp((u_int8_t*)MFDB24->fd_addr, MFDB_STRIDE(MFDB24->fd_w), MFDB24->fd_h);
         break;
     case 8:
-        makeDitherFSRgb6bpp((u_int8_t*)MFDB24->fd_addr, MFDB24->fd_w, MFDB24->fd_h);
+        makeDitherFSRgb6bpp((u_int8_t*)MFDB24->fd_addr, MFDB_STRIDE(MFDB24->fd_w), MFDB24->fd_h);
         break;
     default:
         break;
@@ -772,13 +772,13 @@ void* st_Sierra_Dithering(MFDB* MFDB24, int16_t bpp){
     switch (bpp)
     {
     case 1:
-        makeDitherSierra((u_int8_t*)MFDB24->fd_addr, MFDB24->fd_w, MFDB24->fd_h);
+        makeDitherSierra((u_int8_t*)MFDB24->fd_addr, MFDB_STRIDE(MFDB24->fd_w), MFDB24->fd_h);
         break;        
     case 4:
-        makeDitherSierraRgbNbpp((u_int8_t*)MFDB24->fd_addr, MFDB24->fd_w, MFDB24->fd_h, 1);
+        makeDitherSierraRgbNbpp((u_int8_t*)MFDB24->fd_addr, MFDB_STRIDE(MFDB24->fd_w), MFDB24->fd_h, 1);
         break;
     case 8:
-        makeDitherSierraRgbNbpp((u_int8_t*)MFDB24->fd_addr, MFDB24->fd_w, MFDB24->fd_h, 3);
+        makeDitherSierraRgbNbpp((u_int8_t*)MFDB24->fd_addr, MFDB_STRIDE(MFDB24->fd_w), MFDB24->fd_h, 3);
         break;
     default:
         break;
