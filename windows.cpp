@@ -1,7 +1,11 @@
 #include "windows.h"
 #include "utils/utils.h"
 
-// void buffer_to_screen(int16_t my_win_handle, GRECT *raster_dest);
+boolean clip_status = FALSE;
+struct_window win_struct_array[MAX_WINDOWS] = {0};
+int16_t number_of_opened_windows = 0;
+boolean mouse_status = TRUE;
+
 void do_arrow_y(int16_t my_win_handle, int16_t arrow_msg);
 void do_arrow_x(int16_t my_win_handle, int16_t arrow_msg);
 

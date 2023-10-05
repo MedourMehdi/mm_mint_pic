@@ -107,6 +107,7 @@ void _st_Read_PDF(int16_t this_win_handle, boolean file_process, int16_t img_id)
     this_win = detect_window(this_win_handle);
 
     if(this_win->wi_data->stop_original_data_load == FALSE){
+
         st_Progress_Bar_Add_Step(this_win->wi_progress_bar);
         st_Progress_Bar_Init(this_win->wi_progress_bar, (int8_t*)"PDF READING");
 /* XPDF */
@@ -213,13 +214,11 @@ void _st_Read_PDF(int16_t this_win_handle, boolean file_process, int16_t img_id)
 		u_int16_t width = bitmap->getWidth();
 		u_int16_t height = bitmap->getHeight();
         st_Progress_Bar_Signal(this_win->wi_progress_bar, 95, (int8_t*)"Convert document to ARGB");
+        void* old_ptr = this_win->wi_original_mfdb.fd_addr;
         u_int8_t* destination_buffer = st_ScreenBuffer_Alloc_bpp(width, height, 32);
         if(destination_buffer == NULL){
             sprintf(alert_message, "Out Of Mem Error\nAsked for %doctets", width * height * 4);
             st_form_alert(FORM_EXCLAM, alert_message);
-        }
-        if(this_win->wi_original_mfdb.fd_addr != NULL){
-            mem_free(this_win->wi_original_mfdb.fd_addr);
         }
 
         uint32_t *dst_ptr = (uint32_t*)destination_buffer;
@@ -234,7 +233,9 @@ void _st_Read_PDF(int16_t this_win_handle, boolean file_process, int16_t img_id)
         }
 
 		mfdb_update_bpp(&this_win->wi_original_mfdb, (int8_t *)destination_buffer, width, height, 32);
-
+        if(old_ptr != NULL){
+            mem_free(old_ptr);
+        }
         this_win->wi_data->img.scaled_pourcentage = 0;
         this_win->wi_data->img.rotate_degree = 0;
         this_win->wi_data->resized = FALSE;

@@ -204,6 +204,9 @@ typedef struct {
 #endif
 
 extern struct_window win_struct_array[MAX_WINDOWS];
+extern int16_t number_of_opened_windows;
+extern boolean clip_status;
+extern boolean mouse_status;
 
 void st_Set_Mouse(boolean status);
 void send_message(int16_t my_win_handle, int16_t my_message);

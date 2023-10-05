@@ -711,6 +711,8 @@ MFDB* st_MFDB32_To_MFDB4bpp(MFDB* MFDB32){
         zview_Dither_RGB_to_8bits((uint8_t*)MFDB24->fd_addr, (uint8_t*)MFDB8C->fd_addr, MFDB24->fd_w, MFDB24->fd_h);
     } else {
         if(!disable_classic_dithering){
+            // st_Progress_Bar_Signal(global_progress_bar, 30, (int8_t*)"Sierra dithering");
+            // st_Sierra_Dithering(MFDB24, bpp);
             st_Progress_Bar_Signal(global_progress_bar, 30, (int8_t*)"Floyd dithering");
             st_Floyd_Dithering(MFDB24, bpp);
         }

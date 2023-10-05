@@ -66,10 +66,8 @@ typedef int boolean;
 *
 */
 
-extern boolean mouse_status;
-extern int16_t number_of_opened_windows;
 extern int16_t xdesk, ydesk, wdesk, hdesk, wrez, hrez;
-extern boolean clip_status;
+
 extern int16_t screen_workstation_format;
 extern int16_t screen_workstation_bits_per_pixel;
 extern int16_t st_vdi_handle;
@@ -88,7 +86,7 @@ extern MFDB screen_mfdb;
 
 extern char alert_message[96];
 
-extern int16_t wchar, hchar, wbox, hbox;
+// extern int16_t wchar, hchar, wbox, hbox;
 
 extern int16_t vdi_palette[256][3];
 extern int16_t pix_palette[256];

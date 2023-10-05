@@ -4,54 +4,29 @@
 #include <mint/cookie.h>
 #include <mint/sysvars.h>
 
-#include "utils/utils.h"
+#include <pthread.h>
+
+#include "utils/utils.h" /* mem_alloc */
 #include "windows.h"
-#include "file.h"
 
-#include "img_heif/img_heif.h"
-#include "img_png/img_png.h"
-#include "img_webp/img_webp.h"
-#include "img_jpeg/img_jpeg.h"
-#include "img_tiff/img_tiff.h"
-#include "img_bmp/img_bmp.h"
-#include "img_tga/img_tga.h"
-#include "img_pi/img_pi.h"
-#include "img_svg/img_svg.h"
-#include "img_pdf/img_pdf.h"
-#include "img_gif/img_gif.h"
-
-#include "img_dummy/img_dummy.h"
-
-#include "png_ico/png_ico.h"
-
-#include "utils_rsc/progress.h"
-#include "utils_rsc/winform.h"
-#include "rsc_processing/diag.h"
-#include "thumbs/thumbs.h"
-#include "utils_gfx/crop.h"
+#include "png_ico/png_ico.h" /* For control bar refresh functions */
+#include "utils_rsc/winform.h" /* st_Form_Handle */
+#include "thumbs/thumbs.h" /* st_Thumb_Desk_PXY_Update + st_Handle_Click_Thumbnail */
+#include "utils_gfx/crop.h" /* st_Crop_Finish */
+#include "new_window.h" /* Opening new windows */
+#include "control_bar.h" /* Init control bar icons MFDB*/
 
 boolean exit_call = FALSE;
 int16_t st_vdi_handle;
 int16_t wchar, hchar, wbox, hbox;
-int16_t original_palette[16];
+
 int16_t xdesk, ydesk, wdesk, hdesk;
-int16_t min_win_hsize, min_win_wsize;
 int16_t work_in[12], work_out[57];
 
-boolean original_palette_saved;
-
 int16_t hrez, wrez;
-int16_t number_of_colors;
 
 int16_t screen_workstation_format;
 int16_t screen_workstation_bits_per_pixel;
-
-boolean mouse_status = TRUE;
-boolean clip_status = FALSE;
-
-struct_window win_struct_array[MAX_WINDOWS] = {0};
-
-int16_t number_of_opened_windows = 0;
 
 int16_t butdown = FALSE;						/* button state tested for UP/DOWN */
 int16_t r1_flags;
@@ -60,21 +35,19 @@ GRECT r1, r2;
 int16_t mx, my; /* Mouse Position */
 int16_t mb, mc; /* Mouse button - clicks */
 int16_t ks, kc; /* Key state/code */
-uint32_t msg_timer = 0L;
+u_int32_t msg_timer = 0L;
 int16_t events; /* What events are valid ? */
-
 int16_t msg_buffer[8];
 
 struct_window *selected_window;
 
 char alert_message[96];
-
 /*
 COOKIE related section
 */
-uint16_t mint_version;
-uint8_t computer_type;
-uint8_t cpu_type;
+u_int16_t mint_version;
+u_int8_t computer_type;
+u_int8_t cpu_type;
 u_int16_t tos_version;
 bool edDi_present = true;
 bool emutos_rom = false;
@@ -96,462 +69,12 @@ void *event_loop( void *result);
 void* exec_eventloop(void* p_param);
 bool init_app();
 int16_t st_VDI_Pixel_Format(VdiHdl vdi_handle);
-bool new_win_img(const char *new_file);
-bool new_win_start();
-void st_Win_Print_Dummy(int16_t this_win_handle);
-int16_t new_win_form_rsc(const char *new_file, const char* win_title, int16_t object_index);
 void exit_app();
-
-int16_t new_win_thumbnails(const char* win_title, int16_t slave_win_handle);
-int16_t new_win_crop(struct_crop* this_crop, const char* win_title);
-
-/* Colors definitions for background transarency */
-u_int32_t grey_color = 0x7AC0C0C0;
-
-/* 
-*	mm_png_lib
-*/
-
-/* Functions executed when you click an icon from the control bar */
-
-void* st_Img_Open(void*);
-void* st_Img_Autoscale(void*);
-void* st_Img_Reload(void* p_param);
-
-void* st_Img_Resize(void* p_param);
-void* st_Img_Export(void* p_param);
-void* st_Img_Crop(void* p_param);
-void* st_Img_ZoomIn(void* p_param);
-void* st_Img_ZoomOut(void* p_param);
-void* st_Img_Rotate(void* p_param);
-
-void* st_Img_down(void* p_param);
-void* st_Img_up(void* p_param);
-
-/* MFDB for each icons */
-
-struct_st_ico_png st_ico_1_mfdb, st_ico_2_mfdb, st_ico_3_mfdb, st_ico_4_mfdb, st_ico_5_mfdb, st_ico_6_mfdb, st_ico_7_mfdb, st_ico_8_mfdb, st_ico_9_mfdb, st_ico_10_mfdb;
-struct_st_ico_png st_ico_11_mfdb, st_ico_12_mfdb;
-struct_st_ico_png st_ico_21_mfdb, st_ico_22_mfdb, st_ico_23_mfdb, st_ico_24_mfdb, st_ico_25_mfdb, st_ico_26_mfdb, st_ico_27_mfdb, st_ico_28_mfdb, st_ico_29_mfdb;
-/*	Here you declare an array of struct with :
-*		- index: an unique index associated to the icon you want to display in the control bar. Negative index signals the end of the array and must end it
-*		- main icon path: must match the icon path, i.e. where your icon is located
-*		- mask like icon path: when you click the main icon the mask path is showed - Let it null if no mask icon is needed
-*		- main icon mfdb, must be declared before the struct array
-*		- mask icon mfdb, must be declared before the struct array
-*		- funtion executed when the icon was clicked - void function with a void pointer parameter
-*		- x coordonate relative to the control bar
-*		- y coordonate relative to the control bar
-*		- mask icon status, this is handled by the lib so this value should always be FALSE
-*/
-
-struct_st_ico_png_list control_bar_winimage_list[] = {
-	{	1,		 "ico24/open.png",		NULL,		&st_ico_1_mfdb,		NULL,		st_Img_Open, 	12,		4 ,		FALSE	},
-	{	2,		 "ico24/export.png",		NULL,		&st_ico_2_mfdb,		NULL,		st_Img_Export, 	48,		4 ,		FALSE	},
-	{	3,		 "ico24/collapse.png",		"ico24/expand.png",		&st_ico_3_mfdb,		&st_ico_4_mfdb,		st_Img_Autoscale, 	80,		4 ,		FALSE	},
-	{	4,		 "ico24/reload.png",		NULL,		&st_ico_5_mfdb,		NULL,		st_Img_Reload, 	112,		4 ,		FALSE	},
-	{	5,		 "ico24/resize.png",		NULL,		&st_ico_6_mfdb,		NULL,		st_Img_Resize, 	144,		4 ,		FALSE	},
-	{	6,		 "ico24/cut.png",		NULL,		&st_ico_7_mfdb,		NULL,		st_Img_Crop, 	176,		4 ,		FALSE	},
-	{	7,		 "ico24/rotate.png",		NULL,		&st_ico_8_mfdb,		NULL,		st_Img_Rotate, 	208,		4 ,		FALSE	},
-	{	8,		 "ico24/zoom_in.png",		NULL,		&st_ico_9_mfdb,		NULL,		st_Img_ZoomIn, 	240,		4 ,		FALSE	},
-	{	9,		 "ico24/zoom_out.png",		NULL,		&st_ico_10_mfdb,		NULL,		st_Img_ZoomOut, 	272,		4 ,		FALSE	},
-	{	-1,		NULL,					NULL, 				NULL, 			 		NULL,				NULL,			0,		0 ,		0	},
-};
-
-struct_st_ico_png_list control_bar_winstart_list[] = {
-	{	1,		 "ico24/open.png",		NULL,		&st_ico_11_mfdb,		NULL,		st_Img_Open, 	12,		4 ,		FALSE	},
-	{	2,		 "ico24/cut.png",		NULL,		&st_ico_12_mfdb,		NULL,		st_Img_Crop, 	48,		4 ,		FALSE	},
-	{	-1,		NULL,					NULL, 				NULL, 			 		NULL,				NULL,			0,		0 ,		0	},
-};
-
-struct_st_ico_png_list control_bar_windocument_list[] = {
-	{	1,		 "ico24/open.png",		NULL,		&st_ico_21_mfdb,		NULL,		st_Img_Open, 	12,		4 ,		FALSE	},
-	{	2,		 "ico24/export.png",		NULL,		&st_ico_22_mfdb,		NULL,		st_Img_Export, 	48,		4 ,		FALSE	},
-	{	3,		 "ico24/collapse.png",		"ico24/expand.png",		&st_ico_23_mfdb,		&st_ico_24_mfdb,		st_Img_Autoscale, 	80,		4 ,		FALSE	},
-	{	4,		 "ico24/up.png", NULL,		&st_ico_25_mfdb,		NULL,		st_Img_up, 	112,		4 ,		FALSE	},
-	{	5,		 "ico24/down.png",		NULL,		&st_ico_26_mfdb,		NULL,		st_Img_down, 	144,		4 ,		FALSE	},
-	{	6,		 "ico24/cut.png",		NULL,		&st_ico_27_mfdb,		NULL,		st_Img_Crop, 	176,		4 ,		FALSE	},
-	{	7,		 "ico24/rotate.png",		NULL,		&st_ico_28_mfdb,		NULL,		st_Img_Rotate, 	208,		4 ,		FALSE	},
-	{	8,		 "ico24/zoom_in.png",		NULL,		&st_ico_29_mfdb,		NULL,		st_Img_ZoomIn, 	240,		4 ,		FALSE	},
-	{	9,		 "ico24/zoom_out.png",		NULL,		&st_ico_10_mfdb,		NULL,		st_Img_ZoomOut, 	272,		4 ,		FALSE	},
-	{	-1,		NULL,					NULL, 				NULL, 			 		NULL,				NULL,			0,		0 ,		0	},
-};
-
-/*	Your control bar declaration */
-
-// struct_st_control_bar my_control_bar; /* I use a malloc inside my init function so no need for me to declare on here */
-
-/* st_Init_WinImage_Control_Bar() - Init the originals values for your control bar in an Init function */
-
-void st_Init_WinImage_Control_Bar(void* p_param);
-
-void st_Init_WinImage_Control_Bar(void* p_param){
-	/* depend of your application - I need this in order to get a win_handle linked to this control bar */
-	struct_window *this_win = (struct_window*)p_param;
-	if( this_win->wi_to_display_mfdb->fd_addr != NULL ){
-	this_win->wi_control_bar = (struct_st_control_bar*)mem_alloc(sizeof(struct_st_control_bar));
-	/* The array of struct you declared below - It contain indexes, path, etc... */
-	this_win->wi_control_bar->control_bar_list = (struct_st_ico_png_list*)mem_alloc(sizeof(control_bar_winimage_list));
-	memcpy(this_win->wi_control_bar->control_bar_list, &control_bar_winimage_list, sizeof(control_bar_winimage_list));
-	/* A right padding if you want an icon is showed at the opposite of the others i.e. for example main icon to the left but one of them to the right */
-	this_win->wi_control_bar->last_ico_padding_right = 72;
-	/* When control_bar_h is equal to zero the control bar was hidden - this value represent the height of the control bar */
-	this_win->wi_control_bar->control_bar_h = 0;
-	/* If you want some transparency filter set transparency to TRUE */
-	this_win->wi_control_bar->transparency = FALSE;
-	// this_win->wi_control_bar->transparency = TRUE;
-	if(cpu_type < 40 || computer_type < 5){
-		this_win->wi_control_bar->transparency = FALSE;
-		/* Disabling transparency computing on ST */
-	}
-	this_win->wi_control_bar->background_mfdb = NULL;
-	this_win->wi_control_bar->need_to_reload_control_mfdb = TRUE;
-	/* Transparency color - ARGB: value 'A' represent the transparecny level */
-	this_win->wi_control_bar->transparency_color = grey_color;
-	/* VDI handle */
-	this_win->wi_control_bar->vdi_handle = &st_vdi_handle;
-	/* Screen MFDB - You may obtained it with a declaration like MFDB screen_mfdb = {0}; */
-	this_win->wi_control_bar->virtual_screen_mfdb = &screen_mfdb;
-	/* We want hide the control bar with the right click */
-	this_win->wi_control_bar->force_unhide = FALSE;
-	}
-}
-
-void st_Init_WinDoc_Control_Bar(void* p_param);
-
-void st_Init_WinDoc_Control_Bar(void* p_param){
-	/* depend of your application - I need this in order to get a win_handle linked to this control bar */
-	struct_window *this_win = (struct_window*)p_param;
-	if( this_win->wi_to_display_mfdb->fd_addr != NULL ){
-	this_win->wi_control_bar = (struct_st_control_bar*)mem_alloc(sizeof(struct_st_control_bar));
-	/* The array of struct you declared below - It contain indexes, path, etc... */
-	this_win->wi_control_bar->control_bar_list = (struct_st_ico_png_list*)mem_alloc(sizeof(control_bar_windocument_list));
-	memcpy(this_win->wi_control_bar->control_bar_list, &control_bar_windocument_list, sizeof(control_bar_windocument_list));
-	/* A right padding if you want an icon is showed at the opposite of the others i.e. for example main icon to the left but one of them to the right */
-	this_win->wi_control_bar->last_ico_padding_right = 72;
-	/* When control_bar_h is equal to zero the control bar was hidden - this value represent the height of the control bar */
-	this_win->wi_control_bar->control_bar_h = 0;
-	/* If you want some transparency filter set transparency to TRUE */
-	this_win->wi_control_bar->transparency = TRUE;
-	if(cpu_type < 40 || computer_type < 5){
-		this_win->wi_control_bar->transparency = FALSE;
-		/* Disabling transparency computing on ST */
-	}
-	this_win->wi_control_bar->background_mfdb = NULL;
-	this_win->wi_control_bar->need_to_reload_control_mfdb = TRUE;
-	/* Transparency color - ARGB: value 'A' represent the transparecny level */
-	this_win->wi_control_bar->transparency_color = grey_color;
-	/* VDI handle */
-	this_win->wi_control_bar->vdi_handle = &st_vdi_handle;
-	/* Screen MFDB - You may obtained it with a declaration like MFDB screen_mfdb = {0}; */
-	this_win->wi_control_bar->virtual_screen_mfdb = &screen_mfdb;
-	/* We want hide the control bar with the right click */
-	this_win->wi_control_bar->force_unhide = FALSE;
-	}
-}
-
-void st_Init_WinStart_Control_Bar(void* p_param);
-
-void st_Init_WinStart_Control_Bar(void* p_param){
-	struct_window *this_win = (struct_window*)p_param;
-	this_win->wi_control_bar = (struct_st_control_bar*)mem_alloc(sizeof(struct_st_control_bar));
-	this_win->wi_control_bar->control_bar_list = (struct_st_ico_png_list*)mem_alloc(sizeof(control_bar_winstart_list));
-	memcpy(this_win->wi_control_bar->control_bar_list, &control_bar_winstart_list, sizeof(control_bar_winstart_list));
-	this_win->wi_control_bar->last_ico_padding_right = 24;
-	this_win->wi_control_bar->control_bar_h = CONTROLBAR_H;
-	this_win->wi_control_bar->transparency = FALSE;
-	this_win->wi_control_bar->background_mfdb = NULL;
-	this_win->wi_control_bar->need_to_reload_control_mfdb = TRUE;
-	this_win->wi_control_bar->transparency_color = grey_color;
-	this_win->wi_control_bar->vdi_handle = &st_vdi_handle;
-	this_win->wi_control_bar->virtual_screen_mfdb = &screen_mfdb;
-	this_win->wi_control_bar->force_unhide = TRUE;
-}
-
-/*	
-*	st_Control_Bar_Refresh_MFDB() rebuild the MFDB control bar with transprency if it was enabled
-*		-	control bar structure declared previously & assiociated to your icons + funtions
-*		-	window MFDB, containing the original image buffer
-*		-	window elevator x & y values
-*		-	window working area width & heigh
-*
-*	st_Control_Bar_Buffer_to_Screen() render the control bar in the window.
-*/
-
-void st_Reload_Control_Bar(struct_window *this_win, struct_st_control_bar* control_bar);
-
-void st_Reload_Control_Bar(struct_window *this_win, struct_st_control_bar* control_bar){
-	if( this_win->wi_to_display_mfdb->fd_addr != NULL && this_win->wi_control_bar != NULL ){
-		if(this_win->wi_control_bar->control_bar_h > 0){
-			if( this_win->wi_data->control_bar_media || screen_workstation_bits_per_pixel <= 8 || this_win->work_area.g_w > this_win->total_length_w || this_win->work_area.g_h > this_win->total_length_h || cpu_type < 30){
-				control_bar->need_to_reload_control_mfdb = control_bar->st_control_bar_mfdb.fd_w == wrez ? control_bar->need_to_reload_control_mfdb : true;
-				st_Control_Bar_Refresh_Classic(control_bar, wrez, screen_workstation_bits_per_pixel);
-			} else {
-				st_Control_Bar_Refresh_MFDB(control_bar, this_win->wi_to_display_mfdb, this_win->current_pos_x, this_win->current_pos_y, this_win->work_area.g_w, this_win->work_area.g_h);
-			}
-			if(msg_buffer[0] != WM_VSLID && msg_buffer[0] != WM_HSLID){
-				st_Control_Bar_Buffer_to_Screen(control_bar, &control_bar->rect_control_bar);
-			}
-		}
-	}
-}
-
-/* Custom functions associated to our icons */
-
-void* st_Img_down(void* p_param){
-	struct_window*	this_win = (struct_window*)p_param;
-	if(this_win->wi_data->thumbnail_slave == TRUE){
-		if(this_win->wi_thumb != NULL){
-			int16_t i = this_win->wi_data->img.img_id;
-			struct_window* this_win_master = detect_window(this_win->wi_thumb->master_win_handle);
-			if(this_win_master != NULL ){
-				if(i < this_win_master->wi_thumb->thumbs_nb){
-					this_win->wi_data->img.img_id = NIL;
-					/* Disable selected thumnail */
-					this_win_master->wi_thumb->thumbs_selected_nb = this_win_master->wi_thumb->thumbs_list_array[i].thumb_index;
-					this_win_master->wi_thumb->thumbs_area_refresh = TRUE;
-					st_Start_Window_Process(this_win_master);
-					this_win_master->refresh_win(this_win_master->wi_handle);
-					st_End_Window_Process(this_win_master);
-					/* Enable new thumbnail */
-					this_win->wi_data->img.img_id = this_win_master->wi_thumb->thumbs_list_array[i + 1].thumb_id;
-					this_win->wi_data->img.img_index = this_win_master->wi_thumb->thumbs_list_array[i + 1].thumb_index;
-					this_win_master->wi_thumb->thumbs_selected_nb = this_win_master->wi_thumb->thumbs_list_array[i + 1].thumb_index;
-					this_win_master->wi_thumb->thumbs_area_refresh = TRUE;				
-					this_win->wi_data->stop_original_data_load = FALSE;
-					this_win->wi_data->fx_on = FALSE;
-					this_win->wi_data->remap_displayed_mfdb = TRUE;
-					this_win->wi_data->img.scaled_pourcentage = 0;
-					this_win->wi_data->img.rotate_degree = 0;
-					this_win->current_pos_y = 0;
-					this_win->refresh_win(this_win->wi_handle);
-					send_message(this_win->wi_handle, WM_REDRAW);
-					st_Start_Window_Process(this_win_master);
-					this_win_master->refresh_win(this_win_master->wi_handle);
-					st_End_Window_Process(this_win_master);
-				}
-			}
-			else{
-				if( this_win->wi_data->img.img_id < this_win->wi_data->img.img_total){
-					this_win->wi_data->img.img_id += 1;
-					this_win->wi_data->img.img_index += 1;
-					st_Img_Reload(p_param);
-				}
-			}
-		}
-	}
-	return NULL;
-}
-
-void* st_Img_up(void* p_param){
-	struct_window*	this_win = (struct_window*)p_param;
-	if(this_win->wi_data->thumbnail_slave == TRUE){
-		if(this_win->wi_thumb != NULL){
-			int16_t i = this_win->wi_data->img.img_id;
-			struct_window* this_win_master = detect_window(this_win->wi_thumb->master_win_handle);
-			if(this_win_master != NULL && i > 0){	
-				this_win->wi_data->img.img_id = NIL;
-				/* Disbable selected thumnail */
-				this_win_master->wi_thumb->thumbs_selected_nb = this_win_master->wi_thumb->thumbs_list_array[i].thumb_index;
-				this_win_master->wi_thumb->thumbs_area_refresh = TRUE;
-				st_Start_Window_Process(this_win_master);
-				this_win_master->refresh_win(this_win_master->wi_handle);
-				st_End_Window_Process(this_win_master);
-				/* Enable new thumbnail */
-                this_win->wi_data->img.img_id = this_win_master->wi_thumb->thumbs_list_array[i - 1].thumb_id;
-            	this_win->wi_data->img.img_index = this_win_master->wi_thumb->thumbs_list_array[i - 1].thumb_index;
-            	this_win_master->wi_thumb->thumbs_selected_nb = this_win_master->wi_thumb->thumbs_list_array[i - 1].thumb_index;
-				this_win_master->wi_thumb->thumbs_area_refresh = TRUE;				
-                this_win->wi_data->stop_original_data_load = FALSE;
-                this_win->wi_data->fx_on = FALSE;
-                this_win->wi_data->remap_displayed_mfdb = TRUE;
-                this_win->wi_data->img.scaled_pourcentage = 0;
-                this_win->wi_data->img.rotate_degree = 0;
-				this_win->current_pos_y = 0;
-				this_win->refresh_win(this_win->wi_handle);
-				send_message(this_win->wi_handle, WM_REDRAW);
-				st_Start_Window_Process(this_win_master);
-				this_win_master->refresh_win(this_win_master->wi_handle);
-				st_End_Window_Process(this_win_master);				
-			} else {
-				if( this_win->wi_data->img.img_id > 0){
-					this_win->wi_data->img.img_id -= 1;
-					this_win->wi_data->img.img_index -= 1;
-					st_Img_Reload(p_param);
-				}
-			}
-		}
-	}	
-	return NULL;
-}
-
-void* st_Img_Rotate(void* p_param){
-	struct_window*	this_win = (struct_window*)p_param;
-	this_win->wi_data->fx_requested = TRUE;
-	this_win->wi_data->img.rotate_degree = this_win->wi_data->img.rotate_degree <= 180 ? this_win->wi_data->img.rotate_degree + 90 : 0;
-	this_win->refresh_win(this_win->wi_handle);
-	send_message(this_win->wi_handle, WM_REDRAW);	
-	return NULL;
-}
-
-void* st_Img_ZoomIn(void* p_param){
-	struct_window*	this_win = (struct_window*)p_param;
-	this_win->wi_data->autoscale = FALSE;
-	this_win->wi_data->fx_requested = TRUE;
-	this_win->wi_data->img.scaled_pourcentage = this_win->wi_data->img.scaled_pourcentage < 100 ? this_win->wi_data->img.scaled_pourcentage + 10 : 100;	
-	if(this_win->wi_data->resized){
-		this_win->wi_data->img.scaled_width = (this_win->wi_data->img.export_width * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
-		this_win->wi_data->img.scaled_height = (this_win->wi_data->img.export_height * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
-	}
-	// else if(this_win->wi_data->doc_media){
-	// 		this_win->wi_data->img.scaled_pourcentage = +10;
-	// 		this_win->wi_data->img.scaled_width = (this_win->total_length_w * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
-	// 		this_win->wi_data->img.scaled_height = (this_win->total_length_h * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
-	// }else{
-	// 	this_win->wi_data->img.scaled_width = (this_win->wi_data->img.original_width * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
-	// 	this_win->wi_data->img.scaled_height = (this_win->wi_data->img.original_height * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
-	// }
-	else{
-			this_win->wi_data->img.scaled_pourcentage = +10;
-			this_win->wi_data->img.scaled_width = (this_win->total_length_w * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
-			this_win->wi_data->img.scaled_height = (this_win->total_length_h * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
-	}
-	
-	this_win->refresh_win(this_win->wi_handle);
-	send_message(this_win->wi_handle, WM_REDRAW);
-	return NULL;
-}
-
-void* st_Img_ZoomOut(void* p_param){
-	struct_window*	this_win = (struct_window*)p_param;
-	/* Blocked to a resonable resolution */
-	if((this_win->total_length_w > MIN_WINDOWS_WSIZE && this_win->total_length_h > MIN_WINDOWS_HSIZE)){
-	this_win->wi_data->fx_requested = TRUE;	
-	this_win->wi_data->autoscale = FALSE;	
-	this_win->wi_data->img.scaled_pourcentage = this_win->wi_data->img.scaled_pourcentage > -90 ? this_win->wi_data->img.scaled_pourcentage - 10 : -90;
-		if(this_win->wi_data->resized){
-			this_win->wi_data->img.scaled_width = (this_win->wi_data->img.export_width * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
-			this_win->wi_data->img.scaled_height = (this_win->wi_data->img.export_height * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
-		}
-		// else if(this_win->wi_data->doc_media){
-		// 	this_win->wi_data->img.scaled_pourcentage = -10;
-		// 	this_win->wi_data->img.scaled_width = (this_win->total_length_w * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
-		// 	this_win->wi_data->img.scaled_height = (this_win->total_length_h * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
-		// }else{
-		// 	this_win->wi_data->img.scaled_width = (this_win->wi_data->img.original_width * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
-		// 	this_win->wi_data->img.scaled_height = (this_win->wi_data->img.original_height * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
-		// }
-		else{
-			this_win->wi_data->img.scaled_pourcentage = -10;
-			this_win->wi_data->img.scaled_width = (this_win->total_length_w * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
-			this_win->wi_data->img.scaled_height = (this_win->total_length_h * (this_win->wi_data->img.scaled_pourcentage + 100)) / 100;
-		}
-		
-		this_win->refresh_win(this_win->wi_handle);
-		
-		send_message(this_win->wi_handle, WM_REDRAW);
-	}
-	return NULL;
-}
-
-void* st_Img_Crop(void* p_param){
-	struct_window*	this_win = (struct_window*)p_param;
-	this_win->wi_data->crop_requested = true;
-	wind_update(BEG_MCTRL);
-	graf_mouse(THIN_CROSS,0L);
-	return NULL;
-}
-
-void* st_Img_Resize(void* p_param){
-
-	struct_window*	this_win_master = (struct_window*)p_param;
-	const char*		rsc_file_to_load = "rsc/diag.rsc";
-	const char*		window_form_title = "Resize an image";
-	int16_t			rsc_object_index = 0;
-
-
-	if(this_win_master->wi_form == NULL){
-		int16_t this_win_form_handle = new_win_form_rsc(rsc_file_to_load, window_form_title , rsc_object_index);
-		if(this_win_form_handle == NIL){
-			form_alert(1, "[1][Error opening this form|Please get the source code and debug it!][Okay]");
-		} else {
-		struct_window* this_win_form = detect_window(this_win_form_handle);
-		this_win_form->wi_data->rsc.win_master_handle = this_win_master->wi_handle;
-		this_win_master->wi_form = &this_win_form->wi_data->rsc;
-		this_win_form->wi_data->rsc.process_function = &st_Form_Events_Change_Resolution;
-
-		st_Form_Init_Change_Resolution(this_win_form_handle);
-		}
-	} else { 
-		form_alert(1, "[1][There is already a form opened for this window.|Please close it before process an other task][Okay]");
-	}
-	return NULL;
-}
-
-void* st_Img_Export(void* p_param){
-
-	struct_window*	this_win_master = (struct_window*)p_param;
-	const char*		rsc_file_to_load = "rsc/diag.rsc";
-	const char*		window_form_title = "Export an image";
-	int16_t			rsc_object_index = 1;
-
-	if(this_win_master->wi_form == NULL){
-		int16_t this_win_form_handle = new_win_form_rsc(rsc_file_to_load, window_form_title , rsc_object_index);
-		if(this_win_form_handle == NIL){
-			form_alert(1, "[1][Error opening this form|Please get the source code and debug it!][Okay]");
-		} else {
-			struct_window* this_win_form = detect_window(this_win_form_handle);
-
-			this_win_form->wi_data->rsc.win_master_handle = this_win_master->wi_handle;
-			this_win_master->wi_form = &this_win_form->wi_data->rsc;
-
-			this_win_form->wi_data->rsc.process_function = &process_diag_export;
-		}
-	} else { 
-		form_alert(1, "[1][There is already a form opened for this window.|Please close it before process an other task][Okay]");
-	}
-	return NULL;
-}
-
-void* st_Img_Open(void* param){
-	char final_path[128] = {'\0'};
-	char filename[128];
-	
-	if(file_selector(final_path, (char*)"Open new image", filename) != FALSE){
-		new_win_img(final_path);
-	}
-
-	return NULL;
-}
-
-void* st_Img_Reload(void* param){
-	struct_window *this_win = (struct_window*)param;
-	this_win->wi_data->stop_original_data_load = FALSE;
-	this_win->wi_data->fx_on = FALSE;
-	this_win->wi_data->remap_displayed_mfdb = TRUE;
-    this_win->wi_data->img.scaled_pourcentage = 0;
-    this_win->wi_data->img.rotate_degree = 0;	
-	this_win->refresh_win(this_win->wi_handle);
-	send_message(this_win->wi_handle, WM_REDRAW);
-	return NULL;
-}
-
-void* st_Img_Autoscale(void* param){
-	struct_window *this_win = (struct_window*)param;
-	this_win->wi_data->autoscale = this_win->wi_data->autoscale == TRUE ? FALSE : TRUE;
-	this_win->wi_data->remap_displayed_mfdb = TRUE;
-	this_win->wi_data->img.scaled_pourcentage = 0;
-	this_win->refresh_win(this_win->wi_handle);
-	send_message(this_win->wi_handle, WM_REDRAW);
-	return NULL;
-}
-
-/* End for declarations and definitions foR functions associated to our icons */
 
 /* Main */
 
 int main(int argc, char *argv[]){
-
+	pthread_t pth_eventloop;
 	char* this_file = (char*)mem_alloc(256);
 	memset(this_file, 0, 256);
 
@@ -559,9 +82,9 @@ int main(int argc, char *argv[]){
 	
 	global_progress_bar = st_Progress_Bar_Alloc_Enable();
 
-	if(!st_Ico_PNG_Init(control_bar_winimage_list)){ goto quit;	}
+	if(!st_Ico_PNG_Init_Image()){ goto quit;	}
 
-	if(!st_Ico_PNG_Init(control_bar_windocument_list)){ goto quit; }
+	if(!st_Ico_PNG_Init_Document()){ goto quit; }
 
 	if (argc > 1){
 		for(int16_t i = 1; i < argc; i++) {
@@ -577,23 +100,26 @@ int main(int argc, char *argv[]){
 			pfile = GetNextVaStartFileName( pfile, va_file ) ;
 			// printf("# %s #\n",va_file);
 			if(!new_win_img(va_file)){
-				TRACE(("Failed new_win_img()\n"))
-				goto close_ico_png;
+				goto close_ico_image;
 			}
 		} while ( pfile ) ;
 		mem_free(va_file);
 	} else {
-		if(!st_Ico_PNG_Init(control_bar_winstart_list)){goto close_ico_png;}
-		if(!new_win_start()){goto close_ico_png;}		
+		if(!st_Ico_PNG_Init_Main()){goto close_ico_main;}
+		if(!new_win_start()){goto close_ico_main;}
 	}
 
-	while (!exit_call) {
-		exec_eventloop(NULL);
-	}
+	
+	pthread_create( &pth_eventloop, NULL, &exec_eventloop, NULL);
 
-	st_Ico_PNG_Release(control_bar_winstart_list);
-close_ico_png:
-	st_Ico_PNG_Release(control_bar_winimage_list);
+	pthread_join( pth_eventloop, NULL);
+
+close_ico_main:
+	st_Ico_PNG_Release_Main();
+close_ico_image:
+	st_Ico_PNG_Release_Image();
+close_ico_document:
+	st_Ico_PNG_Release_Document();
 
 	st_Progress_Bar_Finish(global_progress_bar);
 
@@ -604,15 +130,11 @@ quit:
 }
 
 bool init_app(){
-	
 	bool ret = true;
 	TRACE(("appl_init()\n"))
     appl_init();
 
     st_vdi_handle = graf_handle(&wchar, &hchar, &wbox, &hbox);
-
-    min_win_hsize = MIN_WINDOWS_HSIZE;
-	min_win_wsize = MIN_WINDOWS_WSIZE;
 
     wind_get(0, WF_WORKXYWH, &xdesk, &ydesk, &wdesk, &hdesk);
 
@@ -622,28 +144,18 @@ bool init_app(){
 		work_in[i] = 1;
 	}
     work_in[10] = 2;
-	TRACE(("v_opnvwk()\n"))
     v_opnvwk(work_in, &st_vdi_handle, work_out);
 
     hrez = work_out[1] + 1;
 	wrez = work_out[0] + 1;
-	
-	TRACE(("wrez %dpx hrez %dpx\n", wrez, hrez))
-
-	number_of_colors = work_out[13];
 
 	vq_extnd(st_vdi_handle,1,work_out);
 	screen_workstation_bits_per_pixel = work_out[4];
 	screen_workstation_format = st_VDI_Pixel_Format(st_vdi_handle);
 
-	TRACE(("screen_workstation_bits_per_pixel %d screen_workstation_format %d\n", screen_workstation_bits_per_pixel, screen_workstation_format))
-
 	if ( screen_workstation_bits_per_pixel < 1){
 		screen_workstation_bits_per_pixel = 1;
-	}
-
-	TRACE(("st_Save_Pal() / st_VDI_SavePalette_RGB()\n"))
-	if (screen_workstation_bits_per_pixel < 16){
+	}else if(screen_workstation_bits_per_pixel < 16){
 		st_Save_Pal(palette_ori, 1 << screen_workstation_bits_per_pixel);
 		st_VDI_SavePalette_RGB(vdi_palette);
 	}else{
@@ -657,13 +169,11 @@ bool init_app(){
 	} else {
 		computer_type = cookie_mch >> 16;
 	}
-	TRACE(("computer_type %d\n", computer_type))
 	if(Getcookie(*(int32_t *) "MiNT",&cookie_mint)){
 		mint_version = 0;
 	} else {
 		mint_version = cookie_mint;
 	}
-	TRACE(("mint_version %#04x\n", mint_version))
 	if(mint_version < 0x0100){
 		if(st_form_alert_choice(FORM_EXCLAM, (char*)"This app requiers Mint > 1") == 1){
 			ret = false;
@@ -680,7 +190,6 @@ bool init_app(){
 			}
 		}		
 	}
-	TRACE(("edDi_present = %d Cookie %#08x\n", edDi_present, cookie_eddi))
 	if(Getcookie(*(int32_t *) "_CF_",&cookie_cpu)){
 		if(Getcookie(*(int32_t *) "_CPU_",&cookie_cpu)){
 			cpu_type = 0;
@@ -690,14 +199,10 @@ bool init_app(){
 	} else {
 		cpu_type = 54;
 	}
-	TRACE(("cpu_type = %d\n", cpu_type))
 	tos_version = (int)((OSHEADER *)get_sysvar(_sysbase))->os_version;
-
-	if( (*(uint32_t *)&((OSHEADER *)get_sysvar(_sysbase))->p_rsv2) == 0x45544f53){
+	if( (*(u_int32_t *)&((OSHEADER *)get_sysvar(_sysbase))->p_rsv2) == 0x45544f53){
 		emutos_rom = true;
 	}
-
-	TRACE(("Tos Version = %#04x EmutosRom %d\n", tos_version, emutos_rom))
     st_Set_Mouse( FALSE );
 	graf_mouse(ARROW,0L);
 	st_Set_Mouse( TRUE );
@@ -1037,292 +542,4 @@ void *event_loop(void *result)
 		}
 	}
 	return NULL;
-}
-
-bool new_win_img(const char *new_file){
-	int16_t i = 0;
-	u_int32_t start_time, end_time;
-	const char *file_extension;
-	while(i < MAX_WINDOWS){
-		if(win_struct_array[i].wi_handle == 0){
-			win_struct_array[i].wi_style = WIN_STYLE_IMG;
-			if(win_struct_array[i].wi_data == NULL){
-				/* Init wi_data structure */
-				win_struct_array[i].wi_data = (struct_metadata *)mem_alloc(sizeof(struct_metadata));
-				win_struct_array[i].wi_data->path = NULL;
-				/* Fill window title structure */
-				char* file = basename(new_file);
-				win_struct_array[i].wi_name = (char *)mem_alloc(sizeof(file) + 8);
-				strcpy(win_struct_array[i].wi_name, file);
-				/* Init window structure to default values */
-				st_Init_Default_Win(&win_struct_array[i]);
-				/* Manage if the file is already opened and have more than one picture */
-				struct_window* win_master_thumb = get_win_thumb_master_by_file(new_file);
-				if(win_master_thumb != NULL){
-					win_struct_array[i].wi_data->original_buffer = win_master_thumb->wi_data->original_buffer;
-					win_struct_array[i].wi_data->path = (char*)mem_alloc(strlen(win_master_thumb->wi_data->path) + 1);
-					strcpy((char*)win_struct_array[i].wi_data->path, win_master_thumb->wi_data->path);
-					win_struct_array[i].wi_data->file_lock = win_master_thumb->wi_data->file_lock;
-					win_struct_array[i].wi_data->extension = win_master_thumb->wi_data->extension;
-					win_struct_array[i].prefers_file_instead_mem = win_master_thumb->prefers_file_instead_mem;
-					
-					win_struct_array[i].wi_data->img.img_id = win_master_thumb->wi_data->img.img_id;
-					win_struct_array[i].wi_data->img.img_index = win_master_thumb->wi_data->img.img_index;
-					
-					memcpy (&win_struct_array[i].wi_data->STAT_FILE, &win_master_thumb->wi_data->STAT_FILE, sizeof(win_master_thumb->wi_data->STAT_FILE));
-
-					win_struct_array[i].wi_thumb = win_master_thumb->wi_thumb;
-
-					char this_thumb_id[4];
-					sprintf(win_struct_array[i].wi_name, "%s #%d",win_struct_array[i].wi_name,  win_struct_array[i].wi_data->img.img_index);
-
-					open_window(&win_struct_array[i]);
-				} else {
-					open_window(&win_struct_array[i]);
-					if(!open_file(&win_struct_array[i], new_file)){
-						TRACE(("Failed open_file()\n"))
-						return false;
-					}
-				}
-				file_extension = win_struct_array[i].wi_data->extension;
-				TRACE(("File Extension %s\n", file_extension))
-				if (check_ext(file_extension, "HEI") || check_ext(file_extension, "HEIF") || check_ext(file_extension, "HEIC") ){
-					st_Init_HEIF(&win_struct_array[i]);
-				} else if (check_ext(file_extension, "PNG")){
-					st_Init_PNG(&win_struct_array[i]);
-				} else if (check_ext(file_extension, "WEB") || check_ext(file_extension, "WEBP")){
-					st_Init_WEBP(&win_struct_array[i]);
-				} else if (check_ext(file_extension, "JPG") || check_ext(file_extension, "JPEG") || check_ext(file_extension, "JPE")){
-					st_Init_JPEG(&win_struct_array[i]);
-				} else if (check_ext(file_extension, "TIF") || check_ext(file_extension, "TIFF")){
-					st_Init_TIFF(&win_struct_array[i]);
-				} else if (check_ext(file_extension, "BMP")){
-					st_Init_BMP(&win_struct_array[i]);
-				} else if (check_ext(file_extension, "TGA")){
-					st_Init_TGA(&win_struct_array[i]);
-				} else if (check_ext(file_extension, "PI1") || check_ext(file_extension, "PI3") ){
-					st_Init_Degas(&win_struct_array[i]);
-				} else if (check_ext(file_extension, "SVG")){
-					st_Init_SVG(&win_struct_array[i]);
-				} else if (check_ext(file_extension, "PDF")){
-					st_Init_PDF(&win_struct_array[i]);
-				} else if (check_ext(file_extension, "GIF")){
-					st_Init_GIF(&win_struct_array[i]);
-				} 
-
-				else {
-					form_alert(1, "[1][Wrong file extension][Okay]");
-					return false;
-				}
-				if(win_struct_array[i].prefers_file_instead_mem != TRUE){
-					if(!file_to_memory(&win_struct_array[i])){
-						form_alert(1, "[1][File to Mem error][Okay]");
-						return false;						
-					}
-				}
-				else{
-					win_struct_array[i].wi_data->original_buffer = NULL;
-				}
-				
-                st_Set_Clipping(CLIPPING_ON, win_struct_array[i].work_pxy);
-
-                if(win_struct_array[i].rendering_time == FALSE){
-                    start_time = st_Supexec(get200hz);
-                }
-                win_struct_array[i].refresh_win(win_struct_array[i].wi_handle);
-                if(win_struct_array[i].rendering_time == FALSE){
-                    end_time = st_Supexec(get200hz);
-                    win_struct_array[i].rendering_time = (end_time - start_time) * 5;
-                }
-				TRACE(("Rendering time %lums\n", win_struct_array[i].rendering_time))
-                st_Set_Clipping(CLIPPING_OFF, win_struct_array[i].work_pxy);
-				if(win_struct_array[i].wi_data->doc_media){
-					st_Init_WinDoc_Control_Bar((void*)&win_struct_array[i]);
-				}else{
-					st_Init_WinImage_Control_Bar((void*)&win_struct_array[i]);
-				}				
-				if(win_struct_array[i].wi_data->thumbnail_slave){
-					char* file = basename(win_struct_array[i].wi_data->path);
-					char thumbs_title[strlen(file) + 16] = {0};
-					sprintf(thumbs_title, "%s (%d elements)", file, win_struct_array[i].wi_data->img.img_total);
-					new_win_thumbnails(thumbs_title, win_struct_array[i].wi_handle);
-				}
-				win_struct_array[i].wi_data->thumbnail_slave = TRUE;
-
-			}
-			wind_set(win_struct_array[i].wi_handle,WF_TOP,0,0,0,0);
-			win_struct_array[i].win_is_topped = TRUE;
-			send_message(win_struct_array[i].wi_handle, WM_REDRAW);
-			return true;
-		}
-		i++;
-	}
-	TRACE(("Loop finished at %d iter\n", i))
-	return false;
-}
-
-bool new_win_start(){
-	int16_t i = 0;
-	
-	while(i < MAX_WINDOWS){
-		if(win_struct_array[i].wi_handle == 0){
-			win_struct_array[i].wi_style = WIN_STYLE_FORM;
-			if(win_struct_array[i].wi_data == NULL){
-				win_struct_array[i].wi_data = (struct_metadata *)mem_alloc(sizeof(struct_metadata));
-				st_Init_Default_Win(&win_struct_array[i]);
-				win_struct_array[i].wi_name = (char *)mem_alloc(WINDOW_TITLE_MAXLEN);
-				strcpy(win_struct_array[i].wi_name, "MM PIC");
-				win_struct_array[i].wi_data->control_bar_media = TRUE;
-                open_window(&win_struct_array[i]);
-
-				st_Init_Dummy(&win_struct_array[i]);
-
-				st_Init_WinStart_Control_Bar((void*)&win_struct_array[i]);
-
-				win_struct_array[i].refresh_win(win_struct_array[i].wi_handle);
-
-			}
-			return true;
-		}
-		i++;
-	}
-	return false;
-}
-
-int16_t new_win_form_rsc(const char *new_file, const char* win_title, int16_t object_index){
-	int16_t i = 0;
-	
-	while(i < MAX_WINDOWS){
-		if(win_struct_array[i].wi_handle == 0){
-			win_struct_array[i].wi_style = WIN_STYLE_FORM;
-			if(win_struct_array[i].wi_data == NULL){
-
-				win_struct_array[i].wi_data = (struct_metadata *)mem_alloc(sizeof(struct_metadata));
-
-				st_Init_Default_Win(&win_struct_array[i]);
-
-				win_struct_array[i].wi_data->rsc.rsc_file = new_file;
-
-				if( !rsc_already_loaded(new_file) ){
-					if( !rsrc_load(win_struct_array[i].wi_data->rsc.rsc_file) ){
-						form_alert(1, "[1][new_win_form_rsc -> RSC Error][Okay]");
-						return NIL;
-					}
-				}
-
-				rsrc_gaddr(R_TREE, object_index, &win_struct_array[i].wi_data->rsc.tree);
-
-				win_struct_array[i].wi_name = (char *)mem_alloc(WINDOW_TITLE_MAXLEN);
-				strcpy(win_struct_array[i].wi_name, win_title);
-
-				st_Init_Form((void*)&win_struct_array[i]);
-
-                open_window(&win_struct_array[i]);
-
-				win_struct_array[i].refresh_win(win_struct_array[i].wi_handle);
-			}
-			return win_struct_array[i].wi_handle;
-		}
-		i++;
-	}
-	return NIL;
-}
-
-int16_t new_win_thumbnails(const char* win_title, int16_t slave_win_handle){
-
-	struct_window *dest_win;
-	dest_win = detect_window(slave_win_handle);
-    if(dest_win == NULL){
-        return NIL;
-    }
-
-	int16_t i = 0;
-	
-	while(i < MAX_WINDOWS){
-		if(win_struct_array[i].wi_handle == 0){
-			win_struct_array[i].wi_style = WIN_STYLE_THUMBS;
-			if(win_struct_array[i].wi_data == NULL){
-				win_struct_array[i].wi_data = (struct_metadata *)mem_alloc(sizeof(struct_metadata));
-				st_Init_Default_Win(&win_struct_array[i]);
-				win_struct_array[i].wi_name = (char *)mem_alloc(WINDOW_TITLE_MAXLEN);
-				strcpy(win_struct_array[i].wi_name, win_title);
-
-				win_struct_array[i].wi_data->original_buffer = dest_win->wi_data->original_buffer;
-
-				win_struct_array[i].wi_data->path = (const char*)mem_alloc(strlen(dest_win->wi_data->path));
-				strcpy((char*)win_struct_array[i].wi_data->path, dest_win->wi_data->path);
-
-				win_struct_array[i].wi_data->extension = (const char*)mem_alloc(strlen(dest_win->wi_data->extension));
-				strcpy((char*)win_struct_array[i].wi_data->extension, dest_win->wi_data->extension);
-
-				win_struct_array[i].wi_data->file_lock = dest_win->wi_data->file_lock;
-				memcpy(&win_struct_array[i].wi_data->STAT_FILE, &dest_win->wi_data->STAT_FILE, sizeof (dest_win->wi_data->STAT_FILE));
-
-				win_struct_array[i].wi_data->image_media = TRUE;
-				win_struct_array[i].wi_data->window_size_limited = TRUE;
-				win_struct_array[i].wi_data->thumbnail_master = TRUE;
-				win_struct_array[i].wi_thumb = dest_win->wi_thumb;
-				win_struct_array[i].wi_thumb->wi_original_thumbs_mfdb = NULL;
-				
-				win_struct_array[i].wi_thumb->thumbs_area_refresh = TRUE;
-				win_struct_array[i].wi_thumb->master_win_handle = 0;
-				
-				win_struct_array[i].refresh_win = st_Thumb_Refresh;
-
-				win_struct_array[i].wi_to_display_mfdb = (MFDB*)st_Thumb_MFDB_Update((void*)dest_win->wi_thumb);
-
-				win_struct_array[i].total_length_w = dest_win->wi_thumb->thumbs_area_w;
-				win_struct_array[i].total_length_h = dest_win->wi_thumb->thumbs_area_h;
-
-                open_window(&win_struct_array[i]);
-
-				win_struct_array[i].wi_thumb->master_win_handle = win_struct_array[i].wi_handle;
-				win_struct_array[i].wi_thumb->open_win_func = &new_win_img;
-
-				win_struct_array[i].refresh_win(win_struct_array[i].wi_handle);
-			}
-			return win_struct_array[i].wi_handle;
-		}
-		i++;
-	}
-	return NIL;
-}
-
-int16_t new_win_crop(struct_crop* this_crop, const char* win_title){
-	int16_t i = 0;
-	
-	while(i < MAX_WINDOWS){
-		if(win_struct_array[i].wi_handle == 0){
-			win_struct_array[i].wi_style = WIN_STYLE_IMG;
-			if(win_struct_array[i].wi_data == NULL){
-				win_struct_array[i].wi_data = (struct_metadata *)mem_alloc(sizeof(struct_metadata));
-				st_Init_Default_Win(&win_struct_array[i]);
-				win_struct_array[i].wi_crop = this_crop;
-
-				memcpy(&win_struct_array[i].wi_original_mfdb, this_crop->wi_crop_original, sizeof(MFDB));
-
-				st_Init_Crop(&win_struct_array[i]);
-
-				win_struct_array[i].wi_to_display_mfdb = &win_struct_array[i].wi_original_mfdb;
-				win_struct_array[i].total_length_w = win_struct_array[i].wi_original_mfdb.fd_w;
-				win_struct_array[i].total_length_h = win_struct_array[i].wi_original_mfdb.fd_h;				
-
-				win_struct_array[i].wi_name = (char *)mem_alloc(strlen(win_title) + 1);
-				strcpy(win_struct_array[i].wi_name, win_title);
-				win_struct_array[i].wi_data->path = (const char *)mem_alloc(strlen(win_title) + 15);
-				strcpy((char*)win_struct_array[i].wi_data->path, win_title);
-
-                open_window(&win_struct_array[i]);
-
-				st_Init_WinImage_Control_Bar((void*)&win_struct_array[i]);
-
-				win_struct_array[i].refresh_win(win_struct_array[i].wi_handle);
-
-				win_struct_array[i].wi_data->stop_original_data_load = TRUE;
-			}
-			return win_struct_array[i].wi_handle;
-		}
-		i++;
-	}
-	return NIL;
 }
