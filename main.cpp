@@ -58,10 +58,10 @@ int16_t palette_ori[256] = {0};
 
 char *pfile, *va_file;
 
-int16_t	clock_unit = 5;
-u_int32_t time_start;
-u_int32_t time_end;
-u_int32_t duration;
+// int16_t	clock_unit = 5;
+// u_int32_t time_start;
+// u_int32_t time_end;
+// u_int32_t duration;
 
 struct_progress_bar *global_progress_bar;
 
@@ -92,8 +92,7 @@ int main(int argc, char *argv[]){
 			if(i < (argc - 1)){strcat(this_file, " ");}
 		}
 		pfile = this_file;
-		
-		TRACE(("File %s\n", this_file))
+	
 		va_file = (char*)mem_alloc(256);
 		do {
 			memset(va_file, 0, 256);
@@ -237,8 +236,7 @@ void* exec_eventloop(void* p_param){
 	return NULL;
 }
 
-void *event_loop(void *result)
-{
+void *event_loop(void *result) {
 	events = evnt_multi(
 		MU_MESAG|MU_BUTTON|MU_KEYBD,
 		256 | 2, 3, butdown, /* button state tested for UP/DOWN */

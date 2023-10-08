@@ -36,3 +36,4 @@ build/utils_gfx/ttf.o
 build/utils_rsc/forms.o
 build/utils_rsc/progress.o
 build/utils_rsc/winform.o
+bin/mm_pic.prg
