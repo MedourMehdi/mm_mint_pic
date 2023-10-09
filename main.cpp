@@ -338,7 +338,7 @@ void *event_loop(void *result) {
 					if(selected_window->wi_data->thumbnail_master == TRUE){
 						window_area_buffer[2] = MIN(selected_window->wi_thumb->thumbs_max_area_w, window_area_buffer[2]);
 						window_area_buffer[3] = MIN(selected_window->wi_thumb->thumbs_max_area_h, window_area_buffer[3]);
-					} else if(selected_window->wi_data->control_bar_media == TRUE){
+					} else if(selected_window->wi_data->control_bar_media == TRUE || selected_window->wi_data->video_media){
 						window_area_buffer[2] = MIN(selected_window->total_length_w, window_area_buffer[2]);
 						window_area_buffer[3] = MIN(selected_window->total_length_h, window_area_buffer[3]);
 					}else {

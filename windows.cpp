@@ -668,14 +668,19 @@ void st_Init_Default_Win(struct_window *this_win){
 }
 
 void st_Start_Window_Process(struct_window *this_win){
-	st_Set_Mouse( FALSE );
-    graf_mouse(BUSY_BEE,0L);
-    st_Set_Mouse( TRUE );
+	if(!this_win->wi_data->video_media){
+		st_Set_Mouse( FALSE );
+		graf_mouse(BUSY_BEE,0L);
+		st_Set_Mouse( TRUE );
+	}
 }
 
 void st_End_Window_Process(struct_window *this_win){
+	
 	st_Set_Mouse( FALSE );
-    graf_mouse(ARROW,0L);
+	if(!this_win->wi_data->video_media){		
+		graf_mouse(ARROW,0L);
+	}
 	if(this_win != NULL){
     	win_refresh_from_buffer(this_win);
 	}

@@ -198,7 +198,8 @@ void* st_Img_Play(void* p_param){
 	struct_window *this_win = (struct_window*)p_param;
 	this_win->wi_data->play_on = this_win->wi_data->play_on == TRUE ? FALSE : TRUE;
 	event_timer_used = this_win->wi_data->play_on == TRUE ? event_timer_video : event_timer_default;
-	printf("Timer %ld\n", event_timer_used);
+	global_progress_bar->progress_bar_enabled = this_win->wi_data->play_on == TRUE ? FALSE : TRUE;
+	// printf("Timer %ld\n", event_timer_used);
 	return NULL;
 }
 
@@ -239,7 +240,7 @@ void* st_Img_down(void* p_param){
 			}
 			else{
 				if( this_win->wi_data->img.img_id < this_win->wi_data->img.img_total){
-					printf("this_win->wi_data->img.img_id %d this_win->wi_data->img.img_total %d\n", this_win->wi_data->img.img_id,this_win->wi_data->img.img_total );
+					// printf("this_win->wi_data->img.img_id %d this_win->wi_data->img.img_total %d\n", this_win->wi_data->img.img_id,this_win->wi_data->img.img_total );
 					this_win->wi_data->img.img_id += 1;
 					this_win->wi_data->img.img_index += 1;
 					st_Img_Reload(p_param);

@@ -128,7 +128,7 @@ typedef struct {
 } struct_image_metadata;
 
 typedef struct {
-	u_int16_t frame_delay;
+	u_int32_t frame_delay;
 } struct_video_metadata;
 
 typedef struct {
