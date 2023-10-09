@@ -13,7 +13,7 @@ void st_Init_BMP(struct_window *this_win){
 	this_win->refresh_win = st_Win_Print_BMP;
     /* Progress Bar Stuff */
     this_win->wi_progress_bar = global_progress_bar;
-    this_win->prefers_file_instead_mem = FALSE; /* If FALSE the original file will be copied to memory and available in this_win->wi_data->original_buffer */
+    this_win->prefers_file_instead_mem = TRUE; /* If FALSE the original file will be copied to memory and available in this_win->wi_data->original_buffer */
     if(!st_Set_Renderer(this_win)){
         sprintf(alert_message, "screen_format: %d\nscreen_bits_per_pixel: %d", screen_workstation_format, screen_workstation_bits_per_pixel);
         st_form_alert(FORM_STOP, alert_message);
@@ -30,7 +30,6 @@ void st_Win_Print_BMP(int16_t this_win_handle){
     }
 
     _st_Read_BMP(this_win_handle, this_win->prefers_file_instead_mem);
-
     if( st_Img32b_To_Window(this_win) == false ){
         st_form_alert(FORM_STOP, alert_message);
     }
@@ -69,12 +68,6 @@ void _st_Read_BMP(int16_t this_win_handle, boolean file_process)
         u_int32_t  i;
         int16_t x, y;
 
-        this_win->wi_data->img.scaled_pourcentage = 0;
-        this_win->wi_data->img.rotate_degree = 0;
-        this_win->wi_data->resized = FALSE;
-        this_win->wi_data->img.original_width = width;
-        this_win->wi_data->img.original_height = height;
-
         u_int8_t* destination_buffer = st_ScreenBuffer_Alloc_bpp(width, height, nb_components_32bits << 3);
         if(destination_buffer == NULL){
             sprintf(alert_message, "Out Of Mem Error\nAsked for %doctets", width * height * nb_components_32bits);
@@ -107,12 +100,22 @@ void _st_Read_BMP(int16_t this_win_handle, boolean file_process)
             this_win->total_length_h = this_win->wi_original_mfdb.fd_h;
             mfdb_update_bpp(&this_win->wi_original_mfdb, (int8_t*)destination_buffer, width, height, nb_components_32bits << 3);
  
-            if(file_process == FALSE){
-                mem_free(this_win->wi_data->original_buffer);
-            }
+            // if(file_process == TRUE){
+            //     mem_free(this_win->wi_data->original_buffer);
+            // }
             BMP_Free( img );
             this_win->wi_data->stop_original_data_load = TRUE;
         }
+        this_win->wi_data->img.scaled_pourcentage = 0;
+        this_win->wi_data->img.rotate_degree = 0;
+        this_win->wi_data->resized = FALSE;
+        this_win->wi_data->img.original_width = width;
+        this_win->wi_data->img.original_height = height;
+
+        this_win->total_length_w = this_win->wi_original_mfdb.fd_w;
+        this_win->total_length_h = this_win->wi_original_mfdb.fd_h;
+        this_win->wi_data->stop_original_data_load = TRUE;
+        this_win->wi_data->wi_buffer_modified = FALSE;
 
         st_Progress_Bar_Signal(this_win->wi_progress_bar, 100, (int8_t*)"Finished");
         st_Progress_Bar_Step_Done(this_win->wi_progress_bar);
