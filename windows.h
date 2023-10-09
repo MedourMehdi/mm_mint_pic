@@ -153,6 +153,7 @@ typedef struct {
 	boolean stop_original_data_load;
 	boolean remap_displayed_mfdb;
 	FILE *file_lock;
+	pthread_t *wi_pth;
 	struct_image_metadata img;
 	struct_rsc_metadata rsc;
 	struct stat STAT_FILE;
@@ -256,7 +257,7 @@ void st_Limit_Work_Area(struct_window *this_win);
 struct_window* get_win_thumb_slave_by_image_id(int16_t master_win_handle, u_int32_t img_id);
 struct_window* get_win_thumb_master_by_file(const char* this_path);
 
-bool st_Open_Thread(void* func(void*), void* th_param);
+int st_Open_Thread(void* func(void*), void* th_param);
 void st_Wait_For_Threads();
 
 #endif

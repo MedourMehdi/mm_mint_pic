@@ -422,11 +422,16 @@ void *event_loop(void *result) {
 		case WM_CLOSED:
 			selected_window = detect_window(msg_buffer[3]);
 			if(selected_window != NULL){
-				if(close_window(selected_window->wi_handle)){
-					if (number_of_opened_windows < 1){
-						exit_call = TRUE; 
+				if(selected_window->wi_data->wi_pth != NULL){
+					selected_window->wi_data->wi_pth = NULL;
+				}else{
+					if(close_window(selected_window->wi_handle)){
+						if (number_of_opened_windows < 1){
+							exit_call = TRUE; 
+						}
 					}
 				}
+
 			}
 			break;
 		case WM_ICONIFY:

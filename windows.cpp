@@ -643,6 +643,7 @@ void st_Init_Default_Win(struct_window *this_win){
 	this_win->wi_data->window_size_limited = FALSE;
 	this_win->wi_data->wi_buffer_modified = FALSE;
 	this_win->wi_data->stop_original_data_load = FALSE;
+	this_win->wi_data->wi_pth = NULL;
 	this_win->rendering_time = FALSE;
 	this_win->refresh_win = NULL;
     this_win->prefers_file_instead_mem = DO_WE_USE_FILE;
@@ -735,14 +736,14 @@ struct_window* get_win_thumb_master_by_file(const char* this_path){
 
 /* Pth stuff */
 
-bool st_Open_Thread(void* func(void*), void* th_param){
+int st_Open_Thread(void* func(void*), void* th_param){
 	long ret = 0;
 	for(int index = 0; index < NUM_THREADS; ++index){
 		if (threads[index] == NULL){
 			// printf("Debug - th_param %s", (char*)th_param);
 			ret = pthread_create( &threads[index], NULL, func, th_param );
 			total_thread += 1;
-			break;
+			return index;
 		}
 	}
 	return ret;

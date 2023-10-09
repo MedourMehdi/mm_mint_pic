@@ -113,11 +113,13 @@ bool new_win_img(const char *new_file){
 
 				else {
 					form_alert(1, "[1][Wrong file extension][Okay]");
+					close_window(win_struct_array[i].wi_handle);
 					return false;
 				}
 				if(win_struct_array[i].prefers_file_instead_mem != TRUE){
 					if(!file_to_memory(&win_struct_array[i])){
 						form_alert(1, "[1][File to Mem error][Okay]");
+						close_window(win_struct_array[i].wi_handle);
 						return false;						
 					}
 				}
@@ -131,7 +133,8 @@ bool new_win_img(const char *new_file){
                     start_time = st_Supexec(get200hz);
                 }
 				if(win_struct_array[i].wi_data->video_media){
-					st_Open_Thread(video_function, (void*)&win_struct_array[i].wi_handle);
+					int th_idx = st_Open_Thread(video_function, (void*)&win_struct_array[i].wi_handle);
+					win_struct_array[i].wi_data->wi_pth = &threads[th_idx];
 				}else{
 					win_struct_array[i].refresh_win(win_struct_array[i].wi_handle);
 				}

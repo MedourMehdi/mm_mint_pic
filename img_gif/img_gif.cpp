@@ -67,7 +67,7 @@ void st_Win_Print_GIF(int16_t this_win_handle){
         this_win->wi_to_work_in_mfdb = &this_win->wi_original_mfdb;
     }
     if(!this_win->wi_data->video_media){
-        printf("Read Gif \n");
+        // printf("Read Gif \n");
         _st_Read_GIF(this_win_handle, this_win->prefers_file_instead_mem, this_win->wi_data->img.img_id);
     }
     if( st_Img32b_To_Window(this_win) == false ){
@@ -397,13 +397,13 @@ void *st_Win_Play_GIF_Video(void *_this_win_handle){
         GifFileType* gifFile = DGifOpenFileName(file_name, &error);
         if (!gifFile) {
             sprintf(alert_message, "DGifOpenFileName() failed - %d", error);
-            printf("Error opening %s - Handle %d\n", file_name, this_win->wi_handle);
+            // printf("Error opening %s - Handle %d\n", file_name, this_win->wi_handle);
             st_form_alert(FORM_STOP, alert_message);
             return NULL;
         }
         if (DGifSlurp(gifFile) == GIF_ERROR) {
             sprintf(alert_message, "DGifSlurp() failed - %d", gifFile->Error);
-            st_form_alert(FORM_STOP, alert_message);        
+            st_form_alert(FORM_STOP, alert_message);
             DGifCloseFile(gifFile, &error);
             return NULL;
         }
@@ -442,7 +442,7 @@ void *st_Win_Play_GIF_Video(void *_this_win_handle){
         long ii, jj, x, y;
         u_int32_t* ptr_argb = (u_int32_t*)temp_buffer;        
 
-        while( this_win->wi_data->img.img_id < this_win->wi_data->img.img_total ){
+        while( (this_win->wi_data->img.img_id < this_win->wi_data->img.img_total) && this_win->wi_data->wi_pth != NULL){
             if(this_win->wi_data->play_on || this_win->wi_data->img.img_id == 0){
                 time_start = clock();
                 GraphicsControlBlock image_gcb;
@@ -509,5 +509,6 @@ void *st_Win_Play_GIF_Video(void *_this_win_handle){
         }
 
         DGifCloseFile(gifFile, &error);
+        send_message(this_win_handle, WM_CLOSED);
         return NULL;
 }
