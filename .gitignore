@@ -37,3 +37,17 @@ build/utils_rsc/forms.o
 build/utils_rsc/progress.o
 build/utils_rsc/winform.o
 bin/mm_pic.prg
+build/vid_flic/vid_flic.o
+build/vid_flic/vid_flic.o
+build/external/flic/stdio.o
+build/external/flic/encoder.o
+build/external/flic/decoder.o
+build/external/flic/decoder.o
+build/external/flic/encoder.o
+build/external/flic/stdio.o
+build/external/flic/decoder.o
+build/external/flic/encoder.o
+build/external/flic/stdio.o
+build/vid_flic/vid_flic.o
+bin/mm_pic_020.tar.gz
+bin/mm_pic_020.tar.gz
