@@ -103,7 +103,6 @@ void st_Init_WinImage_Control_Bar(void* p_param){
 void st_Init_WinVideo_Control_Bar(void* p_param){
 	/* depend of your application - I need this in order to get a win_handle linked to this control bar */
 	struct_window *this_win = (struct_window*)p_param;
-	if( this_win->wi_to_display_mfdb->fd_addr != NULL ){
 	this_win->wi_control_bar = (struct_st_control_bar*)mem_alloc(sizeof(struct_st_control_bar));
 	/* The array of struct you declared below - It contain indexes, path, etc... */
 	this_win->wi_control_bar->control_bar_list = (struct_st_ico_png_list*)mem_alloc(sizeof(control_bar_winvideo_list));
@@ -128,7 +127,6 @@ void st_Init_WinVideo_Control_Bar(void* p_param){
 	this_win->wi_control_bar->virtual_screen_mfdb = &screen_mfdb;
 	/* We want hide the control bar with the right click */
 	this_win->wi_control_bar->force_unhide = FALSE;
-	}
 }
 
 void st_Init_WinDoc_Control_Bar(void* p_param){
