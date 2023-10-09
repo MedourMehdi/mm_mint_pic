@@ -14,4 +14,6 @@ boolean file_to_memory(struct_window *this_win);
 boolean mfdb_to_file(MFDB *this_mfdb, char* final_path);
 int16_t file_selector(char *final_path, char* title, char *file_selected);
 
+const char *get_filename_ext(const char *filename);
+
 #endif

@@ -104,6 +104,10 @@ bool new_win_img(const char *new_file){
 				} else if (check_ext(file_extension, "PDF")){
 					st_Init_PDF(&win_struct_array[i]);
 				} else if (check_ext(file_extension, "GIF")){
+					if(win_master_thumb == NULL && screen_workstation_bits_per_pixel > 8 && st_form_alert_choice(FORM_QUESTION, (char*)"How do you want open it?", (char*)"Video", (char*)"Image") == 1){
+						win_struct_array[i].wi_data->video_media = TRUE;
+						video_function = st_Win_Play_GIF_Video;
+					}
 					st_Init_GIF(&win_struct_array[i]);
 				} 
 

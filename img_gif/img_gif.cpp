@@ -27,22 +27,31 @@ void st_Init_GIF(struct_window *this_win){
     this_win->wi_data->image_media = TRUE;
     this_win->wi_data->window_size_limited = TRUE;
     this_win->wi_data->remap_displayed_mfdb = TRUE;
-	this_win->refresh_win = st_Win_Print_GIF;
-    /* Progress Bar Stuff */
-    this_win->wi_progress_bar = global_progress_bar;
+    if(this_win->wi_data->video_media){
+        this_win->wi_data->img.img_id = 0;
+        this_win->wi_data->img.img_index = 1; 
+    } else {
+        
+        /* Progress Bar Stuff */
+        this_win->wi_progress_bar = global_progress_bar;
+    }
+    this_win->refresh_win = st_Win_Print_GIF;
+
     if(!st_Set_Renderer(this_win)){
         sprintf(alert_message, "screen_format: %d\nscreen_bits_per_pixel: %d", screen_workstation_format, screen_workstation_bits_per_pixel);
         st_form_alert(FORM_STOP, alert_message);
         return;
     }    
-    /* thumbnails stuff */
-    if(this_win->wi_thumb == NULL){
-        if(cpu_type < 40){
-            _st_Handle_Thumbs_GIF_Generic(this_win->wi_handle, this_win->prefers_file_instead_mem);
-        }else{
-            _st_Handle_Thumbs_GIF(this_win->wi_handle, this_win->prefers_file_instead_mem);
+
+    if(!this_win->wi_data->video_media){
+        /* thumbnails stuff */
+        if(this_win->wi_thumb == NULL){
+            if(cpu_type < 40){
+                _st_Handle_Thumbs_GIF_Generic(this_win->wi_handle, this_win->prefers_file_instead_mem);
+            }else{
+                _st_Handle_Thumbs_GIF(this_win->wi_handle, this_win->prefers_file_instead_mem);
+            }
         }
-        
     }
 }
 
@@ -50,12 +59,17 @@ void st_Win_Print_GIF(int16_t this_win_handle){
     struct_window *this_win;
     this_win = detect_window(this_win_handle);
 
-    if(this_win->wi_data->stop_original_data_load == FALSE){
+    if(this_win->wi_data->video_media){
         this_win->wi_to_work_in_mfdb = &this_win->wi_original_mfdb;
     }
 
-    _st_Read_GIF(this_win_handle, this_win->prefers_file_instead_mem, this_win->wi_data->img.img_id);
-    
+    if(this_win->wi_data->stop_original_data_load == FALSE){
+        this_win->wi_to_work_in_mfdb = &this_win->wi_original_mfdb;
+    }
+    if(!this_win->wi_data->video_media){
+        printf("Read Gif \n");
+        _st_Read_GIF(this_win_handle, this_win->prefers_file_instead_mem, this_win->wi_data->img.img_id);
+    }
     if( st_Img32b_To_Window(this_win) == false ){
         st_form_alert(FORM_STOP, alert_message);
     }
@@ -65,7 +79,6 @@ void _st_Read_GIF(int16_t this_win_handle, boolean file_processing, int32_t img_
     struct_window *this_win;
     this_win = detect_window(this_win_handle);
     if(this_win->wi_data->stop_original_data_load == FALSE){
-
         st_Progress_Bar_Add_Step(this_win->wi_progress_bar);
         st_Progress_Bar_Init(this_win->wi_progress_bar, (int8_t*)"GIF READING");
         st_Progress_Bar_Signal(this_win->wi_progress_bar, 15, (int8_t*)"Init");
@@ -78,66 +91,64 @@ void _st_Read_GIF(int16_t this_win_handle, boolean file_processing, int32_t img_
         GifFileType* gifFile = DGifOpenFileName(file_name, &error);
         if (!gifFile) {
             sprintf(alert_message, "DGifOpenFileName() failed - %d", error);
-            st_form_alert(FORM_STOP, alert_message);        
-
+            st_form_alert(FORM_STOP, alert_message);
+            return;
         }
         if (DGifSlurp(gifFile) == GIF_ERROR) {
             sprintf(alert_message, "DGifSlurp() failed - %d", gifFile->Error);
             st_form_alert(FORM_STOP, alert_message);        
             DGifCloseFile(gifFile, &error);
-
+            return;
         }
-        
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 55, (int8_t*)"Reading headers");
-        ColorMapObject* commonMap = gifFile->SColorMap;
-
+        if(img_id > (gifFile->ImageCount - 1)){
+            printf("img_id out of range\n");
+            return;
+        }        
         if(img_id > PRIMARY_IMAGE_ID){
             this_img = img_id;
         }
+
+        st_Progress_Bar_Signal(this_win->wi_progress_bar, 55, (int8_t*)"Reading headers");
+        ColorMapObject* commonMap = gifFile->SColorMap;
+
         u_int16_t width = gifFile->SWidth;
         u_int16_t height = gifFile->SHeight;
 
-        GraphicsControlBlock image_gcb;
-        DGifSavedExtensionToGCB(gifFile, this_img, &image_gcb);
-		int32_t trans = image_gcb.TransparentColor;
-        int32_t disposal = image_gcb.DisposalMode;
-		int32_t image_delay = image_gcb.DelayTime;
-
-        u_int8_t* temp_buffer = st_ScreenBuffer_Alloc_bpp(width, height, 32);
+        u_int8_t* temp_buffer = NULL;
+        temp_buffer = st_ScreenBuffer_Alloc_bpp(width, height, 32);
+        if(temp_buffer == NULL){
+            return;
+        }
         if(this_win->wi_original_mfdb.fd_addr != NULL){
             mem_free(this_win->wi_original_mfdb.fd_addr);
         }
         mfdb_update_bpp(&this_win->wi_original_mfdb, (int8_t*)temp_buffer, width, height, 32);
-        
         st_MFDB_Fill(&this_win->wi_original_mfdb, 0XFFFFFFFF);
+
         st_Progress_Bar_Signal(this_win->wi_progress_bar, 85, (int8_t*)"Building ARGB image");
+
         int32_t ii, jj, x, y;
         u_int32_t* ptr_argb = (u_int32_t*)temp_buffer;        
         int16_t img_current = 0;
         while( img_current <= this_img ){
+
+            GraphicsControlBlock image_gcb;
+            DGifSavedExtensionToGCB(gifFile, img_current, &image_gcb);
+       
             const SavedImage& saved = gifFile->SavedImages[img_current];
             const GifImageDesc& desc = saved.ImageDesc;
             const ColorMapObject* colorMap = desc.ColorMap ? desc.ColorMap : commonMap;
 
-            u_int8_t alpha ;
+            u_int8_t alpha = image_gcb.TransparentColor ; 
+            u_int16_t delay = image_gcb.DelayTime;
             int colorCount = colorMap->ColorCount;
-
-            for(int z = 0; z < saved.ExtensionBlockCount; z++)
-            {
-                ExtensionBlock * block = &saved.ExtensionBlocks[z];
-                if(block->Function == 249)
-                {
-                    if(block->Bytes[0])
-                        alpha = (u_int8_t)block->Bytes[3];
-                }
-            }
-                
+            
             for(y = 0; y < desc.Height; y++){
                 for(x = 0; x < desc.Width; x++){
                     ii = (x + desc.Left) + ((y + desc.Top) * MFDB_STRIDE(width));
                     int c = saved.RasterBits[ (y * desc.Width) + x];
                     if(c == alpha || c >= colorCount || c == gifFile->SBackGroundColor){
-                        if(img_current == 0 || (c == gifFile->SBackGroundColor && c < colorCount && c >= 0 && trans == -1 && disposal != DISPOSE_BACKGROUND) ){                         
+                        if(img_current == 0 || (c == gifFile->SBackGroundColor && c < colorCount && c >= 0 && alpha == -1) ){                         
                             ptr_argb[ii] = alpha << 24 | colorMap->Colors[c].Red << 16 | colorMap->Colors[c].Green << 8 | colorMap->Colors[c].Blue;
                         }else{
                             continue;
@@ -147,7 +158,8 @@ void _st_Read_GIF(int16_t this_win_handle, boolean file_processing, int32_t img_
                     }
                 }
             }
-            img_current++;
+
+            img_current++;            
         }
 
         this_win->wi_data->img.scaled_pourcentage = 0;
@@ -169,7 +181,6 @@ void _st_Read_GIF(int16_t this_win_handle, boolean file_processing, int32_t img_
     }
 }
 
-
 void _st_Handle_Thumbs_GIF(int16_t this_win_handle, boolean file_process){
 
 	struct_window *this_win;
@@ -190,13 +201,13 @@ void _st_Handle_Thumbs_GIF(int16_t this_win_handle, boolean file_process){
         if (!gifFile) {
             sprintf(alert_message, "DGifOpenFileName() failed - %d", error);
             st_form_alert(FORM_STOP, alert_message);        
-            // return false;
+            return;
         }
         if (DGifSlurp(gifFile) == GIF_ERROR) {
             sprintf(alert_message, "DGifSlurp() failed - %d", gifFile->Error);
             st_form_alert(FORM_STOP, alert_message);        
             DGifCloseFile(gifFile, &error);
-            // return false;
+            return;
         }
     }
 
@@ -221,7 +232,7 @@ void _st_Handle_Thumbs_GIF(int16_t this_win_handle, boolean file_process){
         u_int16_t wanted_height = 140;
         if(final_height < final_width){
             wanted_width = 140;
-            wanted_height = 100;            
+            wanted_height = 100;
         }
         u_int16_t wanted_padx = 8;
         u_int16_t wanted_pady = 8;
@@ -249,8 +260,7 @@ void _st_Handle_Thumbs_GIF(int16_t this_win_handle, boolean file_process){
             GraphicsControlBlock image_gcb;
             DGifSavedExtensionToGCB(gifFile, i, &image_gcb);
             int trans = image_gcb.TransparentColor;
-            int disposal = image_gcb.DisposalMode;            
-            // printf("id %d trans %d\n", i, trans);
+            int disposal = image_gcb.DisposalMode;
             u_int8_t alpha = 0xFF;
             int colorCount = colorMap->ColorCount;
 
@@ -369,4 +379,135 @@ void _st_Handle_Thumbs_GIF_Generic(int16_t this_win_handle, boolean file_process
     st_Thumb_List_Generic(this_win, "GIF Building images index", "GIF", 80, 20, 4, 4, TRUE);
 
     if(file_process){DGifCloseFile(gifFile, &error);} 
+}
+
+void *st_Win_Play_GIF_Video(void *_this_win_handle){
+    int16_t this_win_handle = *(int16_t*)_this_win_handle;
+    struct_window *this_win;
+    this_win = detect_window(this_win_handle);
+    if(this_win == NULL){
+        sprintf(alert_message, "Error this_win is NULL");
+        st_form_alert(FORM_STOP, alert_message);        
+    }
+        u_int32_t time_start, time_end, duration;
+
+        const char *file_name = this_win->wi_data->path;
+        int error;
+
+        GifFileType* gifFile = DGifOpenFileName(file_name, &error);
+        if (!gifFile) {
+            sprintf(alert_message, "DGifOpenFileName() failed - %d", error);
+            printf("Error opening %s - Handle %d\n", file_name, this_win->wi_handle);
+            st_form_alert(FORM_STOP, alert_message);
+            return NULL;
+        }
+        if (DGifSlurp(gifFile) == GIF_ERROR) {
+            sprintf(alert_message, "DGifSlurp() failed - %d", gifFile->Error);
+            st_form_alert(FORM_STOP, alert_message);        
+            DGifCloseFile(gifFile, &error);
+            return NULL;
+        }
+
+        this_win->wi_data->img.img_total = gifFile->ImageCount;
+
+        ColorMapObject* commonMap = gifFile->SColorMap;
+
+        u_int16_t width = gifFile->SWidth;
+        u_int16_t height = gifFile->SHeight;
+
+        u_int8_t* temp_buffer = NULL;
+        temp_buffer = st_ScreenBuffer_Alloc_bpp(width, height, 32);
+        if(temp_buffer == NULL){
+            return NULL;
+        }
+        if(this_win->wi_original_mfdb.fd_addr != NULL){
+            mem_free(this_win->wi_original_mfdb.fd_addr);
+        }
+        mfdb_update_bpp(&this_win->wi_original_mfdb, (int8_t*)temp_buffer, width, height, 32);
+        st_MFDB_Fill(&this_win->wi_original_mfdb, 0XFFFFFFFF);
+
+        this_win->wi_data->img.scaled_pourcentage = 0;
+        this_win->wi_data->img.rotate_degree = 0;
+        this_win->wi_data->resized = FALSE;
+        this_win->wi_data->img.original_width = width;
+        this_win->wi_data->img.original_height = height;
+
+        this_win->total_length_w = this_win->wi_original_mfdb.fd_w;
+        this_win->total_length_h = this_win->wi_original_mfdb.fd_h;
+        this_win->wi_data->stop_original_data_load = TRUE;
+        this_win->wi_data->wi_buffer_modified = FALSE;
+
+        this_win->refresh_win(this_win->wi_handle);
+
+        int32_t ii, jj, x, y;
+        u_int32_t* ptr_argb = (u_int32_t*)temp_buffer;        
+
+        while( this_win->wi_data->img.img_id < this_win->wi_data->img.img_total ){
+            if(this_win->wi_data->play_on || this_win->wi_data->img.img_id == 0){
+                time_start = clock();
+                GraphicsControlBlock image_gcb;
+                DGifSavedExtensionToGCB(gifFile, this_win->wi_data->img.img_id, &image_gcb);
+        
+                const SavedImage& saved = gifFile->SavedImages[this_win->wi_data->img.img_id];
+                const GifImageDesc& desc = saved.ImageDesc;
+                const ColorMapObject* colorMap = desc.ColorMap ? desc.ColorMap : commonMap;
+
+                int trans = image_gcb.TransparentColor ;
+                int alpha; 
+                u_int16_t delay = image_gcb.DelayTime;
+                int disposal = image_gcb.DisposalMode;
+                int colorCount = colorMap->ColorCount;
+
+                for(int z = 0; z < saved.ExtensionBlockCount; z++)
+                {
+                    ExtensionBlock * block = &saved.ExtensionBlocks[z];
+                    if(block->Function == 249)
+                    {
+                        if(block->Bytes[0])
+                            alpha = (u_int8_t)block->Bytes[3];
+                    }
+                }
+
+                for(y = 0; y < desc.Height; y++){
+                    for(x = 0; x < desc.Width; x++){
+                        ii = (x + desc.Left) + ((y + desc.Top) * MFDB_STRIDE(width));
+                        int c = saved.RasterBits[ (y * desc.Width) + x];
+                        if(c == alpha || c >= colorCount || c == gifFile->SBackGroundColor){
+                            if(this_win->wi_data->img.img_id == 0 || (c == gifFile->SBackGroundColor && c < colorCount && c >= 0 && trans == -1 && disposal != DISPOSE_BACKGROUND) ){                         
+                                ptr_argb[ii] = alpha << 24 | colorMap->Colors[c].Red << 16 | colorMap->Colors[c].Green << 8 | colorMap->Colors[c].Blue;
+                            }else{
+                                continue;
+                            }
+                        } else if (colorMap) {
+                            ptr_argb[ii] = alpha << 24 | colorMap->Colors[c].Red << 16 | colorMap->Colors[c].Green << 8 | colorMap->Colors[c].Blue;
+                        }
+                    }
+                }
+
+                time_end = clock();
+                duration = 5 * (time_end - time_start);
+
+                while( duration <  mul_10_fast(delay)){
+                    duration = 5 * (clock() - time_start);
+                }
+                if(screen_workstation_bits_per_pixel != 32){
+                    this_win->wi_data->wi_buffer_modified = FALSE;
+                    this_win->wi_data->remap_displayed_mfdb = TRUE;
+                    this_win->refresh_win(this_win->wi_handle);
+                }
+                st_Control_Bar_Refresh_MFDB(this_win->wi_control_bar, this_win->wi_to_display_mfdb, this_win->current_pos_x, this_win->current_pos_y, this_win->work_area.g_w, this_win->work_area.g_h);          
+                send_message(this_win_handle, WM_REDRAW);
+                this_win->wi_data->img.img_id++;
+                this_win->wi_data->img.img_index = this_win->wi_data->img.img_id + 1;
+                pthread_yield_np();
+            }
+            if(this_win->wi_data->img.img_id == (this_win->wi_data->img.img_total - 1)){
+                this_win->wi_data->img.img_id = 0;
+                this_win->wi_data->img.img_index = this_win->wi_data->img.img_id + 1;
+            }
+            pthread_yield_np();
+        }
+
+        DGifCloseFile(gifFile, &error);
+        return NULL;
 }
