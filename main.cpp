@@ -37,9 +37,9 @@ int16_t mb, mc; /* Mouse button - clicks */
 int16_t ks, kc; /* Key state/code */
 u_int32_t msg_timer = 0L;
 int16_t events; /* What events are valid ? */
-int32_t event_timer_default = 200;
-int32_t event_timer_video = 8;
-int32_t event_timer_used = event_timer_default;
+long event_timer_default = 200;
+long event_timer_video = 8;
+long event_timer_used = event_timer_default;
 int16_t msg_buffer[8];
 
 struct_window *selected_window;
@@ -164,13 +164,13 @@ bool init_app(){
 		st_VDI_SavePalette_RGB(vdi_palette);
 	}
 	
-	int32_t cookie_mch, cookie_mint, cookie_cpu, cookie_eddi = 0;
-	if(Getcookie(*(int32_t *) "_MCH",&cookie_mch)){
+	long cookie_mch, cookie_mint, cookie_cpu, cookie_eddi = 0;
+	if(Getcookie(*(long *) "_MCH",&cookie_mch)){
 		computer_type = 0;
 	} else {
 		computer_type = cookie_mch >> 16;
 	}
-	if(Getcookie(*(int32_t *) "MiNT",&cookie_mint)){
+	if(Getcookie(*(long *) "MiNT",&cookie_mint)){
 		mint_version = 0;
 	} else {
 		mint_version = cookie_mint;
@@ -180,7 +180,7 @@ bool init_app(){
 			ret = false;
 		}		
 	}	
-	Getcookie(*(int32_t *) "EdDI", &cookie_eddi);
+	Getcookie(*(long *) "EdDI", &cookie_eddi);
 	if( !cookie_eddi ){
 		edDi_present = false;
 		if(screen_workstation_bits_per_pixel == 8){
@@ -191,8 +191,8 @@ bool init_app(){
 			}
 		}		
 	}
-	if(Getcookie(*(int32_t *) "_CF_",&cookie_cpu)){
-		if(Getcookie(*(int32_t *) "_CPU_",&cookie_cpu)){
+	if(Getcookie(*(long *) "_CF_",&cookie_cpu)){
+		if(Getcookie(*(long *) "_CPU_",&cookie_cpu)){
 			cpu_type = 0;
 		} else {
 			cpu_type = cookie_cpu;

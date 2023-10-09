@@ -76,12 +76,12 @@ void reset(void)
 	(* (void (**)(void)) 0x4)();
 }
 
-int32_t get200hz(void)
+long get200hz(void)
 {
-	return *((int32_t*)0x4ba);
+	return *((long*)0x4ba);
 }
 
-int32_t st_Supexec(int32_t atari_hardware_addr()){
+long st_Supexec(long atari_hardware_addr()){
 	return Supexec(atari_hardware_addr);
 }
 
@@ -151,7 +151,7 @@ void stringtoupper(char *ext){
 *
 */
 
-void *mem_alloc(int32_t size){
+void *mem_alloc(long size){
 	void *mem_ptr = NULL;
 	mem_ptr = (void*)Mxalloc(size,3);
 	return mem_ptr;

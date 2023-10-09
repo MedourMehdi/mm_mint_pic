@@ -736,7 +736,7 @@ struct_window* get_win_thumb_master_by_file(const char* this_path){
 /* Pth stuff */
 
 bool st_Open_Thread(void* func(void*), void* th_param){
-	int32_t ret = 0;
+	long ret = 0;
 	for(int index = 0; index < NUM_THREADS; ++index){
 		if (threads[index] == NULL){
 			// printf("Debug - th_param %s", (char*)th_param);

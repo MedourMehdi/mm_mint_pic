@@ -8,7 +8,7 @@
 typedef unsigned char UTF8;
 #endif
 #ifndef UTF32
-typedef int32_t UTF32;
+typedef long UTF32;
 #endif
 
 #ifndef BYTE

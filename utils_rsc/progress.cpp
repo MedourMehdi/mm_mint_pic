@@ -135,7 +135,7 @@ void set_prog(int16_t value, int16_t MAXc) {
     width_old = tree[PROBOX].ob_width - 1;	/* Take border into account */
     width_new = width_old + 1;
     if (MAXc){
-        width_new = MAX(1, ((int32_t)value * (int32_t)width_new) / MAXc); 
+        width_new = MAX(1, ((long)value * (long)width_new) / MAXc); 
     }
     tree[PROBAR].ob_width = width_new;
     if (value){

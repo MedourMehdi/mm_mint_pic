@@ -16,7 +16,7 @@
 #define PRIMARY_IMAGE_ID    -1
 #endif
 
-void _st_Read_GIF(int16_t this_win_handle, boolean file_processing, int32_t img_id);
+void _st_Read_GIF(int16_t this_win_handle, boolean file_processing, long img_id);
 void _st_Handle_Thumbs_GIF(int16_t this_win_handle, boolean file_process);
 void _st_Handle_Thumbs_GIF_Generic(int16_t this_win_handle, boolean file_process);
 
@@ -75,7 +75,7 @@ void st_Win_Print_GIF(int16_t this_win_handle){
     }
 }
 
-void _st_Read_GIF(int16_t this_win_handle, boolean file_processing, int32_t img_id){
+void _st_Read_GIF(int16_t this_win_handle, boolean file_processing, long img_id){
     struct_window *this_win;
     this_win = detect_window(this_win_handle);
     if(this_win->wi_data->stop_original_data_load == FALSE){
@@ -84,7 +84,7 @@ void _st_Read_GIF(int16_t this_win_handle, boolean file_processing, int32_t img_
         st_Progress_Bar_Signal(this_win->wi_progress_bar, 15, (int8_t*)"Init");
 
         const char *file_name = this_win->wi_data->path;
-        int32_t this_img = 0;
+        long this_img = 0;
         int error;
 
         st_Progress_Bar_Signal(this_win->wi_progress_bar, 35, (int8_t*)"Opening file");
@@ -127,7 +127,7 @@ void _st_Read_GIF(int16_t this_win_handle, boolean file_processing, int32_t img_
 
         st_Progress_Bar_Signal(this_win->wi_progress_bar, 85, (int8_t*)"Building ARGB image");
 
-        int32_t ii, jj, x, y;
+        long ii, jj, x, y;
         u_int32_t* ptr_argb = (u_int32_t*)temp_buffer;        
         int16_t img_current = 0;
         while( img_current <= this_img ){
@@ -274,7 +274,7 @@ void _st_Handle_Thumbs_GIF(int16_t this_win_handle, boolean file_process){
                 }
             }
 
-            int32_t ii, jj, x, y;
+            long ii, jj, x, y;
             u_int32_t* ptr_argb = (u_int32_t*)temp_buffer; 
 
             for(y = 0; y < desc.Height; y++){
@@ -439,7 +439,7 @@ void *st_Win_Play_GIF_Video(void *_this_win_handle){
 
         this_win->refresh_win(this_win->wi_handle);
 
-        int32_t ii, jj, x, y;
+        long ii, jj, x, y;
         u_int32_t* ptr_argb = (u_int32_t*)temp_buffer;        
 
         while( this_win->wi_data->img.img_id < this_win->wi_data->img.img_total ){

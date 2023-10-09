@@ -148,7 +148,7 @@ void _st_Read_TIFF(int16_t this_win_handle,  boolean file_process, int16_t img_i
         st_Progress_Bar_Signal(this_win->wi_progress_bar, 85, (int8_t*)"Building ARGB image");
         mfdb_update_bpp(&this_win->wi_original_mfdb, (int8_t*)destination_buffer, width, height, 32);
         st_MFDB_Fill(&this_win->wi_original_mfdb, 0XFFFFFFFF);
-        int32_t i, j;
+        long i, j;
 
         for(y = 0; y < height; y++){
             for(x = 0; x < width; x++){
@@ -241,7 +241,7 @@ void _st_Handle_Thumbs_TIFF(int16_t this_win_handle, boolean file_process){
             u_int8_t* temp_buffer = st_ScreenBuffer_Alloc_bpp(original_width, original_height, 32);
             MFDB* temp_mfdb = mfdb_alloc_bpp((int8_t*)temp_buffer, original_width, original_height, 32);
 
-            int32_t ii, jj, x, y;
+            long ii, jj, x, y;
 
             for(y = 0; y < original_height; y++){
                 for(x = 0; x < original_width; x++){

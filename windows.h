@@ -122,7 +122,7 @@ typedef struct {
 	boolean needs_dither;
 	boolean needs_grayscale;
 	int8_t	dither_size;
-	int32_t img_id;
+	long img_id;
 	int16_t img_index;
 	int16_t img_total;
 } struct_image_metadata;
