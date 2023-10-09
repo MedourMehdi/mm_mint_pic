@@ -381,9 +381,9 @@ void* st_Image_Export_To_Degas(void* p_param){
     }
     if(st_FileExistsAccess(my_export->export_path) == 1){
         sprintf(alert_message,"File exist\nDo you want to erase it?");
-        if(st_form_alert_choice(FORM_STOP, alert_message) == 1){
-            return NULL;
-        }
+            if(st_form_alert_choice(FORM_STOP, alert_message, (char*)"No", (char*)"Yes") == 1){
+                return NULL;
+            }
     }
     st_Write_Degas(raw_data, width, height, my_export->export_path);
 
@@ -410,7 +410,7 @@ void* st_Image_Export_To_HEIF(void* p_param){
     }
     if(st_FileExistsAccess(my_export->export_path) == 1){
         sprintf(alert_message,"File exist\nDo you want to erase it?");
-        if(st_form_alert_choice(FORM_STOP, alert_message) == 1){
+        if(st_form_alert_choice(FORM_STOP, alert_message, (char*)"No", (char*)"Yes") == 1){
             return NULL;
         }
     }
@@ -437,7 +437,7 @@ void* st_Image_Export_To_BMP(void* p_param){
 
     if(st_FileExistsAccess(my_export->export_path) == 1){
         sprintf(alert_message,"File exist\nDo you want to erase it?");
-        if(st_form_alert_choice(FORM_STOP, alert_message) == 1){
+        if(st_form_alert_choice(FORM_STOP, alert_message, (char*)"No", (char*)"Yes") == 1){
             return NULL;
         }
     }
@@ -473,7 +473,7 @@ void* st_Image_Export_To_TGA(void* p_param){
     }
     if(st_FileExistsAccess(my_export->export_path) == 1){
         sprintf(alert_message,"File exist\nDo you want to erase it?");
-        if(st_form_alert_choice(FORM_STOP, alert_message) == 1){
+        if(st_form_alert_choice(FORM_STOP, alert_message, (char*)"No", (char*)"Yes") == 1){
             return NULL;
         }
     }
@@ -513,7 +513,7 @@ void* st_Image_Export_To_PNG(void* p_param){
     }
     if(st_FileExistsAccess(my_export->export_path) == 1){
         sprintf(alert_message,"File exist\nDo you want to erase it?");
-        if(st_form_alert_choice(FORM_STOP, alert_message) == 1){
+        if(st_form_alert_choice(FORM_STOP, alert_message, (char*)"No", (char*)"Yes") == 1){
             return NULL;
         }
     }    
@@ -550,7 +550,7 @@ void* st_Image_Export_To_TIFF(void* p_param){
     }
     if(st_FileExistsAccess(my_export->export_path) == 1){
         sprintf(alert_message,"File exist\nDo you want to erase it?");
-        if(st_form_alert_choice(FORM_STOP, alert_message) == 1){
+        if(st_form_alert_choice(FORM_STOP, alert_message, (char*)"No", (char*)"Yes") == 1){
             return NULL;
         }
     }
@@ -592,7 +592,7 @@ void* st_Image_Export_To_WEBP(void* p_param){
     }
     if(st_FileExistsAccess(my_export->export_path) == 1){
         sprintf(alert_message,"File exist\nDo you want to erase it?");
-        if(st_form_alert_choice(FORM_STOP, alert_message) == 1){
+        if(st_form_alert_choice(FORM_STOP, alert_message, (char*)"No", (char*)"Yes") == 1){
             return NULL;
         }
     }    
@@ -652,7 +652,7 @@ void* st_Image_Export_To_MFD(void* p_param){
 
     if(st_FileExistsAccess(my_export->export_path) == 1){
         sprintf(alert_message,"File exist\nDo you want to erase it?");
-        if(st_form_alert_choice(FORM_STOP, alert_message) == 1){
+        if(st_form_alert_choice(FORM_STOP, alert_message, (char*)"No", (char*)"Yes") == 1){
             return NULL;
         }
     }
@@ -696,7 +696,7 @@ void* st_Image_Export_To_JPEG(void* p_param){
     }
     if(st_FileExistsAccess(my_export->export_path) == 1){
         sprintf(alert_message,"File exist\nDo you want to erase it?");
-        if(st_form_alert_choice(FORM_STOP, alert_message) == 1){
+        if(st_form_alert_choice(FORM_STOP, alert_message, (char*)"No", (char*)"Yes") == 1){
             return NULL;
         }
     }    

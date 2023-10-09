@@ -174,7 +174,7 @@ bool init_app(){
 		mint_version = cookie_mint;
 	}
 	if(mint_version < 0x0100){
-		if(st_form_alert_choice(FORM_EXCLAM, (char*)"This app requiers Mint > 1") == 1){
+		if(st_form_alert_choice(FORM_EXCLAM, (char*)"This app requiers Mint > 1", (char*)"Cancel", (char*)"Continue") == 1){
 			ret = false;
 		}		
 	}	
@@ -184,7 +184,7 @@ bool init_app(){
 		if(screen_workstation_bits_per_pixel == 8){
 			sprintf(alert_message, "screen_format: %d\nscreen_bits_per_pixel: %d\nCookie EdDI needed", 
 					screen_workstation_format, screen_workstation_bits_per_pixel );
-			if(st_form_alert_choice(FORM_EXCLAM, alert_message) == 1){
+			if(st_form_alert_choice(FORM_EXCLAM, alert_message, (char*)"Cancel", (char*)"Continue") == 1){
 				ret = false;
 			}
 		}		

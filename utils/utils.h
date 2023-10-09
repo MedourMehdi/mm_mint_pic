@@ -19,7 +19,7 @@ boolean check_ext(const char *ext1, const char *ext2);
 char* replace_char(char* str, char find, char replace);
 void shrink_char_obj(const char* src_string, OBJECT* dst_string);
 void st_form_alert(int16_t this_form_icon, char* form_message);
-int16_t st_form_alert_choice(int16_t this_form_icon, char* this_form_message);
+int16_t st_form_alert_choice(int16_t this_form_icon, char* this_form_message, char* but0, char* but1);
 void st_clear_char_array(char* carray);
 char *basename(char const *path);
 

@@ -252,10 +252,10 @@ void st_form_alert(int16_t this_form_icon, char* this_form_message){
     form_alert(1, _form_message);
 }
 
-int16_t st_form_alert_choice(int16_t this_form_icon, char* this_form_message){
+int16_t st_form_alert_choice(int16_t this_form_icon, char* this_form_message, char* but0, char* but1){
     char _form_message[96];
     replace_char(this_form_message, 0XA, '|');
-    sprintf(_form_message, "[%d][%s][Cancel|Continue]", this_form_icon, this_form_message);
+    sprintf(_form_message, "[%d][%s][%s|%s]", this_form_icon, this_form_message, but0, but1);
     return form_alert(1, _form_message);
 }
 

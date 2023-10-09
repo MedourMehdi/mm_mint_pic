@@ -138,7 +138,9 @@ void _st_Read_PDF(int16_t this_win_handle, boolean file_process, int16_t img_id)
             globalParams = new GlobalParams(conf_file);
         }else{
             sprintf(alert_message,"Conf file not found\n%s", conf_file);
-            st_form_alert_choice(FORM_STOP, alert_message);
+            if(st_form_alert_choice(FORM_STOP, alert_message, (char*)"Cancel", (char*)"Continue") == 1){
+                return;
+            }
         }
         st_Progress_Bar_Signal(this_win->wi_progress_bar, 45, (int8_t*)"Setting global parameters");
         st_Get_Current_Dir(current_dir);
@@ -286,7 +288,9 @@ void _st_Handle_Thumbs_PDF(int16_t this_win_handle, boolean file_process){
         globalParams = new GlobalParams(conf_file);
     }else{
         sprintf(alert_message,"Conf file not found\n%s", conf_file);
-        st_form_alert_choice(FORM_STOP, alert_message);
+        if(st_form_alert_choice(FORM_STOP, alert_message, (char*)"Cancel", (char*)"Continue") == 1){
+            return;
+        }
     }
     globalParams->setPrintStatusInfo(gFalse);
     globalParams->setErrQuiet(gTrue);
@@ -460,7 +464,9 @@ void _st_Handle_Thumbs_PDF_Generic(int16_t this_win_handle, boolean file_process
         globalParams = new GlobalParams(conf_file);
     }else{
         sprintf(alert_message,"Conf file not found\n%s", conf_file);
-        st_form_alert_choice(FORM_STOP, alert_message);
+        if(st_form_alert_choice(FORM_STOP, alert_message, (char*)"Cancel", (char*)"Continue") == 1){
+            return;
+        }
     }
     globalParams->setPrintStatusInfo(gFalse);
     globalParams->setErrQuiet(gTrue);
