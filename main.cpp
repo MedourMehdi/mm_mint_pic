@@ -61,11 +61,6 @@ int16_t palette_ori[256] = {0};
 
 char *pfile, *va_file;
 
-// int16_t	clock_unit = 5;
-// u_int32_t time_start;
-// u_int32_t time_end;
-// u_int32_t duration;
-
 struct_progress_bar *global_progress_bar;
 
 void *event_loop( void *result);
