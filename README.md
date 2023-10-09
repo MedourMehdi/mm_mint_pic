@@ -32,7 +32,8 @@ No shared library or module is required to run it.
 ### Read
 * PDF (Password not managed yet)
 * SVG
-* GIF (No player yet)
+* GIF (Images & Video)
+* FLIC (Video)
 
 ### Write
 * MFD (Screen memory RAW format)

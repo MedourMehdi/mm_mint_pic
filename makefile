@@ -13,7 +13,8 @@ SRC := $(wildcard $(SRC_DIR)/*.cpp) \
   $(wildcard $(SRC_DIR)/*/nanosvg/*.cpp) \
   $(wildcard $(SRC_DIR)/*/qdbmp/*.cpp) \
   $(wildcard $(SRC_DIR)/*/rgb2lab/*.cpp) \
-  $(wildcard $(SRC_DIR)/*/tgafunc/*.cpp)
+  $(wildcard $(SRC_DIR)/*/tgafunc/*.cpp) \
+  $(wildcard $(SRC_DIR)/*/flic/*.cpp)
 
 BIN := $(BIN_DIR)/mm_pic.prg
 

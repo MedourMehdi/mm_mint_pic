@@ -18,6 +18,8 @@
 #include "img_pdf/img_pdf.h"
 #include "img_gif/img_gif.h"
 
+#include "vid_flic/vid_flic.h"
+
 #include "img_dummy/img_dummy.h"
 
 void* new_win_img_threaded(void* _this_file){
@@ -109,7 +111,21 @@ bool new_win_img(const char *new_file){
 						video_function = st_Win_Play_GIF_Video;
 					}
 					st_Init_GIF(&win_struct_array[i]);
-				} 
+				} else if (check_ext(file_extension, "FLI") || check_ext(file_extension, "FLC")){
+					if(win_master_thumb == NULL && screen_workstation_bits_per_pixel > 8){
+						win_struct_array[i].wi_data->video_media = TRUE;
+						video_function = st_Win_Play_Flic_Video;
+					}else{
+						if(st_form_alert_choice(FORM_QUESTION, (char*)"Video support only for >=16bpp", (char*)"Cancel", (char*)"Continue") == 1){
+							close_window(win_struct_array[i].wi_handle);
+							return false;
+						}else{
+							win_struct_array[i].wi_data->video_media = TRUE;
+							video_function = st_Win_Play_Flic_Video;							
+						}
+					}
+					st_Init_Flic(&win_struct_array[i]);
+				}
 
 				else {
 					form_alert(1, "[1][Wrong file extension][Okay]");
