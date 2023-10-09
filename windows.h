@@ -26,6 +26,8 @@
 
 #define WIN_STYLE_THUMBS (NAME|CLOSER|ICONIFIER|MOVER|UPARROW|DNARROW|VSLIDE|LFARROW|RTARROW|HSLIDE|SIZER)
 
+#define WIN_STYLE_VID (NAME|CLOSER|MOVER)
+
 #define	CLIPPING_OFF 0
 #define	CLIPPING_ON 1
 
@@ -126,15 +128,21 @@ typedef struct {
 } struct_image_metadata;
 
 typedef struct {
+	u_int16_t frame_delay;
+} struct_video_metadata;
+
+typedef struct {
 	const char *path;
 	const char *extension;    
 	int8_t *original_buffer;
 	boolean crop_requested;
 	boolean fx_on;
 	boolean fx_requested;
+	boolean play_on;
 	boolean thumbnail_master;
 	boolean thumbnail_slave;
-	boolean control_bar_media;	
+	boolean control_bar_media;
+	boolean video_media;
 	boolean image_media;
 	boolean doc_media;
 	boolean rsc_media;
@@ -164,7 +172,6 @@ typedef struct {
 	boolean prefers_file_instead_mem;
 
     boolean win_is_topped;
-	boolean win_is_locked;
 
 	int16_t current_pos_x; /* x Slide Position */
 	int16_t current_pos_y; /* y Slide Position */
@@ -194,13 +201,13 @@ typedef struct {
 	MFDB *wi_to_work_in_mfdb;
 	MFDB *wi_to_display_mfdb;
 
+	struct_video_metadata	(*wi_video);
 	struct_crop				(*wi_crop);
 	struct_thumbs			(*wi_thumb);
 	struct_rsc_metadata		(*wi_form);
     struct_metadata 		(*wi_data);
 	struct_st_control_bar	(*wi_control_bar);
 	struct_progress_bar		(*wi_progress_bar);
-
 	void (*refresh_win)(int16_t);
 	MFDB* (*render_win)(MFDB*);
 } struct_window;

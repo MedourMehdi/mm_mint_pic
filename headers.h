@@ -92,10 +92,9 @@ extern int16_t vdi_palette[256][3];
 extern int16_t pix_palette[256];
 extern int16_t palette_ori[256];
 
-// extern int16_t	clock_unit;
-// extern u_int32_t time_start;
-// extern u_int32_t time_end;
-// extern u_int32_t duration;
+extern int32_t event_timer_default;
+extern int32_t event_timer_video;
+extern int32_t event_timer_used; 
 
 /*
 COOKIE related section

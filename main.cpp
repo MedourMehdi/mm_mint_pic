@@ -37,6 +37,9 @@ int16_t mb, mc; /* Mouse button - clicks */
 int16_t ks, kc; /* Key state/code */
 u_int32_t msg_timer = 0L;
 int16_t events; /* What events are valid ? */
+int32_t event_timer_default = 200;
+int32_t event_timer_video = 8;
+int32_t event_timer_used = event_timer_default;
 int16_t msg_buffer[8];
 
 struct_window *selected_window;
@@ -236,18 +239,20 @@ void* exec_eventloop(void* p_param){
 	while ( exit_call != 1 )
 	{
 		event_loop(NULL);
+		pthread_yield_np();
 	}
 	return NULL;
 }
 
 void *event_loop(void *result) {
 	events = evnt_multi(
-		MU_MESAG|MU_BUTTON|MU_KEYBD,
+		// MU_MESAG|MU_BUTTON|MU_KEYBD,
+		MU_MESAG|MU_BUTTON|MU_KEYBD|MU_TIMER,
 		256 | 2, 3, butdown, /* button state tested for UP/DOWN */
 		r1_flags, r1.g_x, r1.g_y, r1.g_w, r1.g_h, /* M1 event */
 		r2_flags, r2.g_x, r2.g_y, r2.g_w, r2.g_h, /* M2 event */
 		msg_buffer, /* Pointer to msg */
-		0,
+		event_timer_used,
 		&mx, &my, &mb,
 		&ks, &kc,
 		&mc /* Single/double clicks */

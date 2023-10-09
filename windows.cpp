@@ -474,7 +474,6 @@ void buffer_to_screen(int16_t my_win_handle, GRECT *raster_dest){
 	struct_window *this_win;
 	this_win = detect_window(my_win_handle);
 	update_struct_window(this_win);
-
 	bool wipe = false;
 
 	int16_t clip = 0;
@@ -628,9 +627,11 @@ void st_Init_Default_Win(struct_window *this_win){
 
 /* Default is to set everything to FALSE */
     this_win->x_unit = 10; this_win->y_unit = 10;
+	this_win->wi_data->video_media = FALSE;
     this_win->wi_data->image_media = FALSE;
 	this_win->wi_data->doc_media = FALSE;
 	this_win->wi_data->crop_requested = FALSE;
+	this_win->wi_data->play_on = FALSE;
 	this_win->wi_data->fx_on = FALSE;
 	this_win->wi_data->fx_requested = FALSE;
     this_win->wi_data->thumbnail_master = FALSE;
@@ -647,13 +648,13 @@ void st_Init_Default_Win(struct_window *this_win){
     this_win->prefers_file_instead_mem = DO_WE_USE_FILE;
    
 	this_win->current_pos_x = 0; this_win->current_pos_y = 0;
-	this_win->wi_control_bar = NULL;
-	this_win->wi_progress_bar = NULL;
-	this_win->wi_form = NULL;
-	this_win->wi_thumb = NULL;
-	this_win->wi_crop = NULL;
-	this_win->win_is_topped = FALSE;
-	this_win->win_is_locked = FALSE;
+	this_win->wi_control_bar	= NULL;
+	this_win->wi_progress_bar	= NULL;
+	this_win->wi_video			= NULL;
+	this_win->wi_form			= NULL;
+	this_win->wi_thumb			= NULL;
+	this_win->wi_crop			= NULL;
+	this_win->win_is_topped		= FALSE;
 	this_win->total_length_w = 0; this_win->total_length_h = 0;
 
     /* Dest MFDB. */

@@ -11,11 +11,9 @@
 */
 
 /* MFDB for image control bar icons */
-struct_st_ico_png st_ico_1_mfdb, st_ico_2_mfdb, st_ico_3_mfdb, st_ico_4_mfdb, st_ico_5_mfdb, st_ico_6_mfdb, st_ico_7_mfdb, st_ico_8_mfdb, st_ico_9_mfdb, st_ico_10_mfdb;
-/* MFDB for main control bar icons */
-struct_st_ico_png st_ico_11_mfdb, st_ico_12_mfdb;
-/* MFDB for document control bar icons */
-struct_st_ico_png st_ico_21_mfdb, st_ico_22_mfdb, st_ico_23_mfdb, st_ico_24_mfdb, st_ico_25_mfdb, st_ico_26_mfdb, st_ico_27_mfdb, st_ico_28_mfdb, st_ico_29_mfdb;
+struct_st_ico_png st_ico_1_mfdb, st_ico_2_mfdb, st_ico_3_mfdb, st_ico_4_mfdb, st_ico_5_mfdb;
+struct_st_ico_png st_ico_6_mfdb, st_ico_7_mfdb, st_ico_8_mfdb, st_ico_9_mfdb, st_ico_10_mfdb;
+struct_st_ico_png st_ico_11_mfdb, st_ico_12_mfdb, st_ico_13_mfdb, st_ico_14_mfdb;
 
 /*	Here you declare an array of struct with :
 *		- index: an unique index associated to the icon you want to display in the control bar. Negative index signals the end of the array and must end it
@@ -43,21 +41,26 @@ struct_st_ico_png_list control_bar_winimage_list[] = {
 };
 
 struct_st_ico_png_list control_bar_winstart_list[] = {
-	{	1,		 "ico24/open.png",		NULL,		&st_ico_11_mfdb,		NULL,		st_Img_Open, 	12,		4 ,		FALSE	},
-	{	2,		 "ico24/cut.png",		NULL,		&st_ico_12_mfdb,		NULL,		st_Img_Crop, 	48,		4 ,		FALSE	},
+	{	1,		 "ico24/open.png",		NULL,		&st_ico_1_mfdb,		NULL,		st_Img_Open, 	12,		4 ,		FALSE	},
+	{	2,		 "ico24/export.png",		NULL,		&st_ico_2_mfdb,		NULL,		st_Img_Export, 	48,		4 ,		FALSE	},
 	{	-1,		NULL,					NULL, 				NULL, 			 		NULL,				NULL,			0,		0 ,		0	},
 };
 
 struct_st_ico_png_list control_bar_windocument_list[] = {
-	{	1,		 "ico24/open.png",		NULL,		&st_ico_21_mfdb,		NULL,		st_Img_Open, 	12,		4 ,		FALSE	},
-	{	2,		 "ico24/export.png",		NULL,		&st_ico_22_mfdb,		NULL,		st_Img_Export, 	48,		4 ,		FALSE	},
-	{	3,		 "ico24/collapse.png",		"ico24/expand.png",		&st_ico_23_mfdb,		&st_ico_24_mfdb,		st_Img_Autoscale, 	80,		4 ,		FALSE	},
-	{	4,		 "ico24/up.png", NULL,		&st_ico_25_mfdb,		NULL,		st_Img_up, 	112,		4 ,		FALSE	},
-	{	5,		 "ico24/down.png",		NULL,		&st_ico_26_mfdb,		NULL,		st_Img_down, 	144,		4 ,		FALSE	},
-	{	6,		 "ico24/cut.png",		NULL,		&st_ico_27_mfdb,		NULL,		st_Img_Crop, 	176,		4 ,		FALSE	},
-	{	7,		 "ico24/rotate.png",		NULL,		&st_ico_28_mfdb,		NULL,		st_Img_Rotate, 	208,		4 ,		FALSE	},
-	{	8,		 "ico24/zoom_in.png",		NULL,		&st_ico_29_mfdb,		NULL,		st_Img_ZoomIn, 	240,		4 ,		FALSE	},
+	{	1,		 "ico24/open.png",		NULL,		&st_ico_1_mfdb,		NULL,		st_Img_Open, 	12,		4 ,		FALSE	},
+	{	2,		 "ico24/export.png",		NULL,		&st_ico_2_mfdb,		NULL,		st_Img_Export, 	48,		4 ,		FALSE	},
+	{	3,		 "ico24/collapse.png",		"ico24/expand.png",		&st_ico_3_mfdb,		&st_ico_4_mfdb,		st_Img_Autoscale, 	80,		4 ,		FALSE	},
+	{	4,		 "ico24/up.png", NULL,		&st_ico_11_mfdb,		NULL,		st_Img_up, 	112,		4 ,		FALSE	},
+	{	5,		 "ico24/down.png",		NULL,		&st_ico_12_mfdb,		NULL,		st_Img_down, 	144,		4 ,		FALSE	},
+	{	6,		 "ico24/cut.png",		NULL,		&st_ico_7_mfdb,		NULL,		st_Img_Crop, 	176,		4 ,		FALSE	},
+	{	7,		 "ico24/rotate.png",		NULL,		&st_ico_8_mfdb,		NULL,		st_Img_Rotate, 	208,		4 ,		FALSE	},
+	{	8,		 "ico24/zoom_in.png",		NULL,		&st_ico_9_mfdb,		NULL,		st_Img_ZoomIn, 	240,		4 ,		FALSE	},
 	{	9,		 "ico24/zoom_out.png",		NULL,		&st_ico_10_mfdb,		NULL,		st_Img_ZoomOut, 	272,		4 ,		FALSE	},
+	{	-1,		NULL,					NULL, 				NULL, 			 		NULL,				NULL,			0,		0 ,		0	},
+};
+
+struct_st_ico_png_list control_bar_winvideo_list[] = {
+	{	1,		 "ico24/play.png",		"ico24/pause.png",		&st_ico_13_mfdb,		&st_ico_14_mfdb,		st_Img_Play, 	12,		4 ,		FALSE	},
 	{	-1,		NULL,					NULL, 				NULL, 			 		NULL,				NULL,			0,		0 ,		0	},
 };
 
@@ -80,6 +83,37 @@ void st_Init_WinImage_Control_Bar(void* p_param){
 	/* If you want some transparency filter set transparency to TRUE */
 	this_win->wi_control_bar->transparency = FALSE;
 	// this_win->wi_control_bar->transparency = TRUE;
+	if(cpu_type < 40 || computer_type < 5){
+		this_win->wi_control_bar->transparency = FALSE;
+		/* Disabling transparency computing on ST */
+	}
+	this_win->wi_control_bar->background_mfdb = NULL;
+	this_win->wi_control_bar->need_to_reload_control_mfdb = TRUE;
+	/* Transparency color - ARGB: value 'A' represent the transparecny level */
+	this_win->wi_control_bar->transparency_color = GREY_COLOR;
+	/* VDI handle */
+	this_win->wi_control_bar->vdi_handle = &st_vdi_handle;
+	/* Screen MFDB - You may obtained it with a declaration like MFDB screen_mfdb = {0}; */
+	this_win->wi_control_bar->virtual_screen_mfdb = &screen_mfdb;
+	/* We want hide the control bar with the right click */
+	this_win->wi_control_bar->force_unhide = FALSE;
+	}
+}
+
+void st_Init_WinVideo_Control_Bar(void* p_param){
+	/* depend of your application - I need this in order to get a win_handle linked to this control bar */
+	struct_window *this_win = (struct_window*)p_param;
+	if( this_win->wi_to_display_mfdb->fd_addr != NULL ){
+	this_win->wi_control_bar = (struct_st_control_bar*)mem_alloc(sizeof(struct_st_control_bar));
+	/* The array of struct you declared below - It contain indexes, path, etc... */
+	this_win->wi_control_bar->control_bar_list = (struct_st_ico_png_list*)mem_alloc(sizeof(control_bar_winvideo_list));
+	memcpy(this_win->wi_control_bar->control_bar_list, &control_bar_winvideo_list, sizeof(control_bar_winvideo_list));
+	/* A right padding if you want an icon is showed at the opposite of the others i.e. for example main icon to the left but one of them to the right */
+	this_win->wi_control_bar->last_ico_padding_right = 72;
+	/* When control_bar_h is equal to zero the control bar was hidden - this value represent the height of the control bar */
+	this_win->wi_control_bar->control_bar_h = 0;
+	/* If you want some transparency filter set transparency to TRUE */
+	this_win->wi_control_bar->transparency = FALSE;
 	if(cpu_type < 40 || computer_type < 5){
 		this_win->wi_control_bar->transparency = FALSE;
 		/* Disabling transparency computing on ST */
@@ -158,6 +192,16 @@ void st_Reload_Control_Bar(struct_window *this_win, struct_st_control_bar* contr
 			}
 		}
 	}
+}
+
+/* Functions for video */
+
+void* st_Img_Play(void* p_param){
+	struct_window *this_win = (struct_window*)p_param;
+	this_win->wi_data->play_on = this_win->wi_data->play_on == TRUE ? FALSE : TRUE;
+	event_timer_used = this_win->wi_data->play_on == TRUE ? event_timer_video : event_timer_default;
+	printf("Timer %ld\n", event_timer_used);
+	return NULL;
 }
 
 /* Custom functions associated to our icons */
@@ -405,6 +449,10 @@ bool st_Ico_PNG_Init_Document(void){
 	if(!st_Ico_PNG_Init(control_bar_windocument_list)){ return false; }
 	return true;
 }
+bool st_Ico_PNG_Init_Video(void){
+	if(!st_Ico_PNG_Init(control_bar_winvideo_list)){ printf("Error init vidieo control bar\n"); return false; }
+	return true;
+}
 
 bool st_Ico_PNG_Init_Main(void){
 	if(!st_Ico_PNG_Init(control_bar_winstart_list)){ return false; }
@@ -413,6 +461,10 @@ bool st_Ico_PNG_Init_Main(void){
 
 void st_Ico_PNG_Release_Main(void){
 	st_Ico_PNG_Release(control_bar_winstart_list);
+}
+
+void st_Ico_PNG_Release_Video(void){
+	st_Ico_PNG_Release(control_bar_winvideo_list);
 }
 
 void st_Ico_PNG_Release_Document(void){

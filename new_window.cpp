@@ -80,6 +80,7 @@ bool new_win_img(const char *new_file){
 						return false;
 					}
 				}
+				void* (*video_function)(void*) = NULL;
 				file_extension = win_struct_array[i].wi_data->extension;
 				TRACE(("File Extension %s\n", file_extension))
 				if (check_ext(file_extension, "HEI") || check_ext(file_extension, "HEIF") || check_ext(file_extension, "HEIC") ){
@@ -125,7 +126,11 @@ bool new_win_img(const char *new_file){
                 if(win_struct_array[i].rendering_time == FALSE){
                     start_time = st_Supexec(get200hz);
                 }
-                win_struct_array[i].refresh_win(win_struct_array[i].wi_handle);
+				if(win_struct_array[i].wi_data->video_media){
+					st_Open_Thread(video_function, (void*)&win_struct_array[i].wi_handle);
+				}else{
+					win_struct_array[i].refresh_win(win_struct_array[i].wi_handle);
+				}
                 if(win_struct_array[i].rendering_time == FALSE){
                     end_time = st_Supexec(get200hz);
                     win_struct_array[i].rendering_time = (end_time - start_time) * 5;
@@ -134,9 +139,12 @@ bool new_win_img(const char *new_file){
                 st_Set_Clipping(CLIPPING_OFF, win_struct_array[i].work_pxy);
 				if(win_struct_array[i].wi_data->doc_media){
 					st_Init_WinDoc_Control_Bar((void*)&win_struct_array[i]);
-				}else{
+				} else if(win_struct_array[i].wi_data->video_media){
+					st_Init_WinVideo_Control_Bar((void*)&win_struct_array[i]);
+				}
+				else{
 					st_Init_WinImage_Control_Bar((void*)&win_struct_array[i]);
-				}				
+				}
 				if(win_struct_array[i].wi_data->thumbnail_slave){
 					char* file = basename(win_struct_array[i].wi_data->path);
 					char thumbs_title[strlen(file) + 16] = {0};
@@ -146,9 +154,11 @@ bool new_win_img(const char *new_file){
 				win_struct_array[i].wi_data->thumbnail_slave = TRUE;
 
 			}
-			wind_set(win_struct_array[i].wi_handle,WF_TOP,0,0,0,0);
-			win_struct_array[i].win_is_topped = TRUE;
-			send_message(win_struct_array[i].wi_handle, WM_REDRAW);
+			if(!win_struct_array[i].wi_data->video_media){
+				wind_set(win_struct_array[i].wi_handle,WF_TOP,0,0,0,0);
+				win_struct_array[i].win_is_topped = TRUE;
+				send_message(win_struct_array[i].wi_handle, WM_REDRAW);
+			}
 			return true;
 		}
 		i++;
