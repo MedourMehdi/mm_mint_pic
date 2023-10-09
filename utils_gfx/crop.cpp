@@ -44,7 +44,7 @@ bool st_Crop_To_MFDB(struct_crop* this_crop){
 	xy[3] = xy[1] + this_crop->wi_crop_original->fd_h - 1;
 
 	xy[4] = 0; xy[5] = 0;
-	xy[6] = this_crop->wi_crop_original->fd_w; xy[7] = this_crop->wi_crop_original->fd_h;
+	xy[6] = this_crop->wi_crop_original->fd_w - 1; xy[7] = this_crop->wi_crop_original->fd_h - 1;
 	// xy[2] -= 1;	xy[3] -= 1;	
 
     switch (screen_workstation_bits_per_pixel){
