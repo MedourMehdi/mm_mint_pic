@@ -344,7 +344,9 @@ void st_Control_Bar_Buffer_to_Screen(struct_st_control_bar* control_bar, GRECT* 
 
 	if((clipw != 0) && ( cliph != 0)) {
 		xy_clip[0] = clipx; xy_clip[1] = clipy; xy_clip[2] = clipx + clipw - 1; xy_clip[3] = clipy + cliph;
+		xy_clip[2] -= 1;
 		vs_clip( *my_vdi_handle, TRUE, xy_clip );
+		xy_clip[2] += 1;
 	}
 
 	/* Source buffer */
