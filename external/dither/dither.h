@@ -2,12 +2,12 @@
 #ifndef DITHER_HEADERS
 #define DITHER_HEADERS
 
-void	makeDitherSierra( u_int8_t* pixels, int32_t width, int32_t height );
-void    makeDitherSierraLiteRgbNbpp( u_int8_t* pixels, int32_t width, int32_t height, int32_t ncolors );
-void    makeDitherSierraRgbNbpp( u_int8_t* pixels, int32_t width, int32_t height, int32_t ncolors );
+void	makeDitherSierra( u_int8_t* pixels, long width, long height );
+void    makeDitherSierraLiteRgbNbpp( u_int8_t* pixels, long width, long height, long ncolors );
+void    makeDitherSierraRgbNbpp( u_int8_t* pixels, long width, long height, long ncolors );
 
-void	makeDitherFS( u_int8_t* pixels, int32_t width, int32_t height );
-void	makeDitherFSRgb3bpp( u_int8_t* pixels, int32_t width, int32_t height );
-void	makeDitherFSRgb6bpp( u_int8_t* pixels, int32_t width, int32_t height );
+void	makeDitherFS( u_int8_t* pixels, long width, long height );
+void	makeDitherFSRgb3bpp( u_int8_t* pixels, long width, long height );
+void	makeDitherFSRgb6bpp( u_int8_t* pixels, long width, long height );
 
 #endif

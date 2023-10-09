@@ -23,48 +23,48 @@ typedef	u_int32_t pixel;
 
 const u_int8_t	VALUES_6BPP[]	= {	0,  85, 170, 255	};
 
-#define	f7_16	112		//const int32_t	f7	= (7 << 8) / 16;
-#define	f5_16	 80		//const int32_t	f5	= (5 << 8) / 16;
-#define	f3_16	 48		//const int32_t	f3	= (3 << 8) / 16;
-#define	f1_16	 16		//const int32_t	f1	= (1 << 8) / 16;
+#define	f7_16	112		//const long	f7	= (7 << 8) / 16;
+#define	f5_16	 80		//const long	f5	= (5 << 8) / 16;
+#define	f3_16	 48		//const long	f3	= (3 << 8) / 16;
+#define	f1_16	 16		//const long	f1	= (1 << 8) / 16;
 
 /////////////////////////////////////////////////////////////////////////////
 
 //	Back-white Floyd-Steinberg dither
-void makeDitherFS( u_int8_t* pixels, int32_t width, int32_t height ) {
-	const int32_t	size	= width * height;
+void makeDitherFS( u_int8_t* pixels, long width, long height ) {
+	const long	size	= width * height;
 
-	int32_t*	error	= (int32_t*)Mxalloc( size * sizeof(int32_t), 3 );
+	long*	error	= (long*)Mxalloc( size * sizeof(long), 3 );
 
 	//	Clear the errors buffer.
-	memset( error, 0, size * sizeof(int32_t) );
+	memset( error, 0, size * sizeof(long) );
 
 	//~~~~~~~~
 
-	int32_t	i	= 0;
+	long	i	= 0;
 
-	for( int32_t y = 0; y < height; y++ )
+	for( long y = 0; y < height; y++ )
 	{
 		u_int8_t*   prow   = pixels + ( y * width * 3 );
 
-		for( int32_t x = 0; x < width; x++,i++ )
+		for( long x = 0; x < width; x++,i++ )
 		{
-			const int32_t	blue	= prow[mul_3_fast(x) + 0];
-            const int32_t	green	= prow[mul_3_fast(x) + 1];
-            const int32_t	red		= prow[mul_3_fast(x) + 2];
+			const long	blue	= prow[mul_3_fast(x) + 0];
+            const long	green	= prow[mul_3_fast(x) + 1];
+            const long	red		= prow[mul_3_fast(x) + 2];
 
 			//	Get the pixel gray value.
-			// int32_t	newVal	= (red+green+blue)/3 + (error[i] >> 8);	//	PixelGray + error correction
-			int32_t	newVal	= (red + green + blue) / 3 + (error[i] >> 8);
-			int32_t	newc	= (newVal < 128 ? 0 : 255);
+			// long	newVal	= (red+green+blue)/3 + (error[i] >> 8);	//	PixelGray + error correction
+			long	newVal	= (red + green + blue) / 3 + (error[i] >> 8);
+			long	newc	= (newVal < 128 ? 0 : 255);
             prow[mul_3_fast(x) + 0]	= newc;	//	blue
             prow[mul_3_fast(x) + 1]	= newc;	//	green
             prow[mul_3_fast(x) + 2]	= newc;	//	red
 
 			//	Correction - the new error
-			const int32_t	cerror	= newVal - newc;
+			const long	cerror	= newVal - newc;
 
-			int32_t idx = i+1;
+			long idx = i+1;
 			if( x+1 < width )
 				error[idx] += (cerror * f7_16);
 
@@ -87,51 +87,51 @@ void makeDitherFS( u_int8_t* pixels, int32_t width, int32_t height ) {
 /////////////////////////////////////////////////////////////////////////////
 
 //	Color Floyd-Steinberg dither using 3 bits per pixel (1 bit per color plane)
-void	makeDitherFSRgb3bpp( u_int8_t* pixels, int32_t width, int32_t height )	
+void	makeDitherFSRgb3bpp( u_int8_t* pixels, long width, long height )	
 {
-	const int32_t	size	= width * height;
+	const long	size	= width * height;
 
-	int32_t*	errorB	= (int32_t*)malloc( size * sizeof(int32_t) );
-	int32_t*	errorG	= (int32_t*)malloc( size * sizeof(int32_t) );
-	int32_t*	errorR	= (int32_t*)malloc( size * sizeof(int32_t) );
+	long*	errorB	= (long*)malloc( size * sizeof(long) );
+	long*	errorG	= (long*)malloc( size * sizeof(long) );
+	long*	errorR	= (long*)malloc( size * sizeof(long) );
 
 	//	Clear the errors buffer.
-	memset( errorB, 0, size * sizeof(int32_t) );
-	memset( errorG, 0, size * sizeof(int32_t) );
-	memset( errorR, 0, size * sizeof(int32_t) );
+	memset( errorB, 0, size * sizeof(long) );
+	memset( errorG, 0, size * sizeof(long) );
+	memset( errorR, 0, size * sizeof(long) );
 
 	//~~~~~~~~
 
-	int32_t	i	= 0;
+	long	i	= 0;
 
-	for( int32_t y = 0; y < height; y++ )
+	for( long y = 0; y < height; y++ )
 	{
 		u_int8_t*   prow   = pixels + ( y * width * 3 );
 
-		for( int32_t x = 0; x < width; x++,i++ )
+		for( long x = 0; x < width; x++,i++ )
 		{
-			const int32_t	blue	= prow[mul_3_fast(x)];
-            const int32_t	green	= prow[mul_3_fast(x) + 1];
-            const int32_t	red		= prow[mul_3_fast(x) + 2];
+			const long	blue	= prow[mul_3_fast(x)];
+            const long	green	= prow[mul_3_fast(x) + 1];
+            const long	red		= prow[mul_3_fast(x) + 2];
 
-			int32_t	newValB	= blue  + (errorB[i] >> 8);	//	PixelRed   + error correctionB
-			int32_t	newValG	= green + (errorG[i] >> 8);	//	PixelGreen + error correctionG
-			int32_t	newValR	= red   + (errorR[i] >> 8);	//	PixelBlue  + error correctionR
+			long	newValB	= blue  + (errorB[i] >> 8);	//	PixelRed   + error correctionB
+			long	newValG	= green + (errorG[i] >> 8);	//	PixelGreen + error correctionG
+			long	newValR	= red   + (errorR[i] >> 8);	//	PixelBlue  + error correctionR
 
-			int32_t	newcb	= (newValB < 128 ? 0 : 255);
-			int32_t	newcg	= (newValG < 128 ? 0 : 255);
-			int32_t	newcr	= (newValR < 128 ? 0 : 255);
+			long	newcb	= (newValB < 128 ? 0 : 255);
+			long	newcg	= (newValG < 128 ? 0 : 255);
+			long	newcr	= (newValR < 128 ? 0 : 255);
 
             prow[mul_3_fast(x)]	= newcb;
             prow[mul_3_fast(x) + 1]	= newcg;
             prow[mul_3_fast(x) + 2]	= newcr;
 
 			//	Correction - the new error
-			int32_t	cerrorR	= newValR - newcr;
-			int32_t	cerrorG	= newValG - newcg;
-			int32_t	cerrorB	= newValB - newcb;
+			long	cerrorR	= newValR - newcr;
+			long	cerrorG	= newValG - newcg;
+			long	cerrorB	= newValB - newcb;
 
-			int32_t	idx	= i+1;
+			long	idx	= i+1;
 			if( x+1 < width )
 			{
 				errorR[idx] += (cerrorR * f7_16);
@@ -175,55 +175,55 @@ void	makeDitherFSRgb3bpp( u_int8_t* pixels, int32_t width, int32_t height )
 /////////////////////////////////////////////////////////////////////////////
 
 //	Color Floyd-Steinberg dither using 6 bits per pixel (2 bit per color plane)
-void	makeDitherFSRgb6bpp( u_int8_t* pixels, int32_t width, int32_t height )	
+void	makeDitherFSRgb6bpp( u_int8_t* pixels, long width, long height )	
 {
-	const int32_t	size	= width * height;
+	const long	size	= width * height;
 
-	int32_t*	errorB	= (int32_t*)malloc( size * sizeof(int32_t) );
-	int32_t*	errorG	= (int32_t*)malloc( size * sizeof(int32_t) );
-	int32_t*	errorR	= (int32_t*)malloc( size * sizeof(int32_t) );
+	long*	errorB	= (long*)malloc( size * sizeof(long) );
+	long*	errorG	= (long*)malloc( size * sizeof(long) );
+	long*	errorR	= (long*)malloc( size * sizeof(long) );
 
 	//	Clear the errors buffer.
-	memset( errorB, 0, size * sizeof(int32_t) );
-	memset( errorG, 0, size * sizeof(int32_t) );
-	memset( errorR, 0, size * sizeof(int32_t) );
+	memset( errorB, 0, size * sizeof(long) );
+	memset( errorG, 0, size * sizeof(long) );
+	memset( errorR, 0, size * sizeof(long) );
 
 	//~~~~~~~~
 
-	int32_t	i	= 0;
+	long	i	= 0;
 
-	for( int32_t y = 0; y < height; y++ )
+	for( long y = 0; y < height; y++ )
 	{
 		u_int8_t*   prow   = pixels + ( y * width * 3 );
 
-		for( int32_t x = 0; x < width; x++,i++ )
+		for( long x = 0; x < width; x++,i++ )
 		{
-			const int32_t	blue	= prow[mul_3_fast(x) + 0];
-            const int32_t	green	= prow[mul_3_fast(x) + 1];
-            const int32_t	red		= prow[mul_3_fast(x) + 2];
+			const long	blue	= prow[mul_3_fast(x) + 0];
+            const long	green	= prow[mul_3_fast(x) + 1];
+            const long	red		= prow[mul_3_fast(x) + 2];
 
-			int32_t	newValB	= (int32_t)blue	 + (errorB[i] >> 8);	//	PixelBlue  + error correctionB
-			int32_t	newValG	= (int32_t)green + (errorG[i] >> 8);	//	PixelGreen + error correctionG
-			int32_t	newValR	= (int32_t)red	 + (errorR[i] >> 8);	//	PixelRed   + error correctionR
+			long	newValB	= (long)blue	 + (errorB[i] >> 8);	//	PixelBlue  + error correctionB
+			long	newValG	= (long)green + (errorG[i] >> 8);	//	PixelGreen + error correctionG
+			long	newValR	= (long)red	 + (errorR[i] >> 8);	//	PixelRed   + error correctionR
 
 			//	The error could produce values beyond the borders, so need to keep the color in range
-			int32_t	idxR	= CLAMPED( newValR, 0, 255 );
-			int32_t	idxG	= CLAMPED( newValG, 0, 255 );
-			int32_t	idxB	= CLAMPED( newValB, 0, 255 );
+			long	idxR	= CLAMPED( newValR, 0, 255 );
+			long	idxG	= CLAMPED( newValG, 0, 255 );
+			long	idxB	= CLAMPED( newValB, 0, 255 );
 
-			int32_t	newcR	= VALUES_6BPP[idxR >> 6];	//	x >> 6 is the same as x / 64
-			int32_t	newcG	= VALUES_6BPP[idxG >> 6];	//	x >> 6 is the same as x / 64
-			int32_t	newcB	= VALUES_6BPP[idxB >> 6];	//	x >> 6 is the same as x / 64
+			long	newcR	= VALUES_6BPP[idxR >> 6];	//	x >> 6 is the same as x / 64
+			long	newcG	= VALUES_6BPP[idxG >> 6];	//	x >> 6 is the same as x / 64
+			long	newcB	= VALUES_6BPP[idxB >> 6];	//	x >> 6 is the same as x / 64
 
             prow[mul_3_fast(x) + 0]	= newcB;
             prow[mul_3_fast(x) + 1]	= newcG;
             prow[mul_3_fast(x) + 2]	= newcR;
 
-			int32_t cerrorB	= newValB - newcB;
-			int32_t cerrorG	= newValG - newcG;
-			int32_t cerrorR	= newValR - newcR;
+			long cerrorB	= newValB - newcB;
+			long cerrorG	= newValG - newcG;
+			long cerrorR	= newValR - newcR;
 
-			int32_t	idx = i+1;
+			long	idx = i+1;
 			if( x+1 < width )
 			{
 				errorR[idx] += (cerrorR * f7_16);
@@ -264,7 +264,7 @@ void	makeDitherFSRgb6bpp( u_int8_t* pixels, int32_t width, int32_t height )
 /////////////////////////////////////////////////////////////////////////////
 
 //	Black-white Sierra Lite dithering (variation of Floyd-Steinberg with less computational cost)
-void	makeDitherSierra( u_int8_t* pixels, int32_t width, int32_t height )	
+void	makeDitherSierra( u_int8_t* pixels, long width, long height )	
 {
 	//	To avoid real number calculations, I will raise the level of INT arythmetics by shifting with 8 bits to the left ( << 8 )
 	//	Later, when it is necessary will return to te normal level by shifting back 8 bits to the right ( >> 8 )
@@ -275,38 +275,38 @@ void	makeDitherSierra( u_int8_t* pixels, int32_t width, int32_t height )
 
 	//~~~~~~~~
 
-	const int32_t	size	= width * height;
+	const long	size	= width * height;
 
-	int32_t*	error	= (int32_t*)malloc( size * sizeof(int32_t) );
+	long*	error	= (long*)malloc( size * sizeof(long) );
 
 	//	Clear the errors buffer.
-	memset( error, 0, size * sizeof(int32_t) );
+	memset( error, 0, size * sizeof(long) );
 
 	//~~~~~~~~
 
-	int32_t	i	= 0;
+	long	i	= 0;
 
-	for( int32_t y = 0; y < height; y++ )
+	for( long y = 0; y < height; y++ )
 	{
-		for( int32_t x = 0; x < width; x++,i++ )
+		for( long x = 0; x < width; x++,i++ )
 		{
 			const pixel	blue	= pixels[mul_3_fast(x)];
             const pixel	green	= pixels[mul_3_fast(x) + 1];
             const pixel	red		= pixels[mul_3_fast(x) + 2];
 
 			//	Get the pixel gray value.
-			int32_t	newVal	= (red + green + blue) / 3 + error[i];		//	PixelGray + error correction
-			// int32_t	newVal	= GRAY(red , green , blue) + error[i];		//	PixelGray + error correction
-			int32_t	newc	= (newVal < 128 ? 0 : 255);
+			long	newVal	= (red + green + blue) / 3 + error[i];		//	PixelGray + error correction
+			// long	newVal	= GRAY(red , green , blue) + error[i];		//	PixelGray + error correction
+			long	newc	= (newVal < 128 ? 0 : 255);
 
 			pixels[mul_3_fast(x)]	= newc;
 			pixels[mul_3_fast(x) + 1]	= newc;
 			pixels[mul_3_fast(x) + 2]	= newc;
 
 			//	Correction - the new error
-			const int32_t	cerror	= newVal - newc;
+			const long	cerror	= newVal - newc;
 
-			int32_t idx = i;
+			long idx = i;
 			if( x + 1 < width )
 				error[idx+1] += SIERRA_COEF( 5, cerror );
 
@@ -351,60 +351,60 @@ void	makeDitherSierra( u_int8_t* pixels, int32_t width, int32_t height )
 }
 /////////////////////////////////////////////////////////////////////////////
 
-void makeDitherSierraLiteRgbNbpp( u_int8_t* pixels, int32_t width, int32_t height, int32_t ncolors ) {
-	int32_t	divider	= 256 / ncolors;
+void makeDitherSierraLiteRgbNbpp( u_int8_t* pixels, long width, long height, long ncolors ) {
+	long	divider	= 256 / ncolors;
 
-	const int32_t	size	= width * height;
+	const long	size	= width * height;
 
-	int32_t*	errorB	= (int32_t*)Mxalloc( size * sizeof(int32_t) , 3);
-	int32_t*	errorG	= (int32_t*)Mxalloc( size * sizeof(int32_t) , 3);
-	int32_t*	errorR	= (int32_t*)Mxalloc( size * sizeof(int32_t) , 3);
+	long*	errorB	= (long*)Mxalloc( size * sizeof(long) , 3);
+	long*	errorG	= (long*)Mxalloc( size * sizeof(long) , 3);
+	long*	errorR	= (long*)Mxalloc( size * sizeof(long) , 3);
 
 	//	Clear the errors buffer.
-	memset( errorB, 0, size * sizeof(int32_t) );
-	memset( errorG, 0, size * sizeof(int32_t) );
-	memset( errorR, 0, size * sizeof(int32_t) );
+	memset( errorB, 0, size * sizeof(long) );
+	memset( errorG, 0, size * sizeof(long) );
+	memset( errorR, 0, size * sizeof(long) );
 
 	//~~~~~~~~
 
-	int32_t	i	= 0;
+	long	i	= 0;
 
-	for( int32_t y = 0; y < height; y++ )
+	for( long y = 0; y < height; y++ )
 	{
 		u_int8_t*   prow   = pixels + ( y * width * 3 );
 
-		for( int32_t x = 0; x < width; x++,i++ )
+		for( long x = 0; x < width; x++,i++ )
 		{
-			const int32_t	blue	= prow[mul_3_fast(x)];
-            const int32_t	green	= prow[mul_3_fast(x) + 1];
-            const int32_t	red		= prow[mul_3_fast(x) + 2];
+			const long	blue	= prow[mul_3_fast(x)];
+            const long	green	= prow[mul_3_fast(x) + 1];
+            const long	red		= prow[mul_3_fast(x) + 2];
 
-			const int32_t	newValB	= blue	+ errorB[i];
-			const int32_t	newValG	= green + errorG[i];
-			const int32_t	newValR	= red	+ errorR[i];
+			const long	newValB	= blue	+ errorB[i];
+			const long	newValG	= green + errorG[i];
+			const long	newValR	= red	+ errorR[i];
 
-			int32_t	i1	= newValB / divider;	CLAMP( i1, 0, ncolors );
-			int32_t	i2	= newValG / divider;	CLAMP( i2, 0, ncolors );
-			int32_t	i3	= newValR / divider;	CLAMP( i3, 0, ncolors );
+			long	i1	= newValB / divider;	CLAMP( i1, 0, ncolors );
+			long	i2	= newValG / divider;	CLAMP( i2, 0, ncolors );
+			long	i3	= newValR / divider;	CLAMP( i3, 0, ncolors );
 
 			//	If you want to compress the image, use the values of i1,i2,i3
 			//	they have values in the range 0..ncolors
 			//	So if the ncolors is 4 - you have values: 0,1,2,3 which is encoded in 2 bits
 			//	2 bits for 3 planes == 6 bits per pixel
 
-			const int32_t	newcB	= CLAMPED( i1 * divider, 0, 255 );	//	blue
-			const int32_t	newcG	= CLAMPED( i2 * divider, 0, 255 );	//	green
-			const int32_t	newcR	= CLAMPED( i3 * divider, 0, 255 );	//	red
+			const long	newcB	= CLAMPED( i1 * divider, 0, 255 );	//	blue
+			const long	newcG	= CLAMPED( i2 * divider, 0, 255 );	//	green
+			const long	newcR	= CLAMPED( i3 * divider, 0, 255 );	//	red
 
             prow[mul_3_fast(x) + 0]	= newcB;
             prow[mul_3_fast(x) + 1]	= newcG;
             prow[mul_3_fast(x) + 2]	= newcR;
 
-			const int32_t cerrorB	= (newValB - newcB);
-			const int32_t cerrorG	= (newValG - newcG);
-			const int32_t cerrorR	= (newValR - newcR);
+			const long cerrorB	= (newValB - newcB);
+			const long cerrorG	= (newValG - newcG);
+			const long cerrorR	= (newValR - newcR);
 
-			int32_t	idx = i;
+			long	idx = i;
 			if( x+1 < width )
 			{
 				errorR[idx+1] += SIERRA_LITE_COEF( 2, cerrorR );
@@ -435,60 +435,60 @@ void makeDitherSierraLiteRgbNbpp( u_int8_t* pixels, int32_t width, int32_t heigh
 }
 /////////////////////////////////////////////////////////////////////////////
 
-void makeDitherSierraRgbNbpp( u_int8_t* pixels, int32_t width, int32_t height, int32_t ncolors ) {
-	int32_t	divider	= 256 / ncolors;
+void makeDitherSierraRgbNbpp( u_int8_t* pixels, long width, long height, long ncolors ) {
+	long	divider	= 256 / ncolors;
 
-	const int32_t	size	= width * height;
+	const long	size	= width * height;
 
-	int32_t*	errorB	= (int32_t*)malloc( size * sizeof(int32_t) );
-	int32_t*	errorG	= (int32_t*)malloc( size * sizeof(int32_t) );
-	int32_t*	errorR	= (int32_t*)malloc( size * sizeof(int32_t) );
+	long*	errorB	= (long*)malloc( size * sizeof(long) );
+	long*	errorG	= (long*)malloc( size * sizeof(long) );
+	long*	errorR	= (long*)malloc( size * sizeof(long) );
 
 	//	Clear the errors buffer.
-	memset( errorB, 0, size * sizeof(int32_t) );
-	memset( errorG, 0, size * sizeof(int32_t) );
-	memset( errorR, 0, size * sizeof(int32_t) );
+	memset( errorB, 0, size * sizeof(long) );
+	memset( errorG, 0, size * sizeof(long) );
+	memset( errorR, 0, size * sizeof(long) );
 
 	//~~~~~~~~
 
-	int32_t	i	= 0;
+	long	i	= 0;
 
-	for( int32_t y = 0; y < height; y++ )
+	for( long y = 0; y < height; y++ )
 	{
 		u_int8_t*   prow   = pixels + ( y * width * 3 );
 
-		for( int32_t x = 0; x < width; x++,i++ )
+		for( long x = 0; x < width; x++,i++ )
 		{
-			const int32_t	blue	= prow[mul_3_fast(x) + 0];
-            const int32_t	green	= prow[mul_3_fast(x) + 1];
-            const int32_t	red		= prow[mul_3_fast(x) + 2];
+			const long	blue	= prow[mul_3_fast(x) + 0];
+            const long	green	= prow[mul_3_fast(x) + 1];
+            const long	red		= prow[mul_3_fast(x) + 2];
 
-			const int32_t	newValB	= blue	+ errorB[i];
-			const int32_t	newValG	= green + errorG[i];
-			const int32_t	newValR	= red	+ errorR[i];
+			const long	newValB	= blue	+ errorB[i];
+			const long	newValG	= green + errorG[i];
+			const long	newValR	= red	+ errorR[i];
 
-			int32_t	i1	= newValB / divider;	CLAMP( i1, 0, ncolors );
-			int32_t	i2	= newValG / divider;	CLAMP( i2, 0, ncolors );
-			int32_t	i3	= newValR / divider;	CLAMP( i3, 0, ncolors );
+			long	i1	= newValB / divider;	CLAMP( i1, 0, ncolors );
+			long	i2	= newValG / divider;	CLAMP( i2, 0, ncolors );
+			long	i3	= newValR / divider;	CLAMP( i3, 0, ncolors );
 
 			//	If you want to compress the image, use the values of i1,i2,i3
 			//	they have values in the range 0..ncolors
 			//	So if the ncolors is 4 - you have values: 0,1,2,3 which is encoded in 2 bits
 			//	2 bits for 3 planes == 6 bits per pixel
 
-			const int32_t	newcB	= CLAMPED( i1 * divider, 0, 255 );	//	blue
-			const int32_t	newcG	= CLAMPED( i2 * divider, 0, 255 );	//	green
-			const int32_t	newcR	= CLAMPED( i3 * divider, 0, 255 );	//	red
+			const long	newcB	= CLAMPED( i1 * divider, 0, 255 );	//	blue
+			const long	newcG	= CLAMPED( i2 * divider, 0, 255 );	//	green
+			const long	newcR	= CLAMPED( i3 * divider, 0, 255 );	//	red
 
             prow[mul_3_fast(x) + 0]	= newcB;
             prow[mul_3_fast(x) + 1]	= newcG;
             prow[mul_3_fast(x) + 2]	= newcR;
 
-			const int32_t cerrorB	= (newValB - newcB);
-			const int32_t cerrorG	= (newValG - newcG);
-			const int32_t cerrorR	= (newValR - newcR);
+			const long cerrorB	= (newValB - newcB);
+			const long cerrorG	= (newValG - newcG);
+			const long cerrorR	= (newValR - newcR);
 
-			int32_t idx = i;
+			long idx = i;
 			if( x + 1 < width )
 			{
 				errorR[idx+1] += SIERRA_COEF( 5, cerrorR );

@@ -21,7 +21,7 @@
 #endif
 
 uint8_t		zview_Saturation(uint8_t * rgb);
-uint16_t	zview_Remap_Color (int32_t value, SRGB *screen_colortab);
+uint16_t	zview_Remap_Color (long value, SRGB *screen_colortab);
 uint32_t	zview_Color_Lookup ( uint32_t rgb, SRGB *screen_colortab, int16_t *trans);
 void       	zview_Save_sRGB_Colors(int16_t (*_vdi_palette)[3], SRGB *screen_colortab);
 
@@ -34,7 +34,7 @@ void zview_Set_Max_Color(uint16_t color_nb){
 	max_color = color_nb;
 }
 
-uint16_t zview_Remap_Color (int32_t value, SRGB *screen_colortab){
+uint16_t zview_Remap_Color (long value, SRGB *screen_colortab){
 	int16_t red   = ((uint8_t *)&value)[1];
 	int16_t green = ((uint8_t *)&value)[2];
 	int16_t blue  = ((uint8_t *)&value)[3];
@@ -46,11 +46,11 @@ uint16_t zview_Remap_Color (int32_t value, SRGB *screen_colortab){
 	
 	int16_t i = 0;
 	
-	value = ( value & 0x00FFFFFFl) | (( int32_t)satur << 24);
+	value = ( value & 0x00FFFFFFl) | (( long)satur << 24);
 	
 	do 
 	{
-		if ( *( int32_t*)&screen_colortab[i] == value) 
+		if ( *( long*)&screen_colortab[i] == value) 
 		{
 			/* gotcha! */
 			best_fit = i;
@@ -105,9 +105,9 @@ void zview_Save_sRGB_Colors(int16_t (*_vdi_palette)[3], SRGB *screen_colortab){
 	
 	for( i = 0; i < max_color; i++)
 	{
-		screen_colortab[i].red   = div_1000_fast( ((((int32_t)_vdi_palette[i][0] << 8 ) - _vdi_palette[i][0]) + 500) );
-		screen_colortab[i].green = div_1000_fast( ((((int32_t)_vdi_palette[i][1] << 8 ) - _vdi_palette[i][1]) + 500) );
-		screen_colortab[i].blue  = div_1000_fast( ((((int32_t)_vdi_palette[i][2] << 8 ) - _vdi_palette[i][2]) + 500) );		
+		screen_colortab[i].red   = div_1000_fast( ((((long)_vdi_palette[i][0] << 8 ) - _vdi_palette[i][0]) + 500) );
+		screen_colortab[i].green = div_1000_fast( ((((long)_vdi_palette[i][1] << 8 ) - _vdi_palette[i][1]) + 500) );
+		screen_colortab[i].blue  = div_1000_fast( ((((long)_vdi_palette[i][2] << 8 ) - _vdi_palette[i][2]) + 500) );		
 		screen_colortab[i].satur = zview_Saturation ( &screen_colortab[i].red);
 	}
 }
@@ -135,7 +135,7 @@ void zview_Build_Cube216(int16_t *pixel_val){
 
 uint32_t zview_Color_Lookup(uint32_t rgb, SRGB *screen_colortab, int16_t *trans){
 	uint8_t idx = ((rgb & ~0xFFuL) == ~0xFFuL ? rgb : zview_Remap_Color (rgb, screen_colortab));
-	return ( (( int32_t)(trans ? trans[idx] : idx) << 24) | (*(int32_t*)&screen_colortab[idx] & 0x00FFFFFFuL));
+	return ( (( long)(trans ? trans[idx] : idx) << 24) | (*(long*)&screen_colortab[idx] & 0x00FFFFFFuL));
 }
 
 static inline uint8_t zview_Dither_True ( uint8_t * rgb, int16_t * err, int8_t ** buf){

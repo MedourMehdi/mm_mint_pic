@@ -240,7 +240,9 @@ fo_bnxtobj	New current object, or 0 if the next object has the status HIDDEN or 
                 st_Set_Export(&st_Image_Export_To_Degas, this_export.export_extension, &obj_gui_ftext_filepath);
                 st_Update_Comments(this_win_form_handle, (void*)&this_export, &obj_gui_ftext_info, 1, "DEGAS");                          
             } else {
-                printf("Unknown %s extension", this_export.export_extension);
+                sprintf(alert_message, "Unknown %s extension", this_export.export_extension);
+                st_form_alert(FORM_STOP, alert_message);
+                // printf("Unknown %s extension", this_export.export_extension);
             }
             break;
         case DiagExport_chk_png:

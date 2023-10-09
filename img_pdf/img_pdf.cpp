@@ -126,7 +126,9 @@ void _st_Read_PDF(int16_t this_win_handle, boolean file_process, int16_t img_id)
         SplashOutputDev *splashOut;
         st_Progress_Bar_Signal(this_win->wi_progress_bar, 15, (int8_t*)"Opening file");
         if(!(st_FileExistsAccess(fileName))){
-            printf("File not found %s\n", fileName);
+            sprintf(alert_message, "File not found %s\n", fileName);
+            st_form_alert(FORM_EXCLAM, alert_message);            
+            // printf("File not found %s\n", fileName);
         }
         st_Progress_Bar_Signal(this_win->wi_progress_bar, 35, (int8_t*)"Check for fonts");
         /* Global Parameters */
@@ -278,7 +280,8 @@ void _st_Handle_Thumbs_PDF(int16_t this_win_handle, boolean file_process){
     SplashColor paperColor;
     SplashOutputDev *splashOut;
     if(!(st_FileExistsAccess(fileName))){
-        printf("File not found %s\n", fileName);
+        sprintf(alert_message, "File not found %s\n", fileName);
+        st_form_alert(FORM_EXCLAM, alert_message);  
     }
     /* Global Parameters */
     char conf_file[256] = {0};
@@ -475,7 +478,11 @@ void _st_Handle_Thumbs_PDF_Generic(int16_t this_win_handle, boolean file_process
     doc = new PDFDoc((char*)fileName, ownerPW, userPW);
     if(userPW){delete userPW;}
     if(ownerPW){delete ownerPW;}
-    if(!doc->isOk()){printf("Error opening PDF document %s\n", fileName);}
+    if(!doc->isOk()){
+        sprintf(alert_message, "Error opening PDF document %s\n", fileName);
+        st_form_alert(FORM_EXCLAM, alert_message);  
+        // printf("Error opening PDF document %s\n", fileName);
+    }
 
     this_win->wi_data->img.img_total = doc->getNumPages();
     this_win->wi_data->img.img_id = idx;
