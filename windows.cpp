@@ -524,7 +524,7 @@ void buffer_to_screen(int16_t my_win_handle, GRECT *raster_dest){
 			wipe = TRUE;
 			xy[0] = 0;
 			xy[2] = this_win->total_length_w - 1; 
-			if(this_win->wi_data->thumbnail_master == FALSE){
+			if(this_win->wi_data->thumbnail_master == FALSE && !this_win->wi_data->video_media){
 				xy[4] = x + ((this_win->work_area.g_w - this_win->total_length_w) / 2);
 			}else{
 				xy[4] = x;
@@ -536,7 +536,7 @@ void buffer_to_screen(int16_t my_win_handle, GRECT *raster_dest){
 			wipe = TRUE;
 			xy[1] = 0;
 			xy[3] = this_win->total_length_h - 1;
-			if(this_win->wi_data->thumbnail_master == FALSE){
+			if(this_win->wi_data->thumbnail_master == FALSE && !this_win->wi_data->video_media){
 				xy[5] = y + ((this_win->work_area.g_h - this_win->total_length_h) / 2);
 			} else {
 				xy[5] = y;
