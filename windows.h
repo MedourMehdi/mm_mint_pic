@@ -3,6 +3,8 @@
 #include "png_ico/png_ico.h"
 #include "utils_rsc/progress.h"
 
+#include <pthread.h>
+
 #ifndef WINDOWSTRUCT_HEADERS
 #define WINDOWSTRUCT_HEADERS
 
@@ -10,6 +12,8 @@
 #define MIN_WINDOWS_WSIZE 320
 #define MAX_WINDOWS	10
 #define WINDOW_TITLE_MAXLEN 128
+
+#define NUM_THREADS	20
 
 #define WIN_STYLE_IMG (NAME|CLOSER|ICONIFIER|FULLER|MOVER|SIZER|UPARROW|DNARROW|VSLIDE|LFARROW|RTARROW|HSLIDE)
 // #define WIN_STYLE_IMG (NAME|CLOSER|ICONIFIER|FULLER|MOVER|SIZER|VSLIDE|HSLIDE)
@@ -203,6 +207,10 @@ typedef struct {
 
 #endif
 
+extern pthread_t threads[NUM_THREADS];
+extern int *taskids[NUM_THREADS];
+extern int16_t total_thread;
+
 extern struct_window win_struct_array[MAX_WINDOWS];
 extern int16_t number_of_opened_windows;
 extern boolean clip_status;
@@ -240,5 +248,8 @@ void st_Limit_Work_Area(struct_window *this_win);
 
 struct_window* get_win_thumb_slave_by_image_id(int16_t master_win_handle, u_int32_t img_id);
 struct_window* get_win_thumb_master_by_file(const char* this_path);
+
+bool st_Open_Thread(void* func(void*), void* th_param);
+void st_Wait_For_Threads();
 
 #endif

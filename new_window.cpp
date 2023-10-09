@@ -20,6 +20,21 @@
 
 #include "img_dummy/img_dummy.h"
 
+void* new_win_img_threaded(void* _this_file){
+	char this_file[128] = {'\0'};
+	strcpy((char*)this_file, (char*)_this_file);
+	if(!new_win_img(this_file)){
+		sprintf(alert_message, "Error opening window\n%s", this_file);
+		st_form_alert(FORM_STOP, alert_message); 		
+	}
+	return NULL;
+}
+
+void* new_win_start_threaded(void* ){
+	new_win_start();
+	return NULL;
+}
+
 bool new_win_img(const char *new_file){
 	int16_t i = 0;
 	u_int32_t start_time, end_time;

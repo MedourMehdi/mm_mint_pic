@@ -1,5 +1,10 @@
 #include "windows.h"
 #include "utils/utils.h"
+#include <errno.h>
+
+pthread_t threads[NUM_THREADS] = {NULL};
+int *taskids[NUM_THREADS] = {NULL};
+int16_t total_thread = 0;
 
 boolean clip_status = FALSE;
 struct_window win_struct_array[MAX_WINDOWS] = {0};
@@ -727,3 +732,29 @@ struct_window* get_win_thumb_master_by_file(const char* this_path){
 	return this_win;
 }
 
+/* Pth stuff */
+
+bool st_Open_Thread(void* func(void*), void* th_param){
+	int32_t ret = 0;
+	for(int index = 0; index < NUM_THREADS; ++index){
+		if (threads[index] == NULL){
+			// printf("Debug - th_param %s", (char*)th_param);
+			ret = pthread_create( &threads[index], NULL, func, th_param );
+			total_thread += 1;
+			break;
+		}
+	}
+	return ret;
+}
+
+/* Wait for execution of each thread */
+void st_Wait_For_Threads(){
+    for(int index = 0; index < NUM_THREADS; ++index){
+		if (threads[index] != NULL){
+			if(pthread_join(threads[index],NULL) == 0) {
+				total_thread -= 1;
+				threads[index] = NULL;
+			}
+		}   
+    }
+}

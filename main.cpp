@@ -74,17 +74,22 @@ void exit_app();
 /* Main */
 
 int main(int argc, char *argv[]){
-	pthread_t pth_eventloop;
 	char* this_file = (char*)mem_alloc(256);
 	memset(this_file, 0, 256);
+
+	void* func_param;
 
     if(!init_app()){ goto quit;	}
 	
 	global_progress_bar = st_Progress_Bar_Alloc_Enable();
 
-	if(!st_Ico_PNG_Init_Image()){ goto quit;	}
+	if(!st_Ico_PNG_Init_Image()){ goto close_ico_image;	}
 
-	if(!st_Ico_PNG_Init_Document()){ goto quit; }
+	if(!st_Ico_PNG_Init_Document()){ goto close_ico_document; }
+
+	if(!st_Ico_PNG_Init_Video()){ goto close_ico_video; }
+
+	st_Open_Thread(&exec_eventloop, NULL);
 
 	if (argc > 1){
 		for(int16_t i = 1; i < argc; i++) {
@@ -97,28 +102,27 @@ int main(int argc, char *argv[]){
 		do {
 			memset(va_file, 0, 256);
 			pfile = GetNextVaStartFileName( pfile, va_file ) ;
-			// printf("# %s #\n",va_file);
-			if(!new_win_img(va_file)){
-				goto close_ico_image;
-			}
+			func_param = (void*)va_file;
+			st_Open_Thread(&new_win_img_threaded, func_param);
 		} while ( pfile ) ;
 		mem_free(va_file);
 	} else {
 		if(!st_Ico_PNG_Init_Main()){goto close_ico_main;}
-		if(!new_win_start()){goto close_ico_main;}
+			st_Open_Thread(&new_win_start_threaded, NULL);
 	}
 
-	
-	pthread_create( &pth_eventloop, NULL, &exec_eventloop, NULL);
-
-	pthread_join( pth_eventloop, NULL);
+	while(total_thread > 0){
+		st_Wait_For_Threads();
+	}
 
 close_ico_main:
 	st_Ico_PNG_Release_Main();
-close_ico_image:
-	st_Ico_PNG_Release_Image();
+close_ico_video:
+	st_Ico_PNG_Release_Video();
 close_ico_document:
 	st_Ico_PNG_Release_Document();
+close_ico_image:
+	st_Ico_PNG_Release_Image();
 
 	st_Progress_Bar_Finish(global_progress_bar);
 
