@@ -42,7 +42,7 @@ struct_st_ico_png_list control_bar_winimage_list[] = {
 
 struct_st_ico_png_list control_bar_winstart_list[] = {
 	{	1,		 "ico24/open.png",		NULL,		&st_ico_1_mfdb,		NULL,		st_Img_Open, 	12,		4 ,		FALSE	},
-	{	2,		 "ico24/export.png",		NULL,		&st_ico_2_mfdb,		NULL,		st_Img_Export, 	48,		4 ,		FALSE	},
+	{	2,		 "ico24/cut.png",		NULL,		&st_ico_7_mfdb,		NULL,		st_Img_Crop, 	48,		4 ,		FALSE	},
 	{	-1,		NULL,					NULL, 				NULL, 			 		NULL,				NULL,			0,		0 ,		0	},
 };
 
