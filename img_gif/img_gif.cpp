@@ -240,6 +240,8 @@ void _st_Handle_Thumbs_GIF(int16_t this_win_handle, boolean file_process){
         this_win->wi_data->thumbnail_slave = true;
         this_win->wi_thumb = st_Thumb_Alloc(this_win->wi_data->img.img_total, this_win_handle, wanted_padx, wanted_pady, wanted_width, wanted_height);
 
+        this_win->wi_thumb->thumbs_open_new_win = false;
+
         this_win->wi_thumb->thumbs_area_w = 0;
         this_win->wi_thumb->thumbs_area_h = this_win->wi_thumb->pady;
         this_win->wi_thumb->thumbs_nb = this_win->wi_data->img.img_total;
@@ -376,7 +378,7 @@ void _st_Handle_Thumbs_GIF_Generic(int16_t this_win_handle, boolean file_process
     this_win->wi_data->img.img_id = idx;
     this_win->wi_data->img.img_index = idx + 1;
 
-    st_Thumb_List_Generic(this_win, "GIF Building images index", "GIF", 80, 20, 4, 4, TRUE);
+    st_Thumb_List_Generic(this_win, "GIF Building images index", "GIF", 80, 20, 4, 4, FALSE);
 
     if(file_process){DGifCloseFile(gifFile, &error);} 
 }
