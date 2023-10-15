@@ -1,19 +1,28 @@
 #include "img_webp.h"
-#include <webp/decode.h>
-#include <webp/encode.h>
-#include "../utils/utils.h"
 #include "../img_handler.h"
+
+#include "../utils/utils.h"
+
+#include <webp/encode.h>
+#include <webp/decode.h>
+#include <webp/demux.h>
 
 void st_Win_Print_WEBP(int16_t this_win_handle);
 void _st_Read_WEBP(int16_t this_win_handle, boolean file_process);
+void st_Win_Video_WEBP(int16_t this_win_handle);
 
-void st_Init_WEBP(struct_window *this_win){
+void st_Init_Vid_WEBP(struct_window *this_win){
     this_win->wi_data->image_media = TRUE;
     this_win->wi_data->window_size_limited = TRUE;
     this_win->wi_data->remap_displayed_mfdb = TRUE;
-	this_win->refresh_win = st_Win_Print_WEBP;
-    /* Progress Bar Stuff */
-    this_win->wi_progress_bar = global_progress_bar;
+	this_win->refresh_win = st_Win_Video_WEBP;
+    if(this_win->wi_data->video_media){
+        this_win->wi_data->img.img_id = 0;
+        this_win->wi_data->img.img_index = 1; 
+    } else {
+        /* Progress Bar Stuff */
+        this_win->wi_progress_bar = global_progress_bar;
+    }
     if(!st_Set_Renderer(this_win)){
         sprintf(alert_message, "screen_format: %d\nscreen_bits_per_pixel: %d", screen_workstation_format, screen_workstation_bits_per_pixel);
         st_form_alert(FORM_STOP, alert_message);
@@ -21,20 +30,128 @@ void st_Init_WEBP(struct_window *this_win){
     }      
 }
 
-void st_Win_Print_WEBP(int16_t this_win_handle){
+void st_Win_Video_WEBP(int16_t this_win_handle){
     struct_window *this_win;
     this_win = detect_window(this_win_handle);
-
-    if(this_win->wi_data->stop_original_data_load == FALSE){
+    printf("--> IsAnimated %d <--\n", st_Detect_Webp_Animated(this_win_handle));
+    if(this_win->wi_data->video_media){
         this_win->wi_to_work_in_mfdb = &this_win->wi_original_mfdb;
+    }else{
+        if(this_win->wi_data->stop_original_data_load == FALSE){
+            this_win->wi_to_work_in_mfdb = &this_win->wi_original_mfdb;
+        }
+        _st_Read_WEBP(this_win_handle, this_win->prefers_file_instead_mem);        
     }
-
-    _st_Read_WEBP(this_win_handle, this_win->prefers_file_instead_mem);
 
     if( st_Img32b_To_Window(this_win) == false ){
         st_form_alert(FORM_STOP, alert_message);
     }
 }
+
+void *st_Win_Play_WEBP_Video(void *_this_win_handle){
+    int16_t this_win_handle = *(int16_t*)_this_win_handle;    
+    struct_window *this_win;
+    this_win = detect_window(this_win_handle);
+    u_int32_t time_start, time_end, duration, delay;
+
+    /* You should first get width and height in order to build the destination buffer */
+restart:
+
+    WebPData webp_data;
+    WebPDataInit(&webp_data);
+
+    FILE* in = fopen(this_win->wi_data->path, "rb");
+    fseek(in, 0, SEEK_END);
+    size_t file_size = ftell(in);
+    fseek(in, 0, SEEK_SET);
+    uint8_t* file_data = (uint8_t*)WebPMalloc(file_size + 1);
+    int ok = (fread(file_data, file_size, 1, in) == 1);
+    fclose(in);
+    file_data[file_size] = '\0';  // convenient 0-terminator
+    webp_data.bytes = file_data;
+    webp_data.size = file_size;
+    WebPDemuxer* dmuxer = WebPDemux(&webp_data);
+
+    this_win->wi_data->img.img_total = WebPDemuxGetI(dmuxer, WEBP_FF_FRAME_COUNT);
+    uint32_t width = WebPDemuxGetI(dmuxer, WEBP_FF_CANVAS_WIDTH);
+    uint32_t height = WebPDemuxGetI(dmuxer, WEBP_FF_CANVAS_HEIGHT);
+
+    printf("Total images %d, w %lu, h %lu\n", this_win->wi_data->img.img_total);
+
+    int frame_idx = 1;
+    WebPIterator iter;
+    uint8_t* decode_data;
+
+    u_int8_t* destination_buffer = st_ScreenBuffer_Alloc_bpp(width, height, 32);
+    if(destination_buffer == NULL){
+        sprintf(alert_message, "Out Of Mem Error\nAsked for %doctets", width * height * 4);
+        st_form_alert(FORM_EXCLAM, alert_message);
+    }
+    if(this_win->wi_original_mfdb.fd_addr != NULL){
+        mem_free(this_win->wi_original_mfdb.fd_addr);
+    }
+    mfdb_update_bpp(&this_win->wi_original_mfdb, (int8_t *)destination_buffer, width, height, 32);
+    st_MFDB_Fill(&this_win->wi_original_mfdb, 0XFFFFFFFF);
+
+    uint32_t *pixel = (uint32_t*)destination_buffer;
+    uint32_t total_pixels = width * height;
+
+    this_win->wi_data->img.scaled_pourcentage = 0;
+    this_win->wi_data->img.rotate_degree = 0;
+    this_win->wi_data->resized = FALSE;
+    this_win->wi_data->img.original_width = width;
+    this_win->wi_data->img.original_height = height;
+
+    this_win->total_length_w = this_win->wi_original_mfdb.fd_w;
+    this_win->total_length_h = this_win->wi_original_mfdb.fd_h;
+    this_win->wi_data->stop_original_data_load = TRUE;
+    this_win->wi_data->wi_buffer_modified = FALSE;
+
+    this_win->refresh_win(this_win->wi_handle);
+
+    while( (this_win->wi_data->img.img_id < this_win->wi_data->img.img_total) && this_win->wi_data->wi_pth != NULL ){
+        if(this_win->wi_data->play_on || this_win->wi_data->img.img_id == 0){
+            time_start = clock();        
+
+        WebPDemuxGetFrame(dmuxer, this_win->wi_data->img.img_id, &iter);
+
+        WebPDecodeARGBInto((uint8_t*)iter.fragment.bytes, iter.fragment.size, destination_buffer, (MFDB_STRIDE(width) * height) << 2, MFDB_STRIDE(width) << 2);
+
+        delay = iter.duration;
+        frame_idx++;
+
+       
+            time_end = clock();
+            duration = 5 * (time_end - time_start);
+
+            while( duration <  delay){
+                duration = 5 * (clock() - time_start);
+            }
+            if(screen_workstation_bits_per_pixel != 32){
+                this_win->wi_data->wi_buffer_modified = FALSE;
+                this_win->wi_data->remap_displayed_mfdb = TRUE;
+                this_win->refresh_win(this_win->wi_handle);
+            }
+            st_Control_Bar_Refresh_MFDB(this_win->wi_control_bar, this_win->wi_to_display_mfdb, this_win->current_pos_x, this_win->current_pos_y, this_win->work_area.g_w, this_win->work_area.g_h);          
+            send_message(this_win_handle, WM_REDRAW);
+            this_win->wi_data->img.img_id++;
+            this_win->wi_data->img.img_index = this_win->wi_data->img.img_id + 1;
+            pthread_yield_np();
+        }
+        if(this_win->wi_data->img.img_id == (this_win->wi_data->img.img_total - 1)){
+            this_win->wi_data->img.img_id = 0;
+            this_win->wi_data->img.img_index = this_win->wi_data->img.img_id + 1;
+            goto restart;
+        }
+        pthread_yield_np();
+    }
+    WebPDemuxReleaseIterator(&iter);
+    WebPDemuxDelete(dmuxer);
+    send_message(this_win_handle, WM_CLOSED);
+    return NULL;     
+
+}
+
 
 void _st_Read_WEBP(int16_t this_win_handle, boolean file_process)
 {
@@ -162,4 +279,32 @@ clean:
     st_Progress_Bar_Step_Done(global_progress_bar);
     st_Progress_Bar_Finish(global_progress_bar);        
     return ;
+}
+
+bool st_Detect_Webp_Animated(int16_t this_win_handle){
+	struct_window *this_win;
+	this_win = detect_window(this_win_handle);
+    if(this_win == NULL){
+        return false;
+    }
+
+    bool result = false;
+    char buf[5] = {'\0'};
+
+    FILE* fd = fopen(this_win->wi_data->path, "rb");
+    fseek(fd, 12, SEEK_CUR);
+    fread(buf, 1, 4, fd);
+    // int* b = (int*)&buf; 
+    printf("Buf %s\n", buf);
+    if(!strcmp(buf, "VP8X")){
+        fseek(fd, 4, SEEK_CUR);
+        uint8_t myByte;
+        fread(&myByte, 1, 1, fd);
+        int a = myByte;
+        // printf("a %d", a);
+        result = ((a >> 1) & 1) ? true : false;
+    }
+  fclose(fd);
+  return result;
+  
 }
