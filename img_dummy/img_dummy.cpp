@@ -39,7 +39,7 @@ void _st_Read_Dummy(int16_t this_win_handle, boolean file_process){
     this_win = detect_window(this_win_handle);
 
     if(this_win->wi_data->stop_original_data_load == FALSE){
-		u_int16_t width = 100;
+		u_int16_t width = 120;
 		u_int16_t height = CONTROLBAR_H;
         u_int8_t* destination_buffer = st_ScreenBuffer_Alloc_bpp(width, height, 32);
         if(destination_buffer == NULL){

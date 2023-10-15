@@ -134,7 +134,7 @@ bool init_app(){
 	bool ret = true;
 	TRACE(("appl_init()\n"))
     appl_init();
-
+	
     st_vdi_handle = graf_handle(&wchar, &hchar, &wbox, &hbox);
 
     wind_get(0, WF_WORKXYWH, &xdesk, &ydesk, &wdesk, &hdesk);
@@ -174,6 +174,7 @@ bool init_app(){
 		mint_version = 0;
 	} else {
 		mint_version = cookie_mint;
+		menu_register( gl_apid, "  MM Pic 0.7" ) ;
 	}
 	if(mint_version < 0x0100){
 		if(st_form_alert_choice(FORM_EXCLAM, (char*)"This app requiers Mint > 1", (char*)"Cancel", (char*)"Continue") == 1){
@@ -231,11 +232,12 @@ void exit_app(){
 }
 
 void* exec_eventloop(void* p_param){
-	while ( exit_call != 1 )
+	while ( exit_call != TRUE )
 	{
 		event_loop(NULL);
 		pthread_yield_np();
 	}
+	TRACE(("End of event loop\n"))
 	return NULL;
 }
 
@@ -267,7 +269,12 @@ void *event_loop(void *result) {
 				mem_free(va_file);
 			} while ( pfile ) ;
 			break;
-		case AP_TERM:	
+		case AP_RESCHG:
+		case AP_TERM:
+			st_Win_Close_All();
+			// if (number_of_opened_windows < 1){
+			// 	exit_call = TRUE; 
+			// }
 			break;
 		case MN_SELECTED:
 			break;
@@ -431,7 +438,6 @@ void *event_loop(void *result) {
 						}
 					}
 				}
-
 			}
 			break;
 		case WM_ICONIFY:

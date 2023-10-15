@@ -19,7 +19,7 @@ struct_st_ico_png st_ico_wdoc_7_mfdb, st_ico_wdoc_8_mfdb, st_ico_wdoc_9_mfdb, st
 struct_st_ico_png st_ico_wdoc_11_mfdb, st_ico_wdoc_12_mfdb;
 struct_st_ico_png st_ico_wvid_13_mfdb, st_ico_wvid_14_mfdb;
 
-struct_st_ico_png st_ico_wstart_1_mfdb, st_ico_wstart_2_mfdb;
+struct_st_ico_png st_ico_wstart_1_mfdb, st_ico_wstart_2_mfdb, st_ico_wstart_3_mfdb;
 
 /*	Here you declare an array of struct with :
 *		- index: an unique index associated to the icon you want to display in the control bar. Negative index signals the end of the array and must end it
@@ -49,6 +49,7 @@ struct_st_ico_png_list control_bar_winimage_list[] = {
 struct_st_ico_png_list control_bar_winstart_list[] = {
 	{	1,		 "ico24/open.png",		NULL,		&st_ico_wstart_1_mfdb,		NULL,		st_Img_Open, 	12,		4 ,		FALSE	},
 	{	2,		 "ico24/cut.png",		NULL,		&st_ico_wstart_2_mfdb,		NULL,		st_Img_Crop, 	48,		4 ,		FALSE	},
+	{	3,		 "ico24/quit.png",		NULL,		&st_ico_wstart_3_mfdb,		NULL,		st_Img_Close_All, 	80,		4 ,		FALSE	},
 	{	-1,		NULL,					NULL, 				NULL, 			 		NULL,				NULL,			0,		0 ,		0	},
 };
 
@@ -420,6 +421,17 @@ void* st_Img_Open(void* param){
 	}
 
 	return NULL;
+}
+
+void* st_Img_Close_All(void* param){
+	struct_window*	this_win = (struct_window*)param;	
+    sprintf(alert_message,"Exit now?\n");
+	if(st_form_alert_choice(FORM_STOP, alert_message, (char*)"No", (char*)"Yes") == 1){
+		return NULL;
+	}else{
+		st_Win_Close_All();
+		return NULL;
+	}
 }
 
 void* st_Img_Reload(void* param){

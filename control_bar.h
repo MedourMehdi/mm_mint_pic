@@ -17,6 +17,8 @@ void* st_Img_ZoomIn(void* p_param);
 void* st_Img_ZoomOut(void* p_param);
 void* st_Img_Rotate(void* p_param);
 
+void* st_Img_Close_All(void* p_param);
+
 void* st_Img_down(void* p_param);
 void* st_Img_up(void* p_param);
 

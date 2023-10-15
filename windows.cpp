@@ -299,7 +299,9 @@ int16_t close_window( int16_t this_win_handle ){
 		if ( wind_delete( this_win_handle ) ){
 			number_of_opened_windows -= 1;
 		}
+		this_win->wi_handle = 0;
 		memset(this_win, 0, sizeof(struct_window));
+		
 		return 1;
 	}
 	else 
@@ -764,4 +766,14 @@ void st_Wait_For_Threads(){
 			}
 		}   
     }
+}
+
+void st_Win_Close_All(void){
+	int16_t i = 0;
+	while(i < MAX_WINDOWS){
+		if(win_struct_array[i].wi_handle > 0){
+			send_message( win_struct_array[i].wi_handle, WM_CLOSED);
+		}
+	i++;
+	}
 }

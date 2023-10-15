@@ -223,6 +223,7 @@ extern struct_window win_struct_array[MAX_WINDOWS];
 extern int16_t number_of_opened_windows;
 extern boolean clip_status;
 extern boolean mouse_status;
+extern boolean exit_call;
 
 void st_Set_Mouse(boolean status);
 void send_message(int16_t my_win_handle, int16_t my_message);
@@ -259,5 +260,6 @@ struct_window* get_win_thumb_master_by_file(const char* this_path);
 
 int st_Open_Thread(void* func(void*), void* th_param);
 void st_Wait_For_Threads();
+void st_Win_Close_All(void);
 
 #endif
