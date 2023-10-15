@@ -133,7 +133,7 @@ quit:
 bool init_app(){
 	bool ret = true;
 	TRACE(("appl_init()\n"))
-    appl_init();
+    int app_id = appl_init();
 	
     st_vdi_handle = graf_handle(&wchar, &hchar, &wbox, &hbox);
 
@@ -174,7 +174,7 @@ bool init_app(){
 		mint_version = 0;
 	} else {
 		mint_version = cookie_mint;
-		menu_register( gl_apid, "  MM Pic 0.7" ) ;
+		menu_register( app_id, "  MM Pic" );
 	}
 	if(mint_version < 0x0100){
 		if(st_form_alert_choice(FORM_EXCLAM, (char*)"This app requiers Mint > 1", (char*)"Cancel", (char*)"Continue") == 1){
@@ -371,7 +371,7 @@ void *event_loop(void *result) {
 					form_dial(FMD_FINISH, 0, 0, 0, 0, rect->g_x, rect->g_y, rect->g_w, rect->g_h);
 					st_Control_Bar_PXY_Update(selected_window->wi_control_bar, &selected_window->work_area);
 					st_Reload_Control_Bar(selected_window, selected_window->wi_control_bar);
-					// send_message(selected_window->wi_handle, WM_REDRAW);
+					send_message(selected_window->wi_handle, WM_REDRAW);
 				}
 				if(selected_window->wi_data->thumbnail_master == TRUE){
 					if(selected_window->wi_thumb->thumbs_cols != selected_window->wi_thumb->thumb_w_Item / selected_window->work_area.g_w){
