@@ -47,26 +47,26 @@ struct_st_ico_png_list control_bar_winimage_list[] = {
 };
 
 struct_st_ico_png_list control_bar_winstart_list[] = {
-	{	1,		 "ico24/open.png",		NULL,		&st_ico_1_mfdb,		NULL,		st_Img_Open, 	12,		4 ,		FALSE	},
-	{	2,		 "ico24/cut.png",		NULL,		&st_ico_7_mfdb,		NULL,		st_Img_Crop, 	48,		4 ,		FALSE	},
+	{	1,		 "ico24/open.png",		NULL,		&st_ico_wstart_1_mfdb,		NULL,		st_Img_Open, 	12,		4 ,		FALSE	},
+	{	2,		 "ico24/cut.png",		NULL,		&st_ico_wstart_2_mfdb,		NULL,		st_Img_Crop, 	48,		4 ,		FALSE	},
 	{	-1,		NULL,					NULL, 				NULL, 			 		NULL,				NULL,			0,		0 ,		0	},
 };
 
 struct_st_ico_png_list control_bar_windocument_list[] = {
-	{	1,		 "ico24/open.png",		NULL,		&st_ico_1_mfdb,		NULL,		st_Img_Open, 	12,		4 ,		FALSE	},
-	{	2,		 "ico24/export.png",		NULL,		&st_ico_2_mfdb,		NULL,		st_Img_Export, 	48,		4 ,		FALSE	},
-	{	3,		 "ico24/collapse.png",		"ico24/expand.png",		&st_ico_3_mfdb,		&st_ico_4_mfdb,		st_Img_Autoscale, 	80,		4 ,		FALSE	},
-	{	4,		 "ico24/up.png", NULL,		&st_ico_11_mfdb,		NULL,		st_Img_up, 	112,		4 ,		FALSE	},
-	{	5,		 "ico24/down.png",		NULL,		&st_ico_12_mfdb,		NULL,		st_Img_down, 	144,		4 ,		FALSE	},
-	{	6,		 "ico24/cut.png",		NULL,		&st_ico_7_mfdb,		NULL,		st_Img_Crop, 	176,		4 ,		FALSE	},
-	{	7,		 "ico24/rotate.png",		NULL,		&st_ico_8_mfdb,		NULL,		st_Img_Rotate, 	208,		4 ,		FALSE	},
-	{	8,		 "ico24/zoom_in.png",		NULL,		&st_ico_9_mfdb,		NULL,		st_Img_ZoomIn, 	240,		4 ,		FALSE	},
-	{	9,		 "ico24/zoom_out.png",		NULL,		&st_ico_10_mfdb,		NULL,		st_Img_ZoomOut, 	272,		4 ,		FALSE	},
+	{	1,		 "ico24/open.png",		NULL,		&st_ico_wdoc_1_mfdb,		NULL,		st_Img_Open, 	12,		4 ,		FALSE	},
+	{	2,		 "ico24/export.png",		NULL,		&st_ico_wdoc_2_mfdb,		NULL,		st_Img_Export, 	48,		4 ,		FALSE	},
+	{	3,		 "ico24/collapse.png",		"ico24/expand.png",		&st_ico_wdoc_3_mfdb,		&st_ico_wdoc_4_mfdb,		st_Img_Autoscale, 	80,		4 ,		FALSE	},
+	{	4,		 "ico24/up.png", NULL,		&st_ico_wdoc_11_mfdb,		NULL,		st_Img_up, 	112,		4 ,		FALSE	},
+	{	5,		 "ico24/down.png",		NULL,		&st_ico_wdoc_12_mfdb,		NULL,		st_Img_down, 	144,		4 ,		FALSE	},
+	{	6,		 "ico24/cut.png",		NULL,		&st_ico_wdoc_7_mfdb,		NULL,		st_Img_Crop, 	176,		4 ,		FALSE	},
+	{	7,		 "ico24/rotate.png",		NULL,		&st_ico_wdoc_8_mfdb,		NULL,		st_Img_Rotate, 	208,		4 ,		FALSE	},
+	{	8,		 "ico24/zoom_in.png",		NULL,		&st_ico_wdoc_9_mfdb,		NULL,		st_Img_ZoomIn, 	240,		4 ,		FALSE	},
+	{	9,		 "ico24/zoom_out.png",		NULL,		&st_ico_wdoc_10_mfdb,		NULL,		st_Img_ZoomOut, 	272,		4 ,		FALSE	},
 	{	-1,		NULL,					NULL, 				NULL, 			 		NULL,				NULL,			0,		0 ,		0	},
 };
 
 struct_st_ico_png_list control_bar_winvideo_list[] = {
-	{	1,		 "ico24/play.png",		"ico24/pause.png",		&st_ico_13_mfdb,		&st_ico_14_mfdb,		st_Img_Play, 	12,		4 ,		FALSE	},
+	{	1,		 "ico24/play.png",		"ico24/pause.png",		&st_ico_wvid_13_mfdb,		&st_ico_wvid_14_mfdb,		st_Img_Play, 	12,		4 ,		FALSE	},
 	{	-1,		NULL,					NULL, 				NULL, 			 		NULL,				NULL,			0,		0 ,		0	},
 };
 
