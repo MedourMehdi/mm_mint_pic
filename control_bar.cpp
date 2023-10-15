@@ -14,6 +14,12 @@
 struct_st_ico_png st_ico_1_mfdb, st_ico_2_mfdb, st_ico_3_mfdb, st_ico_4_mfdb, st_ico_5_mfdb;
 struct_st_ico_png st_ico_6_mfdb, st_ico_7_mfdb, st_ico_8_mfdb, st_ico_9_mfdb, st_ico_10_mfdb;
 struct_st_ico_png st_ico_11_mfdb, st_ico_12_mfdb, st_ico_13_mfdb, st_ico_14_mfdb;
+struct_st_ico_png st_ico_wdoc_1_mfdb, st_ico_wdoc_2_mfdb, st_ico_wdoc_3_mfdb, st_ico_wdoc_4_mfdb;
+struct_st_ico_png st_ico_wdoc_7_mfdb, st_ico_wdoc_8_mfdb, st_ico_wdoc_9_mfdb, st_ico_wdoc_10_mfdb;
+struct_st_ico_png st_ico_wdoc_11_mfdb, st_ico_wdoc_12_mfdb;
+struct_st_ico_png st_ico_wvid_13_mfdb, st_ico_wvid_14_mfdb;
+
+struct_st_ico_png st_ico_wstart_1_mfdb, st_ico_wstart_2_mfdb;
 
 /*	Here you declare an array of struct with :
 *		- index: an unique index associated to the icon you want to display in the control bar. Negative index signals the end of the array and must end it

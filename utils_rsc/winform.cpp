@@ -43,7 +43,12 @@ void refresh_form(int16_t this_win_handle){
     objc_draw(this_win->wi_data->rsc.tree, 0, MAX_DEPTH, 
         this_win->work_area.g_x + 4, this_win->work_area.g_y + 4, this_win->work_area.g_w, this_win->work_area.g_h);
 
-    st_End_Window_Process(NULL);
+	st_Set_Mouse( FALSE );
+    graf_mouse(ARROW,0L);
+    win_refresh_from_buffer(this_win);
+    st_Set_Mouse( TRUE );
+
+    // st_End_Window_Process(NULL);
 
     wind_update(END_UPDATE);
 }
