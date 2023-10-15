@@ -33,7 +33,7 @@ void st_Init_Vid_WEBP(struct_window *this_win){
 void st_Win_Video_WEBP(int16_t this_win_handle){
     struct_window *this_win;
     this_win = detect_window(this_win_handle);
-    printf("--> IsAnimated %d <--\n", st_Detect_Webp_Animated(this_win_handle));
+    // printf("--> IsAnimated %d <--\n", st_Detect_Webp_Animated(this_win_handle));
     if(this_win->wi_data->video_media){
         this_win->wi_to_work_in_mfdb = &this_win->wi_original_mfdb;
     }else{
@@ -76,7 +76,7 @@ restart:
     uint32_t width = WebPDemuxGetI(dmuxer, WEBP_FF_CANVAS_WIDTH);
     uint32_t height = WebPDemuxGetI(dmuxer, WEBP_FF_CANVAS_HEIGHT);
 
-    printf("Total images %d, w %lu, h %lu\n", this_win->wi_data->img.img_total);
+    // printf("Total images %d, w %lu, h %lu\n", this_win->wi_data->img.img_total);
 
     int frame_idx = 1;
     WebPIterator iter;
@@ -295,7 +295,7 @@ bool st_Detect_Webp_Animated(int16_t this_win_handle){
     fseek(fd, 12, SEEK_CUR);
     fread(buf, 1, 4, fd);
     // int* b = (int*)&buf; 
-    printf("Buf %s\n", buf);
+    // printf("Buf %s\n", buf);
     if(!strcmp(buf, "VP8X")){
         fseek(fd, 4, SEEK_CUR);
         uint8_t myByte;
