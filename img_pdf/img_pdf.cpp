@@ -166,11 +166,11 @@ void _st_Read_PDF(int16_t this_win_handle, boolean file_process, int16_t img_id)
         // }
         st_Progress_Bar_Signal(this_win->wi_progress_bar, 65, (int8_t*)"Parsing document");
         doc = new PDFDoc((char*)fileName, ownerPW, userPW);
-        if(doc->isEncrypted()){
-            sprintf(alert_message, "User/Password doc not supported yet!");
-            st_form_alert(FORM_STOP, alert_message);
-            return;
-        }
+        // if(doc->isEncrypted()){
+        //     sprintf(alert_message, "User/Password doc not supported yet!");
+        //     st_form_alert(FORM_STOP, alert_message);
+        //     return;
+        // }
         // if (userPW) {
         //     delete userPW;
         // }
