@@ -17,6 +17,7 @@
 #include "img_svg/img_svg.h"
 #include "img_pdf/img_pdf.h"
 #include "img_gif/img_gif.h"
+#include "img_psd/img_psd.h"
 
 #include "vid_flic/vid_flic.h"
 
@@ -89,8 +90,8 @@ bool new_win_img(const char *new_file){
 					st_Init_HEIF(&win_struct_array[i]);
 				} else if (check_ext(file_extension, "PNG")){
 					st_Init_PNG(&win_struct_array[i]);
-				// } else if (check_ext(file_extension, "WEB") || check_ext(file_extension, "WEBP")){
-				// 	st_Init_WEBP(&win_struct_array[i]);
+				} else if (check_ext(file_extension, "PSD")){
+					st_Init_PSD(&win_struct_array[i]);
 				} else if (check_ext(file_extension, "JPG") || check_ext(file_extension, "JPEG") || check_ext(file_extension, "JPE")){
 					st_Init_JPEG(&win_struct_array[i]);
 				} else if (check_ext(file_extension, "TIF") || check_ext(file_extension, "TIFF")){
