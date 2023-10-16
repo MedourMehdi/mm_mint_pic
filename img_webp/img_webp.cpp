@@ -54,9 +54,6 @@ void *st_Win_Play_WEBP_Video(void *_this_win_handle){
     this_win = detect_window(this_win_handle);
     u_int32_t time_start, time_end, duration, delay;
 
-    /* You should first get width and height in order to build the destination buffer */
-restart:
-
     WebPData webp_data;
     WebPDataInit(&webp_data);
 
@@ -93,9 +90,6 @@ restart:
     mfdb_update_bpp(&this_win->wi_original_mfdb, (int8_t *)destination_buffer, width, height, 32);
     st_MFDB_Fill(&this_win->wi_original_mfdb, 0XFFFFFFFF);
 
-    uint32_t *pixel = (uint32_t*)destination_buffer;
-    uint32_t total_pixels = width * height;
-
     this_win->wi_data->img.scaled_pourcentage = 0;
     this_win->wi_data->img.rotate_degree = 0;
     this_win->wi_data->resized = FALSE;
@@ -108,6 +102,8 @@ restart:
     this_win->wi_data->wi_buffer_modified = FALSE;
 
     this_win->refresh_win(this_win->wi_handle);
+
+restart:
 
     while( (this_win->wi_data->img.img_id < this_win->wi_data->img.img_total) && this_win->wi_data->wi_pth != NULL ){
         if(this_win->wi_data->play_on || this_win->wi_data->img.img_id == 0){
@@ -146,6 +142,7 @@ restart:
         pthread_yield_np();
     }
     WebPDemuxReleaseIterator(&iter);
+    WebPDataClear(&webp_data);
     WebPDemuxDelete(dmuxer);
     send_message(this_win_handle, WM_CLOSED);
     return NULL;     
@@ -294,17 +291,13 @@ bool st_Detect_Webp_Animated(int16_t this_win_handle){
     FILE* fd = fopen(this_win->wi_data->path, "rb");
     fseek(fd, 12, SEEK_CUR);
     fread(buf, 1, 4, fd);
-    // int* b = (int*)&buf; 
-    // printf("Buf %s\n", buf);
     if(!strcmp(buf, "VP8X")){
         fseek(fd, 4, SEEK_CUR);
         uint8_t myByte;
         fread(&myByte, 1, 1, fd);
         int a = myByte;
-        // printf("a %d", a);
         result = ((a >> 1) & 1) ? true : false;
     }
-  fclose(fd);
-  return result;
-  
+    fclose(fd);
+    return result;
 }
