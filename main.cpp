@@ -16,6 +16,8 @@
 #include "new_window.h" /* Opening new windows */
 #include "control_bar.h" /* Init control bar icons MFDB*/
 
+#include "utils/dragdrop.h"
+
 boolean exit_call = FALSE;
 int16_t st_vdi_handle;
 int16_t wchar, hchar, wbox, hbox;
@@ -92,18 +94,18 @@ int main(int argc, char *argv[]){
 	if (argc > 1){
 		for(int16_t i = 1; i < argc; i++) {
 			strcat(this_file, argv[i]);
+			TRACE(("Arg %d / %s\n", i, argv[i]))
 			if(i < (argc - 1)){strcat(this_file, " ");}
 		}
+
 		pfile = this_file;
-	
-		va_file = (char*)mem_alloc(256);
 		do {
-			memset(va_file, 0, 256);
+			va_file = (char*)mem_alloc(128);
+			memset(va_file, 0, 128);
 			pfile = GetNextVaStartFileName( pfile, va_file ) ;
-			func_param = (void*)va_file;
-			st_Open_Thread(&new_win_img_threaded, func_param);
+			new_win_img(va_file);
+			mem_free(va_file);
 		} while ( pfile ) ;
-		mem_free(va_file);
 	} else {
 		if(!st_Ico_PNG_Init_Main()){goto close_ico_main;}
 			st_Open_Thread(&new_win_start_threaded, NULL);
@@ -174,7 +176,10 @@ bool init_app(){
 		mint_version = 0;
 	} else {
 		mint_version = cookie_mint;
-		menu_register( app_id, "  MM Pic" );
+		char app_name_string[16] = {'\0'};
+		strcpy(app_name_string, "  ");
+		strcat(app_name_string, THIS_APP_NAME);
+		menu_register( app_id, app_name_string );
 	}
 	if(mint_version < 0x0100){
 		if(st_form_alert_choice(FORM_EXCLAM, (char*)"This app requiers Mint > 1", (char*)"Cancel", (char*)"Continue") == 1){
@@ -190,7 +195,7 @@ bool init_app(){
 			if(st_form_alert_choice(FORM_EXCLAM, alert_message, (char*)"Cancel", (char*)"Continue") == 1){
 				ret = false;
 			}
-		}		
+		}
 	}
 	if(Getcookie(*(long *) "_CF_",&cookie_cpu)){
 		if(Getcookie(*(long *) "_CPU_",&cookie_cpu)){
@@ -269,12 +274,48 @@ void *event_loop(void *result) {
 				mem_free(va_file);
 			} while ( pfile ) ;
 			break;
+		case AP_DRAGDROP:
+			char *buff, *file, *name;	
+			int dd_hdl, dd_msg;
+			int32_t size;
+			char* ext;
+			ext = (char*)mem_alloc(32);
+			memset(ext, 0, 32);			
+			dd_hdl = ddopen( msg_buffer[7], DD_OK);
+			if( dd_hdl < 0){ break; }			
+			strnset( ext, 0, 32);
+			strcpy( ext, "ARGS");
+			dd_msg = ddsexts( dd_hdl, ext );
+			if( dd_msg < 0){ break; }
+			file = (char*)mem_alloc(128); memset(file, 0, 128);
+			name = (char*)mem_alloc(128); memset(name, 0, 128);					
+			dd_msg = ddrtry( dd_hdl, name, file, ext, &size);
+			if( !strncmp( ext, "ARGS", 4)) {
+				ddreply(dd_hdl, DD_OK);
+				buff = (char*)mem_alloc(size);
+				memset(buff, 0, size);
+				if( Fread( dd_hdl, size, buff) == size) {
+					TRACE(("--> Drag&drop list %s <--", buff))
+					buff[size] = '\0';
+					pfile = buff;
+					printf("Files list %s\n", pfile);
+					do {
+						va_file = (char*)mem_alloc(128);
+						memset(va_file, 0, 128);
+						pfile = GetNextVaStartFileName( pfile, va_file ) ;
+						printf("Opening %s\n", va_file);
+						new_win_img(va_file);
+						mem_free(va_file);
+					} while ( pfile ) ;
+				}
+				free( buff);
+				ddclose( dd_hdl);
+			} else { ddreply(dd_hdl, DD_NAK);}
+			ddclose( dd_hdl); mem_free(name); mem_free(file);
+			break;
 		case AP_RESCHG:
 		case AP_TERM:
 			st_Win_Close_All();
-			// if (number_of_opened_windows < 1){
-			// 	exit_call = TRUE; 
-			// }
 			break;
 		case MN_SELECTED:
 			break;

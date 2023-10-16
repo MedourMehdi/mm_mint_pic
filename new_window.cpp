@@ -132,8 +132,6 @@ bool new_win_img(const char *new_file){
 							video_function = st_Win_Play_WEBP_Video;
 						}else{
 							if(st_form_alert_choice(FORM_QUESTION, (char*)"Video support only for >=16bpp", (char*)"Cancel", (char*)"Continue") == 1){
-								// close_window(win_struct_array[i].wi_handle);
-								// return false;
 								win_struct_array[i].wi_data->video_media = FALSE;
 							}else{
 								win_struct_array[i].wi_data->video_media = TRUE;
@@ -142,7 +140,7 @@ bool new_win_img(const char *new_file){
 						}
 					}
 					st_Init_Vid_WEBP(&win_struct_array[i]);
-				}				
+				}
 
 				else {
 					form_alert(1, "[1][Wrong file extension][Okay]");
@@ -217,7 +215,7 @@ bool new_win_start(){
 				win_struct_array[i].wi_data = (struct_metadata *)mem_alloc(sizeof(struct_metadata));
 				st_Init_Default_Win(&win_struct_array[i]);
 				win_struct_array[i].wi_name = (char *)mem_alloc(WINDOW_TITLE_MAXLEN);
-				strcpy(win_struct_array[i].wi_name, "MM PIC");
+				strcpy(win_struct_array[i].wi_name, THIS_APP_NAME);
 				win_struct_array[i].wi_data->control_bar_media = TRUE;
                 open_window(&win_struct_array[i]);
 

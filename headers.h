@@ -106,6 +106,8 @@ extern bool emutos_rom;
 #define FORM_QUESTION   2
 #define FORM_STOP       3
 
+#define THIS_APP_NAME    "Mm Pic"
+
 // #define DEBUG   1
 
 #ifdef DEBUG
