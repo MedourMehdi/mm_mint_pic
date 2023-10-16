@@ -34,6 +34,7 @@ No shared library or module is required to run it.
 * SVG
 * GIF (Images & Video)
 * FLIC (Video)
+* PSD (Due to the old psd library used only old psd version should work)
 
 ### Write
 * MFD (Screen memory RAW format)
@@ -54,6 +55,7 @@ No shared library or module is required to run it.
 * LibJpeg
 * GifLib
 * [Xpdf](https://github.com/MedourMehdi/xpdf)
+* [Libpsd](https://github.com/TheNicker/libpsd)
 
 You should found most of these libraries here: https://tho-otto.de/crossmint.php or you can read https://www.atari-forum.com/viewforum.php?f=70 if you want to rebuild them.
 
