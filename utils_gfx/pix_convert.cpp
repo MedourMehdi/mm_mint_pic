@@ -16,6 +16,9 @@ bool rgb2lab_Color_Init = false;
 #define G8(G6) (( G6 * 259 + 33 ) >> 6)
 #define B8(B5) (( B5 * 527 + 23 ) >> 6)
 
+#ifndef BLEND_TOOL
+#define BLEND_TOOL
+
 #define OPAQUE 0xFF
 #define TRANSPARENT 0
 
@@ -28,7 +31,24 @@ bool rgb2lab_Color_Init = false;
 #define BLEND(back, front, alpha) div_255_fast( (front * alpha) + (back * (255 - alpha)) )
 #define ARGB(a, r, g, b) ((a << 24) | ((r & 0xFF) << 16) | ((g & 0xFF) << 8) | (b & 0xFF))
 
+#endif
+
 #define	GRAY( r,g,b )   (0.3 * r + 0.59 * g + 0.11 * b)
+
+u_int32_t st_Blend_Pix(u_int32_t background, u_int32_t foreground){
+    const u_int32_t colorAlpha = ALPHA(foreground);
+    const u_int8_t colorR = UNMULTIPLY(RED(foreground), colorAlpha);
+    const u_int8_t colorG = UNMULTIPLY(GREEN(foreground), colorAlpha);
+    const u_int8_t colorB = UNMULTIPLY(BLUE(foreground), colorAlpha);
+    const u_int8_t dst_buffered_imageR = RED(background);
+    const u_int8_t dst_buffered_imageG = GREEN(background);
+    const u_int8_t dst_buffered_imageB = BLUE(background);
+    const u_int32_t R = BLEND(dst_buffered_imageR, colorR, colorAlpha);
+    const u_int32_t G = BLEND(dst_buffered_imageG, colorG, colorAlpha);
+    const u_int32_t B = BLEND(dst_buffered_imageB, colorB, colorAlpha);
+
+    return ARGB(OPAQUE, R , G, B);
+}
 
 /* Convert incoming bitmap from RGB565 to RGB8888 */
 void st_Convert_RGB565_to_ARGB(MFDB* src_mfdb, MFDB* dst_mfdb){
@@ -341,6 +361,7 @@ void st_Color_Transparency_ARGB(u_int32_t* dst_buffered_image, u_int32_t* color,
         const u_int32_t B = BLEND(dst_buffered_imageB, colorB, colorAlpha);
 
         *dst_buffered_image++ = ARGB(OPAQUE, R , G, B);
+        // *dst_buffered_image++ = st_Blend_Pix(*dst_buffered_image, *color);
     }
 }
 

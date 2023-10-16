@@ -38,4 +38,6 @@ MFDB* st_MFDB4bpp_to_MFDB32(MFDB* MFDB4bpp, int16_t* this_palette);
 
 void* st_Floyd_Dithering(MFDB* MFDB24, int16_t bpp);
 void* st_Sierra_Dithering(MFDB* MFDB24, int16_t bpp);
+
+u_int32_t st_Blend_Pix(u_int32_t background, u_int32_t foreground);
 #endif
