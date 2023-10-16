@@ -12,7 +12,7 @@
 
 /* Local definitions */
 
-void _st_Read_HEIF(int16_t, boolean file_processing, u_int32_t img_id);
+void _st_Read_HEIF(int16_t, boolean file_processing, long img_id);
 void _st_Handle_Thumbs_Heif(int16_t this_win_handle, boolean file_process);
 void _st_Heif_RGBA_To_ARGB(uint8_t* source_buffer, uint8_t* destination_buffer, int16_t width, int16_t height);
 
@@ -52,7 +52,7 @@ void st_Win_Print_HEIF(int16_t this_win_handle){
 
 }
 
-void _st_Read_HEIF(int16_t this_win_handle, boolean file_process, u_int32_t img_id) {
+void _st_Read_HEIF(int16_t this_win_handle, boolean file_process, long img_id) {
 
 	struct_window *this_win;
 	this_win = detect_window(this_win_handle);
