@@ -187,7 +187,11 @@ void st_Reload_Control_Bar(struct_window *this_win, struct_st_control_bar* contr
 	if( this_win->wi_to_display_mfdb->fd_addr != NULL && this_win->wi_control_bar != NULL ){
 		if(this_win->wi_control_bar->control_bar_h > 0){
 			if( this_win->wi_data->control_bar_media || screen_workstation_bits_per_pixel <= 8 || this_win->work_area.g_w > this_win->total_length_w || this_win->work_area.g_h > this_win->total_length_h || cpu_type < 30){
-				control_bar->need_to_reload_control_mfdb = control_bar->st_control_bar_mfdb.fd_w == wrez ? control_bar->need_to_reload_control_mfdb : true;
+				if(this_win->work_area.g_w > this_win->total_length_w || this_win->work_area.g_h > this_win->total_length_h){
+					control_bar->need_to_reload_control_mfdb = true;
+				}else{
+					control_bar->need_to_reload_control_mfdb = control_bar->st_control_bar_mfdb.fd_w == wrez ? control_bar->need_to_reload_control_mfdb : true;
+				}		// control_bar->need_to_reload_control_mfdb = control_bar->st_control_bar_mfdb.fd_w == wrez ? control_bar->need_to_reload_control_mfdb : true;		
 				st_Control_Bar_Refresh_Classic(control_bar, wrez, screen_workstation_bits_per_pixel);
 			} else {
 				st_Control_Bar_Refresh_MFDB(control_bar, this_win->wi_to_display_mfdb, this_win->current_pos_x, this_win->current_pos_y, this_win->work_area.g_w, this_win->work_area.g_h);
