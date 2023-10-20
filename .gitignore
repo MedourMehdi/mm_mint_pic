@@ -56,3 +56,10 @@ bin/mm_pic_cf.tar.gz
 img_webp/webmux.czz
 build/utils/dragdrop.o
 build/img_psd/img_psd.o
+temp/cmyk_to_rgb.cpp
+temp/img_psd copy.cxx
+temp/img_psd copy.czz
+temp/psdreader.c
+temp/psdreader.h
+temp/img_psd copy/img_psd.cxx
+temp/img_psd copy/img_psd.hxx
