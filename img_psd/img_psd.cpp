@@ -65,6 +65,7 @@ void st_Extract_ARGB_PSD(Layer* layer, uint8_t* maskCanvasData, uint8_t* maskCan
 void st_Win_Print_PSD(int16_t this_win_handle);
 void _st_Read_PSD(int16_t this_win_handle, boolean file_process, long img_id);
 void _st_Handle_Thumbs_PSD(int16_t this_win_handle, boolean file_process);
+void _st_Handle_Thumbs_PSD_Generic(int16_t this_win_handle, boolean file_process);
 
 void st_Init_PSD(struct_window *this_win){
     this_win->wi_data->image_media = TRUE;
@@ -79,7 +80,8 @@ void st_Init_PSD(struct_window *this_win){
     }
     /* thumbnails stuff */
     if(this_win->wi_thumb == NULL){
-        _st_Handle_Thumbs_PSD(this_win->wi_handle, this_win->prefers_file_instead_mem);
+        _st_Handle_Thumbs_PSD_Generic(this_win->wi_handle, this_win->prefers_file_instead_mem);
+        // _st_Handle_Thumbs_PSD(this_win->wi_handle, this_win->prefers_file_instead_mem);
     }
 }
 
@@ -677,12 +679,12 @@ void _st_Handle_Thumbs_PSD(int16_t this_win_handle, boolean file_process){
         u_int16_t final_width = document->width;
         u_int16_t final_height = document->height;
 
-        u_int16_t wanted_width = 140;
-        u_int16_t wanted_height = 140;
-        // if(final_height < final_width){
-        //     wanted_width = 140;
-        //     wanted_height = 100;
-        // }
+        u_int16_t wanted_width = 80;
+        u_int16_t wanted_height = 100;
+        if(final_height < final_width){
+            wanted_width = 100;
+            wanted_height = 80;
+        }
         u_int16_t wanted_padx = 8;
         u_int16_t wanted_pady = 8;
 
@@ -779,4 +781,51 @@ void _st_Handle_Thumbs_PSD(int16_t this_win_handle, boolean file_process){
     DestroyLayerMaskSection(layerMaskSection, &allocator);
     DestroyDocument(document, &allocator);
     file.Close();
+}
+
+void _st_Handle_Thumbs_PSD_Generic(int16_t this_win_handle, boolean file_process){
+
+	struct_window *this_win;
+	this_win = detect_window(this_win_handle);
+    if(this_win == NULL){
+        return;
+    }
+    u_int16_t idx = 0;
+
+    MallocAllocator allocator;
+    NativeFile file(&allocator);
+    if (!file.OpenRead(st_Char_to_WChar(this_win->wi_data->path))) {
+            sprintf(alert_message, "Can't load this PSD file");
+            st_form_alert(FORM_STOP, alert_message);
+    }
+    Document* document = CreateDocument(&file, &allocator);
+    if (!document) {
+        sprintf(alert_message, "Can't load this PSD file");
+        st_form_alert(FORM_STOP, alert_message);        
+        file.Close();
+    }
+
+    LayerMaskSection* layerMaskSection = ParseLayerMaskSection(document, &file, &allocator);
+    bool hasTransparencyMask = layerMaskSection->hasTransparencyMask;
+
+    this_win->wi_data->img.img_total = layerMaskSection->layerCount;
+    this_win->wi_data->img.img_id = PRIMARY_IMAGE_ID;
+
+    if(document->colorMode == colorMode::RGB /*&& document->colorMode != colorMode::GRAYSCALE*/ && layerMaskSection->layerCount > 1){
+        if(st_form_alert_choice(FORM_QUESTION, (char*)"Do you want to try to extract layers", (char*)"No", (char*)"Yes") == 1){
+            this_win->wi_data->thumbnail_slave = false;
+            DestroyLayerMaskSection(layerMaskSection, &allocator);
+            DestroyDocument(document, &allocator);
+            file.Close();                 
+            return;
+        }
+    }else{
+        return;
+    }
+    if(this_win->wi_data->img.img_total > 1){
+        st_Thumb_List_Generic(this_win, "PSD Building layers index", "Layer", 80, 20, 4, 4, TRUE);
+    }
+    DestroyLayerMaskSection(layerMaskSection, &allocator);
+    DestroyDocument(document, &allocator);
+    file.Close();    
 }
