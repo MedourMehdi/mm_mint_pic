@@ -548,3 +548,10 @@ void st_Get_Current_Dir(char* dst_char){
         strcat(dst_char,current_path);
     }
 }
+
+const wchar_t *st_Char_to_WChar(const char *c) {
+    const size_t cSize = strlen(c)+1;
+    wchar_t* wc = new wchar_t[cSize];
+    mbstowcs (wc, c, cSize);
+    return wc;
+}
