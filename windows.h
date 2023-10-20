@@ -57,6 +57,8 @@ typedef struct {
 	u_int16_t thumb_index;
     char*   thumb_filename;
     boolean thumb_selected;
+	boolean thumb_selectable;	
+	boolean thumb_visible;
     int16_t thumb_win_pxy[4];
     int16_t thumb_desk_pxy[4];
     int16_t thumb_mfdb_stride;

@@ -266,7 +266,8 @@ void _st_Handle_Thumbs_Heif(int16_t this_win_handle, boolean file_process){
             }
 
             this_win->wi_thumb->thumbs_list_array[i].thumb_mfdb_stride = MFDB_STRIDE(new_width) - new_width;  
-
+            this_win->wi_thumb->thumbs_list_array[i].thumb_visible = true;
+            this_win->wi_thumb->thumbs_list_array[i].thumb_selectable = true;
             this_win->wi_thumb->thumbs_area_w = MAX( (this_win->wi_thumb->padx << 1) + new_width, this_win->wi_thumb->thumbs_area_w);
             this_win->wi_thumb->thumbs_area_h += new_height + this_win->wi_thumb->pady;
             this_win->wi_thumb->thumbs_list_array[i].thumb_selected = FALSE;
@@ -290,37 +291,6 @@ void _st_Handle_Thumbs_Heif(int16_t this_win_handle, boolean file_process){
 #endif    
 }
 
-// void _st_Heif_RGBA_To_ARGB(uint8_t* source_buffer, uint8_t* destination_buffer, int16_t width, int16_t height, int16_t stride, u_int32_t background_color){
-//     u_int32_t x, y, i, j, k, l, m, n, o;
-//     int16_t width_stride = MFDB_STRIDE(width) - width;
-//     int16_t nb_components_32bits = 4;
-
-//     uint8_t a, r, g, b, *ptr_color;
-//     ptr_color = (uint8_t*)&background_color;
-//     a = ptr_color[0]; r = ptr_color[1]; g = ptr_color[2]; b = ptr_color[3];
-
-//         for (y = 0; y < height; y++) {
-//             m = (width * y);
-//             l = (MFDB_STRIDE(width) * y);
-//             o = (y * stride);
-//             for (x = 0; x < width; x++) {
-//                 n = (l + x) << 2;
-//                 j = o + (x << 2);
-//                 destination_buffer[n] = source_buffer[j + 3];
-//                 destination_buffer[n + 1] = source_buffer[j];
-//                 destination_buffer[n + 2] = source_buffer[j + 1];
-//                 destination_buffer[n + 3] = source_buffer[j + 2];
-//                 i = ((l + x) + 1) << 2;
-//             }
-//             for(k = width_stride; k > 0; k--){
-//                 destination_buffer[i++] = a;
-//                 destination_buffer[i++] = r;
-//                 destination_buffer[i++] = g;
-//                 destination_buffer[i++] = b;
-//             }
-//         }
-// }
-
 void _st_Heif_RGBA_To_ARGB(uint8_t* source_buffer, uint8_t* destination_buffer, int16_t width, int16_t height){
     u_int32_t x, y, i;
     u_int32_t *dst_ptr, *src_ptr;
@@ -333,8 +303,6 @@ void _st_Heif_RGBA_To_ARGB(uint8_t* source_buffer, uint8_t* destination_buffer, 
         }
     }
 }
-
-
 
 void st_Write_HEIF(uint8_t* src_buffer, int width, int height, const char* filename) {
 

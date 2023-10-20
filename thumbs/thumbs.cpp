@@ -206,44 +206,45 @@ void st_Handle_Click_Thumbnail(struct_window *this_win, int16_t mouse_x, int16_t
             && ( mouse_y + this_win->current_pos_y > this_thumb_struct->thumbs_list_array[i].thumb_desk_pxy[1] ) 
             && ( mouse_y + this_win->current_pos_y < this_thumb_struct->thumbs_list_array[i].thumb_desk_pxy[3] )
         ) {
+            if(this_thumb_struct->thumbs_list_array[i].thumb_selectable){
+                struct_window* dest_win;
+                this_win->wi_data->img.img_id = this_thumb_struct->thumbs_list_array[i].thumb_id;
+                this_win->wi_data->img.img_index = this_thumb_struct->thumbs_list_array[i].thumb_index;
+                this_thumb_struct->thumbs_selected_nb = this_thumb_struct->thumbs_list_array[i].thumb_index;
 
-            struct_window* dest_win;
-            this_win->wi_data->img.img_id = this_thumb_struct->thumbs_list_array[i].thumb_id;
-            this_win->wi_data->img.img_index = this_thumb_struct->thumbs_list_array[i].thumb_index;
-            this_thumb_struct->thumbs_selected_nb = this_thumb_struct->thumbs_list_array[i].thumb_index;
+                if(this_thumb_struct->thumbs_open_new_win){
+                    this_win->wi_thumb->open_win_func(this_win->wi_data->path);
+                } else {
+                    dest_win = detect_window(this_win->wi_thumb->slave_win_handle);
+                    if(dest_win == NULL){
+                        form_alert(1, "[1][ERROR WHILE OPENING IMAGE][Okay]");
+                        return;
+                    }
 
-            if(this_thumb_struct->thumbs_open_new_win){
-                this_win->wi_thumb->open_win_func(this_win->wi_data->path);
-            } else {
-                dest_win = detect_window(this_win->wi_thumb->slave_win_handle);
-                if(dest_win == NULL){
-                    form_alert(1, "[1][ERROR WHILE OPENING IMAGE][Okay]");
-                    return;
+                    /* Disable old selected thumbs */
+                    dest_win->wi_data->img.img_id = NIL;
+                    this_win->wi_thumb->thumbs_selected_nb = dest_win->wi_data->img.img_index;
+                    this_win->wi_thumb->thumbs_area_refresh = TRUE;
+                    st_Start_Window_Process(this_win);
+                    this_win->refresh_win(this_win->wi_handle);
+                    st_End_Window_Process(this_win);
+                    /* Enable new selected thumbs */
+                    dest_win->wi_data->img.img_id = this_thumb_struct->thumbs_list_array[i].thumb_id;
+                    dest_win->wi_data->stop_original_data_load = FALSE;
+                    dest_win->wi_data->fx_on = FALSE;
+                    dest_win->wi_data->remap_displayed_mfdb = TRUE;
+                    dest_win->wi_data->img.scaled_pourcentage = 0;
+                    dest_win->wi_data->img.rotate_degree = 0;	
+                    dest_win->refresh_win(dest_win->wi_handle);
+                    send_message(dest_win->wi_handle, WM_REDRAW);
                 }
 
-                /* Disable old selected thumbs */
-                dest_win->wi_data->img.img_id = NIL;
-                this_win->wi_thumb->thumbs_selected_nb = dest_win->wi_data->img.img_index;
-                this_win->wi_thumb->thumbs_area_refresh = TRUE;
                 st_Start_Window_Process(this_win);
-                this_win->refresh_win(this_win->wi_handle);
+                this_win->wi_thumb->thumbs_area_refresh = TRUE;
+                st_Thumb_Refresh(this_win->wi_handle);
                 st_End_Window_Process(this_win);
-                /* Enable new selected thumbs */
-                dest_win->wi_data->img.img_id = this_thumb_struct->thumbs_list_array[i].thumb_id;
-                dest_win->wi_data->stop_original_data_load = FALSE;
-                dest_win->wi_data->fx_on = FALSE;
-                dest_win->wi_data->remap_displayed_mfdb = TRUE;
-                dest_win->wi_data->img.scaled_pourcentage = 0;
-                dest_win->wi_data->img.rotate_degree = 0;	
-                dest_win->refresh_win(dest_win->wi_handle);
-                send_message(dest_win->wi_handle, WM_REDRAW);
+                wind_set(this_win->wi_handle,WF_TOP,0,0,0,0);
             }
-
-            st_Start_Window_Process(this_win);
-            this_win->wi_thumb->thumbs_area_refresh = TRUE;
-            st_Thumb_Refresh(this_win->wi_handle);
-            st_End_Window_Process(this_win);
-            wind_set(this_win->wi_handle,WF_TOP,0,0,0,0);
         }
     }
     return;
@@ -302,6 +303,10 @@ void* st_Thumb_MFDB_Update(void *p_param){
                     for ( int16_t k = 0; k < nb_total_cols; k++) {
                         if( i == this_win_thumb->thumbs_nb ){
                             break;
+                        }
+                        if(!this_win_thumb->thumbs_list_array[i].thumb_visible){
+                            i++;
+                            continue;
                         }
                         if(this_win_thumb->thumbs_selected_nb > NIL && this_win_thumb->thumbs_selected_nb != this_win_thumb->thumbs_list_array[i].thumb_index){
                             i++;
@@ -390,7 +395,8 @@ void st_Thumb_List_Generic(struct_window *this_win,
 
             this_win->wi_thumb->thumbs_list_array[i].thumb_id = i;
             this_win->wi_thumb->thumbs_list_array[i].thumb_index = i + 1;
-
+            this_win->wi_thumb->thumbs_list_array[i].thumb_visible = true;
+            this_win->wi_thumb->thumbs_list_array[i].thumb_selectable = true;
             char progess_bar_indication[96];
             sprintf(progess_bar_indication, "Indexing media list: %s %d/%d", media_type, i+1, this_win->wi_thumb->thumbs_nb);
             st_Progress_Bar_Signal(this_win->wi_progress_bar, (mul_100_fast(i) / this_win->wi_thumb->thumbs_nb), (int8_t*)progess_bar_indication);

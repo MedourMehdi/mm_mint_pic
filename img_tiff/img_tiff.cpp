@@ -284,7 +284,8 @@ void _st_Handle_Thumbs_TIFF(int16_t this_win_handle, boolean file_process){
             } else {
                 this_win->wi_thumb->thumbs_list_array[i].thumb_mfdb = thumb_original_mfdb;
             }
-            
+            this_win->wi_thumb->thumbs_list_array[i].thumb_visible = true;
+            this_win->wi_thumb->thumbs_list_array[i].thumb_selectable = true;
             this_win->wi_thumb->thumbs_area_w = MAX( (this_win->wi_thumb->padx << 1) + new_width, this_win->wi_thumb->thumbs_area_w);
             this_win->wi_thumb->thumbs_area_h += new_height + this_win->wi_thumb->pady;
             this_win->wi_thumb->thumbs_list_array[i].thumb_selected = FALSE;
