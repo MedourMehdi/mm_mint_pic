@@ -50,6 +50,19 @@ u_int32_t st_Blend_Pix(u_int32_t background, u_int32_t foreground){
     return ARGB(OPAQUE, R , G, B);
 }
 
+u_int8_t* st_Convert_RGBA_to_ARGB(u_int8_t* src, u_int16_t width, u_int16_t height){
+    u_int32_t size = width * height;
+    u_int8_t* dest_data = (u_int8_t*)mem_alloc(size * 4 );
+    u_int32_t* dst_ptr = (u_int32_t*)dest_data;
+    u_int32_t* source_data = (u_int32_t*)src;
+    for(int16_t y = 0; y < height; y++ ){
+        for(int16_t x = 0; x < width; x++){
+            dst_ptr[(y * width) + x] = ((source_data[(y * width) + x] & 0x000000FF) << 24 ) | ((source_data[(y * width) + x] & 0xFFFFFF00) >> 8);
+        }
+    }
+    return dest_data;
+}
+
 /* Convert incoming bitmap from RGB565 to RGB8888 */
 void st_Convert_RGB565_to_ARGB(MFDB* src_mfdb, MFDB* dst_mfdb){
     int16_t x, y;

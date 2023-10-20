@@ -13,6 +13,8 @@ void st_Convert_Indexed_to_ARGB(MFDB* src_mfdb, MFDB* dst_mfdb);
 void st_Convert_GRAY_to_MONO(MFDB* src_mfdb, MFDB* dst_mfdb);
 void st_Convert_Mono_to_ARGB(MFDB* src_mfdb, MFDB* dst_mfdb);
 
+u_int8_t* st_Convert_RGBA_to_ARGB(u_int8_t* src, u_int16_t width, u_int16_t height);
+
 u_int16_t ARGB_to_RGB565(u_int8_t *ARGBPixel);
 u_int8_t RGB_to_8bits_Indexed(u_int8_t *ARGBPixel);
 u_int32_t Indexed_to_ARGB(u_int8_t index);
