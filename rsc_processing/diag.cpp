@@ -11,6 +11,7 @@
 #include "../img_bmp/img_bmp.h"
 #include "../img_tga/img_tga.h"
 #include "../img_pi/img_pi.h"
+#include "../img_psd/img_psd.h"
 
 typedef struct {
     char        export_path[256];
@@ -24,8 +25,6 @@ typedef struct {
     u_int8_t    *export_data;
     void        *(*export_function)(void*);
 } struct_export;
-
- /*  Resource C-Header-file v1.95 for ResourceMaster v2.06&up by ARDISOFT  */
 
 #define DiagResize 0  /* form/dial */
 #define DiagResize_diagboxresize 0  /* BOX in tree DiagResize */
@@ -60,6 +59,7 @@ typedef struct {
 #define DiagExport_chk_tga 16  /* BUTTON in tree DiagExport */
 #define DiagExport_chk_pi1 17  /* BUTTON in tree DiagExport */
 #define DiagExport_chk_pi3 18  /* BUTTON in tree DiagExport */
+#define DiagExport_chk_psd 19  /* BUTTON in tree DiagExport */
 #define DiagExport_TextInfo1 14  /* TEXT in tree DiagExport */
 
 #define DiagInfo 2  /* form/dial */
@@ -80,6 +80,7 @@ void* st_Image_Export_To_MFD(void* p_param);
 void* st_Image_Export_To_BMP(void* p_param);
 void* st_Image_Export_To_TGA(void* p_param);
 void* st_Image_Export_To_Degas(void* p_param);
+void* st_Image_Export_To_PSD(void* p_param);
 
 boolean st_Set_Export(void* (*export_function)(void*), const char* this_extention, OBJECT* this_ftext_to_uptdate);
 void st_Update_Comments(int16_t this_win_form_handle, void* p_param, OBJECT* this_ftext_to_uptdate, uint16_t bpp, const char* format );
@@ -239,6 +240,10 @@ fo_bnxtobj	New current object, or 0 if the next object has the status HIDDEN or 
                 form_button(tree, DiagExport_chk_pi3, 1, 0);
                 st_Set_Export(&st_Image_Export_To_Degas, this_export.export_extension, &obj_gui_ftext_filepath);
                 st_Update_Comments(this_win_form_handle, (void*)&this_export, &obj_gui_ftext_info, 1, "DEGAS");                          
+            } else if(strcasecmp(this_export.export_extension, ".psd") == 0 || strcasecmp(this_export.export_extension, ".PSD") == 0){
+                form_button(tree, DiagExport_chk_psd, 1, 0);
+                st_Set_Export(&st_Image_Export_To_PSD, this_export.export_extension, &obj_gui_ftext_filepath);
+                st_Update_Comments(this_win_form_handle, (void*)&this_export, &obj_gui_ftext_info, 24, "PHOTOSHOP");                          
             } else {
                 sprintf(alert_message, "Unknown %s extension", this_export.export_extension);
                 st_form_alert(FORM_STOP, alert_message);
@@ -296,7 +301,13 @@ fo_bnxtobj	New current object, or 0 if the next object has the status HIDDEN or 
                 objc_draw( tree, 0, MAX_DEPTH, obj_pxy_filepath[0] , obj_pxy_filepath[1], obj_pxy_filepath[2], obj_pxy_filepath[3] );
             }
             st_Update_Comments(this_win_form_handle, (void*)&this_export, &obj_gui_ftext_info, 1, "DEGAS");
-            break;               
+            break;
+        case DiagExport_chk_psd:
+            if(st_Set_Export(&st_Image_Export_To_Degas, ".psd", &obj_gui_ftext_filepath)){
+                objc_draw( tree, 0, MAX_DEPTH, obj_pxy_filepath[0] , obj_pxy_filepath[1], obj_pxy_filepath[2], obj_pxy_filepath[3] );
+            }
+            st_Update_Comments(this_win_form_handle, (void*)&this_export, &obj_gui_ftext_info, 1, "PHOTOSHOP");
+            break;                          
         case DiagExport_chk_mfd:
             if(st_Set_Export(&st_Image_Export_To_MFD, ".mfd", &obj_gui_ftext_filepath)){
                 objc_draw( tree, 0, MAX_DEPTH, obj_pxy_filepath[0] , obj_pxy_filepath[1], obj_pxy_filepath[2], obj_pxy_filepath[3] );
@@ -339,6 +350,32 @@ boolean st_Set_Export(void* (*export_function)(void*), const char* this_extentio
         shrink_char_obj(this_export.export_path, this_ftext_to_uptdate);
         return true;
     }
+}
+
+void* st_Image_Export_To_PSD(void* p_param){
+    struct_export* my_export = (struct_export*)p_param;
+
+    u_int8_t* raw_data = my_export->export_data;
+
+    switch (my_export->export_components)
+    {
+    case 4: /* 32 bits per pixels */
+        break;
+    default:
+        sprintf(alert_message,"Error\nnb_components are %d", my_export->export_components);
+        st_form_alert(FORM_EXCLAM, alert_message);
+        return NULL;    
+        break;
+    }
+    if(st_FileExistsAccess(my_export->export_path) == 1){
+        sprintf(alert_message,"File exist\nDo you want to erase it?");
+        if(st_form_alert_choice(FORM_STOP, alert_message, (char*)"No", (char*)"Yes") == 1){
+            return NULL;
+        }
+    }
+    st_Write_PSD(raw_data, my_export->export_width, my_export->export_height, my_export->export_path);
+    form_alert(1, "[1][Export PSD done][Okay]");
+    return NULL;
 }
 
 void* st_Image_Export_To_Degas(void* p_param){
