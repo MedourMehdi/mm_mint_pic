@@ -298,12 +298,12 @@ void *event_loop(void *result) {
 					TRACE(("--> Drag&drop list %s <--", buff))
 					buff[size] = '\0';
 					pfile = buff;
-					printf("Files list %s\n", pfile);
+					// printf("Files list %s\n", pfile);
 					do {
 						va_file = (char*)mem_alloc(128);
 						memset(va_file, 0, 128);
 						pfile = GetNextVaStartFileName( pfile, va_file ) ;
-						printf("Opening %s\n", va_file);
+						// printf("Opening %s\n", va_file);
 						new_win_img(va_file);
 						mem_free(va_file);
 					} while ( pfile ) ;
