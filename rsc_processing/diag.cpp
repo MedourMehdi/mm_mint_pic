@@ -765,6 +765,11 @@ void st_Form_Events_Change_Resolution(int16_t this_win_handle) {
 
         replace_char(tree[DiagResize_FTEXTNewW].ob_spec.tedinfo->te_ptext, str1[1], str1[0]);
         replace_char(tree[DiagResize_FTEXTNewH].ob_spec.tedinfo->te_ptext, str1[1], str1[0]);
+        if(this_win_master->wi_data->autoscale){
+            this_win_master->wi_data->autoscale = FALSE;
+            this_win_master->wi_data->remap_displayed_mfdb = TRUE;
+            this_win_master->refresh_win(this_win_master->wi_handle);
+        }
 
         this_win_master->wi_data->img.export_width = atoi(tree[DiagResize_FTEXTNewW].ob_spec.tedinfo->te_ptext);
         this_win_master->wi_data->img.export_height = atoi(tree[DiagResize_FTEXTNewH].ob_spec.tedinfo->te_ptext);
