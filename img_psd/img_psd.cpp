@@ -808,19 +808,19 @@ void _st_Handle_Thumbs_PSD(int16_t this_win_handle, boolean file_process){
             this_win->wi_thumb->thumbs_area_h += wanted_height + this_win->wi_thumb->pady;
             thumb_ptr->thumb_selected = FALSE;
 
-printf("\n###\tthumb_ptr->thumb_id\t%d\n",thumb_ptr->thumb_id);
-printf("###\tthumb_ptr->thumb_index\t%d\n",thumb_ptr->thumb_index);
-if(i != 0){
-printf("\n###\tthumb_ptr->prev->thumb_id\t%d\n",thumb_ptr->prev->thumb_id);
-printf("###\tthumb_ptr->prev->thumb_index\t%d\n",thumb_ptr->prev->thumb_index);
-}
+            // printf("\n###\tthumb_ptr->thumb_id\t%d\n",thumb_ptr->thumb_id);
+            // printf("###\tthumb_ptr->thumb_index\t%d\n",thumb_ptr->thumb_index);
+            // if(i != 0){
+            // printf("\n###\tthumb_ptr->prev->thumb_id\t%d\n",thumb_ptr->prev->thumb_id);
+            // printf("###\tthumb_ptr->prev->thumb_index\t%d\n",thumb_ptr->prev->thumb_index);
+            // }
 
-printf("###\tthumb_ptr->thumb_id\t%d\n",thumb_ptr->thumb_id);
-printf("###\tthumb_ptr->thumb_index\t%d\n",thumb_ptr->thumb_index);
-printf("###\tthumb_ptr->thumb_selectable\t%d\n",thumb_ptr->thumb_selectable);
-printf("###\tthumb_ptr->thumb_visible\t%d\n",thumb_ptr->thumb_visible);
-printf("###\tthumb_ptr->thumb_mfdb->fd_w\t%d\n",thumb_ptr->thumb_mfdb->fd_w);
-printf("###\tthumb_ptr->thumb_mfdb->fd_h\t%d\n",thumb_ptr->thumb_mfdb->fd_h);
+            // printf("###\tthumb_ptr->thumb_id\t%d\n",thumb_ptr->thumb_id);
+            // printf("###\tthumb_ptr->thumb_index\t%d\n",thumb_ptr->thumb_index);
+            // printf("###\tthumb_ptr->thumb_selectable\t%d\n",thumb_ptr->thumb_selectable);
+            // printf("###\tthumb_ptr->thumb_visible\t%d\n",thumb_ptr->thumb_visible);
+            // printf("###\tthumb_ptr->thumb_mfdb->fd_w\t%d\n",thumb_ptr->thumb_mfdb->fd_w);
+            // printf("###\tthumb_ptr->thumb_mfdb->fd_h\t%d\n",thumb_ptr->thumb_mfdb->fd_h);
 
             prev_thumb_ptr = thumb_ptr;
             thumb_ptr = NULL;    
