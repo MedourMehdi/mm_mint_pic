@@ -74,16 +74,10 @@ struct_st_ico_png_list control_bar_winvideo_list[] = {
 /*	Your control bar declaration */
 
 // struct_st_control_bar my_control_bar; /* I use a malloc inside my init function so no need for me to declare on here */
+void st_Init_Default_Values_Control_Bar(struct_window *this_win);
 
-void st_Init_WinImage_Control_Bar(void* p_param){
-	/* depend of your application - I need this in order to get a win_handle linked to this control bar */
-	struct_window *this_win = (struct_window*)p_param;
-	if( this_win->wi_to_display_mfdb->fd_addr != NULL ){
-	this_win->wi_control_bar = (struct_st_control_bar*)mem_alloc(sizeof(struct_st_control_bar));
-	/* The array of struct you declared below - It contain indexes, path, etc... */
-	this_win->wi_control_bar->control_bar_list = (struct_st_ico_png_list*)mem_alloc(sizeof(control_bar_winimage_list));
-	memcpy(this_win->wi_control_bar->control_bar_list, &control_bar_winimage_list, sizeof(control_bar_winimage_list));
-	/* A right padding if you want an icon is showed at the opposite of the others i.e. for example main icon to the left but one of them to the right */
+void st_Init_Default_Values_Control_Bar(struct_window *this_win){
+	/* A right padding if you want an icon is showed at the opposite of the others i.e. for example main icons to the left but one of them to the right */
 	this_win->wi_control_bar->last_ico_padding_right = 72;
 	/* When control_bar_h is equal to zero the control bar was hidden - this value represent the height of the control bar */
 	this_win->wi_control_bar->control_bar_h = 0;
@@ -104,66 +98,40 @@ void st_Init_WinImage_Control_Bar(void* p_param){
 	this_win->wi_control_bar->virtual_screen_mfdb = &screen_mfdb;
 	/* We want hide the control bar with the right click */
 	this_win->wi_control_bar->force_unhide = FALSE;
+}
+
+void st_Init_WinImage_Control_Bar(void* p_param){
+	/* depend of your application - I need this in order to get a win_handle linked to this control bar */
+	struct_window *this_win = (struct_window*)p_param;
+	if( this_win->wi_to_display_mfdb->fd_addr != NULL ){
+		this_win->wi_control_bar = (struct_st_control_bar*)mem_alloc(sizeof(struct_st_control_bar));
+		this_win->wi_control_bar->control_bar_list = (struct_st_ico_png_list*)mem_alloc(sizeof(control_bar_winimage_list));
+		memcpy(this_win->wi_control_bar->control_bar_list, &control_bar_winimage_list, sizeof(control_bar_winimage_list));
+		st_Init_Default_Values_Control_Bar(this_win);
 	}
 }
 
 void st_Init_WinVideo_Control_Bar(void* p_param){
 	/* depend of your application - I need this in order to get a win_handle linked to this control bar */
 	struct_window *this_win = (struct_window*)p_param;
-	this_win->wi_control_bar = (struct_st_control_bar*)mem_alloc(sizeof(struct_st_control_bar));
-	/* The array of struct you declared below - It contain indexes, path, etc... */
-	this_win->wi_control_bar->control_bar_list = (struct_st_ico_png_list*)mem_alloc(sizeof(control_bar_winvideo_list));
-	memcpy(this_win->wi_control_bar->control_bar_list, &control_bar_winvideo_list, sizeof(control_bar_winvideo_list));
-	/* A right padding if you want an icon is showed at the opposite of the others i.e. for example main icon to the left but one of them to the right */
-	this_win->wi_control_bar->last_ico_padding_right = 72;
-	/* When control_bar_h is equal to zero the control bar was hidden - this value represent the height of the control bar */
-	this_win->wi_control_bar->control_bar_h = 0;
-	/* If you want some transparency filter set transparency to TRUE */
-	this_win->wi_control_bar->transparency = FALSE;
-	if(cpu_type < 40 || computer_type < 5){
-		this_win->wi_control_bar->transparency = FALSE;
-		/* Disabling transparency computing on ST */
+	if( this_win->wi_to_display_mfdb->fd_addr != NULL ){
+		this_win->wi_control_bar = (struct_st_control_bar*)mem_alloc(sizeof(struct_st_control_bar));
+		/* The array of struct you declared below - It contain indexes, path, etc... */
+		this_win->wi_control_bar->control_bar_list = (struct_st_ico_png_list*)mem_alloc(sizeof(control_bar_winvideo_list));
+		memcpy(this_win->wi_control_bar->control_bar_list, &control_bar_winvideo_list, sizeof(control_bar_winvideo_list));
+		st_Init_Default_Values_Control_Bar(this_win);
 	}
-	this_win->wi_control_bar->background_mfdb = NULL;
-	this_win->wi_control_bar->need_to_reload_control_mfdb = TRUE;
-	/* Transparency color - ARGB: value 'A' represent the transparecny level */
-	this_win->wi_control_bar->transparency_color = GREY_COLOR;
-	/* VDI handle */
-	this_win->wi_control_bar->vdi_handle = &st_vdi_handle;
-	/* Screen MFDB - You may obtained it with a declaration like MFDB screen_mfdb = {0}; */
-	this_win->wi_control_bar->virtual_screen_mfdb = &screen_mfdb;
-	/* We want hide the control bar with the right click */
-	this_win->wi_control_bar->force_unhide = FALSE;
 }
 
 void st_Init_WinDoc_Control_Bar(void* p_param){
 	/* depend of your application - I need this in order to get a win_handle linked to this control bar */
 	struct_window *this_win = (struct_window*)p_param;
 	if( this_win->wi_to_display_mfdb->fd_addr != NULL ){
-	this_win->wi_control_bar = (struct_st_control_bar*)mem_alloc(sizeof(struct_st_control_bar));
-	/* The array of struct you declared below - It contain indexes, path, etc... */
-	this_win->wi_control_bar->control_bar_list = (struct_st_ico_png_list*)mem_alloc(sizeof(control_bar_windocument_list));
-	memcpy(this_win->wi_control_bar->control_bar_list, &control_bar_windocument_list, sizeof(control_bar_windocument_list));
-	/* A right padding if you want an icon is showed at the opposite of the others i.e. for example main icon to the left but one of them to the right */
-	this_win->wi_control_bar->last_ico_padding_right = 72;
-	/* When control_bar_h is equal to zero the control bar was hidden - this value represent the height of the control bar */
-	this_win->wi_control_bar->control_bar_h = 0;
-	/* If you want some transparency filter set transparency to TRUE */
-	this_win->wi_control_bar->transparency = TRUE;
-	if(cpu_type < 40 || computer_type < 5){
-		this_win->wi_control_bar->transparency = FALSE;
-		/* Disabling transparency computing on ST */
-	}
-	this_win->wi_control_bar->background_mfdb = NULL;
-	this_win->wi_control_bar->need_to_reload_control_mfdb = TRUE;
-	/* Transparency color - ARGB: value 'A' represent the transparecny level */
-	this_win->wi_control_bar->transparency_color = GREY_COLOR;
-	/* VDI handle */
-	this_win->wi_control_bar->vdi_handle = &st_vdi_handle;
-	/* Screen MFDB - You may obtained it with a declaration like MFDB screen_mfdb = {0}; */
-	this_win->wi_control_bar->virtual_screen_mfdb = &screen_mfdb;
-	/* We want hide the control bar with the right click */
-	this_win->wi_control_bar->force_unhide = FALSE;
+		this_win->wi_control_bar = (struct_st_control_bar*)mem_alloc(sizeof(struct_st_control_bar));
+		/* The array of struct you declared below - It contain indexes, path, etc... */
+		this_win->wi_control_bar->control_bar_list = (struct_st_ico_png_list*)mem_alloc(sizeof(control_bar_windocument_list));
+		memcpy(this_win->wi_control_bar->control_bar_list, &control_bar_windocument_list, sizeof(control_bar_windocument_list));
+		st_Init_Default_Values_Control_Bar(this_win);
 	}
 }
 
@@ -469,38 +437,34 @@ void* st_Img_Autoscale(void* param){
 	return NULL;
 }
 
-/* End for declarations and definitions foR functions associated to our icons */
+/* End for declarations and definitions for functions associated to our icons */
 
 bool st_Ico_PNG_Init_Image(void){
-	if(!st_Ico_PNG_Init(control_bar_winimage_list)){ return false; }
+	if(!st_Ico_PNG_Init(control_bar_winimage_list)){ printf("Error init image control bar\n"); return false; }
 	return true;
 }
 bool st_Ico_PNG_Init_Document(void){
-	if(!st_Ico_PNG_Init(control_bar_windocument_list)){ return false; }
+	if(!st_Ico_PNG_Init(control_bar_windocument_list)){ printf("Error init document control bar\n"); return false; }
 	return true;
 }
 bool st_Ico_PNG_Init_Video(void){
-	if(!st_Ico_PNG_Init(control_bar_winvideo_list)){ printf("Error init vidieo control bar\n"); return false; }
+	if(!st_Ico_PNG_Init(control_bar_winvideo_list)){ printf("Error init video control bar\n"); return false; }
 	return true;
 }
-
 bool st_Ico_PNG_Init_Main(void){
-	if(!st_Ico_PNG_Init(control_bar_winstart_list)){ return false; }
+	if(!st_Ico_PNG_Init(control_bar_winstart_list)){ printf("Error init main control bar\n"); return false; }
 	return true;
 }
 
 void st_Ico_PNG_Release_Main(void){
 	st_Ico_PNG_Release(control_bar_winstart_list);
 }
-
 void st_Ico_PNG_Release_Video(void){
 	st_Ico_PNG_Release(control_bar_winvideo_list);
 }
-
 void st_Ico_PNG_Release_Document(void){
 	st_Ico_PNG_Release(control_bar_windocument_list);
 }
-
 void st_Ico_PNG_Release_Image(void){
 	st_Ico_PNG_Release(control_bar_winimage_list);
 }
