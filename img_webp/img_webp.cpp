@@ -1,6 +1,6 @@
 #include "img_webp.h"
 #include "../img_handler.h"
-
+#include "../utils_gfx/pix_convert.h"
 #include "../utils/utils.h"
 
 #include <webp/encode.h>
@@ -221,13 +221,22 @@ void _st_Read_WEBP(int16_t this_win_handle, boolean file_process)
         this_win->wi_data->img.original_width = width;
         this_win->wi_data->img.original_height = height;
 
-        uint8_t* destination_buffer = st_ScreenBuffer_Alloc_bpp(width, height, nb_components_32bits << 3);
+        u_int32_t total_pixels = width * height;
+        u_int8_t* temp_buffer = (u_int8_t*)mem_alloc((width * height) << 2);
+        u_int8_t* destination_buffer = st_ScreenBuffer_Alloc_bpp(width, height, nb_components_32bits << 3);
         if(destination_buffer == NULL){
             sprintf(alert_message, "Out Of Mem Error\nAsked for %doctets", width * height * nb_components_32bits);
             st_form_alert(FORM_EXCLAM, alert_message);
         } else {
             mfdb_update_bpp(&this_win->wi_original_mfdb, (int8_t*)destination_buffer, width, height, nb_components_32bits << 3);
-            WebPDecodeARGBInto((uint8_t*)data, data_size, destination_buffer, (MFDB_STRIDE(width) * height) << 2, MFDB_STRIDE(width) << 2);
+            WebPDecodeARGBInto((u_int8_t*)data, data_size, temp_buffer, (MFDB_STRIDE(width) * height) << 2, MFDB_STRIDE(width) << 2);
+            u_int32_t *dest_ptr = (u_int32_t*)destination_buffer;
+            u_int32_t *src_ptr = (u_int32_t*)temp_buffer;
+            u_int32_t index = 0;
+            while(index < total_pixels){
+                *dest_ptr++ = st_Blend_Pix(*dest_ptr, *src_ptr++);
+                index++;
+            }
             this_win->total_length_w = this_win->wi_original_mfdb.fd_w;
             this_win->total_length_h = this_win->wi_original_mfdb.fd_h;
             this_win->wi_data->stop_original_data_load = TRUE;
