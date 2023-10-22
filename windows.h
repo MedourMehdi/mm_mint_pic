@@ -52,16 +52,17 @@ typedef struct {
 } struct_crop;
 
 
-typedef struct {
+typedef struct struct_st_thumbs_list{
     u_int32_t thumb_id;
 	u_int16_t thumb_index;
     char*   thumb_filename;
     boolean thumb_selected;
 	boolean thumb_selectable;	
 	boolean thumb_visible;
+	struct_st_thumbs_list* next;
+	struct_st_thumbs_list* prev;
     int16_t thumb_win_pxy[4];
     int16_t thumb_desk_pxy[4];
-    int16_t thumb_mfdb_stride;
     MFDB*   thumb_mfdb;
     void*	(*thumb_func)(void* param);
 } struct_st_thumbs_list;

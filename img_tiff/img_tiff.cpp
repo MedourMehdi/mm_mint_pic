@@ -218,18 +218,35 @@ void _st_Handle_Thumbs_TIFF(int16_t this_win_handle, boolean file_process){
 
         this_win->wi_data->thumbnail_slave = true;
         this_win->wi_thumb = st_Thumb_Alloc(this_win->wi_data->img.img_total, this_win_handle, 4, 8, 120, 80);
+
+        this_win->wi_thumb->thumbs_list_array = (struct_st_thumbs_list*)mem_alloc(sizeof(struct_st_thumbs_list));
+        struct_st_thumbs_list* thumb_ptr = this_win->wi_thumb->thumbs_list_array;
+        struct_st_thumbs_list* prev_thumb_ptr = NULL;
+
         this_win->wi_thumb->thumbs_area_w = 0;
         this_win->wi_thumb->thumbs_area_h = this_win->wi_thumb->pady;
         this_win->wi_thumb->thumbs_nb = this_win->wi_data->img.img_total;
 
         for (int16_t i = 0; i < this_win->wi_thumb->thumbs_nb; i++) {
-            this_win->wi_thumb->thumbs_list_array[i].thumb_id = i;
-            this_win->wi_thumb->thumbs_list_array[i].thumb_index = i + 1;
+        
+            if(thumb_ptr == NULL){
+                thumb_ptr = (struct_st_thumbs_list*)mem_alloc(sizeof(struct_st_thumbs_list));
+            }
+            thumb_ptr->thumb_id = i;
+            thumb_ptr->thumb_index = i + 1;
+            thumb_ptr->thumb_selectable = TRUE;
+            thumb_ptr->thumb_visible = TRUE;
+            thumb_ptr->next = NULL;
+            thumb_ptr->prev = prev_thumb_ptr;
+            if(thumb_ptr->prev != NULL){
+                thumb_ptr->prev->next = thumb_ptr;
+            }
+
             TIFFSetDirectory(tiff_handler, i);
 
             char progess_bar_indication[96];
             int16_t bar_pos = mul_100_fast(i) / this_win->wi_thumb->thumbs_nb;
-            sprintf(progess_bar_indication, "Thumbnail id.%d/%d - Image id.%d", i, this_win->wi_thumb->thumbs_nb, this_win->wi_thumb->thumbs_list_array[i].thumb_id);
+            sprintf(progess_bar_indication, "Thumbnail id.%d/%d - Image id.%d", i, this_win->wi_thumb->thumbs_nb, thumb_ptr->thumb_id);
             st_Progress_Bar_Signal(this_win->wi_progress_bar, bar_pos, (int8_t*)progess_bar_indication);
 
             TIFFGetField( tiff_handler, TIFFTAG_IMAGEWIDTH, &original_width);
@@ -279,17 +296,19 @@ void _st_Handle_Thumbs_TIFF(int16_t this_win_handle, boolean file_process){
 
             mem_free(raster);
             if(screen_workstation_bits_per_pixel != 32){
-                this_win->wi_thumb->thumbs_list_array[i].thumb_mfdb = this_win->render_win(thumb_original_mfdb);
+                thumb_ptr->thumb_mfdb = this_win->render_win(thumb_original_mfdb);
                 mfdb_free(thumb_original_mfdb);
             } else {
-                this_win->wi_thumb->thumbs_list_array[i].thumb_mfdb = thumb_original_mfdb;
+                thumb_ptr->thumb_mfdb = thumb_original_mfdb;
             }
-            this_win->wi_thumb->thumbs_list_array[i].thumb_visible = true;
-            this_win->wi_thumb->thumbs_list_array[i].thumb_selectable = true;
+            thumb_ptr->thumb_visible = true;
+            thumb_ptr->thumb_selectable = true;
             this_win->wi_thumb->thumbs_area_w = MAX( (this_win->wi_thumb->padx << 1) + new_width, this_win->wi_thumb->thumbs_area_w);
             this_win->wi_thumb->thumbs_area_h += new_height + this_win->wi_thumb->pady;
-            this_win->wi_thumb->thumbs_list_array[i].thumb_selected = FALSE;
+            thumb_ptr->thumb_selected = FALSE;
 
+            prev_thumb_ptr = thumb_ptr;
+            thumb_ptr = NULL;
         }
         this_win->wi_thumb->thumbs_area_h += this_win->wi_thumb->pady;
         st_Progress_Bar_Step_Done(this_win->wi_progress_bar);

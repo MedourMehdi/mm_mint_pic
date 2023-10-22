@@ -223,18 +223,23 @@ void* st_Img_down(void* p_param){
 			int16_t i = this_win->wi_data->img.img_id;
 			struct_window* this_win_master = detect_window(this_win->wi_thumb->master_win_handle);
 			if(this_win_master != NULL ){
-				if(i < this_win_master->wi_thumb->thumbs_nb){
+
+				if(i < this_win_master->wi_thumb->thumbs_nb - 1){
+					struct_st_thumbs_list *thumb_ptr = this_win_master->wi_thumb->thumbs_list_array;
+					while(thumb_ptr->thumb_id != i){
+						thumb_ptr = thumb_ptr->next;
+					}					
 					this_win->wi_data->img.img_id = NIL;
 					/* Disable selected thumnail */
-					this_win_master->wi_thumb->thumbs_selected_nb = this_win_master->wi_thumb->thumbs_list_array[i].thumb_index;
+					this_win_master->wi_thumb->thumbs_selected_nb = thumb_ptr->thumb_index;
 					this_win_master->wi_thumb->thumbs_area_refresh = TRUE;
 					st_Start_Window_Process(this_win_master);
 					this_win_master->refresh_win(this_win_master->wi_handle);
 					st_End_Window_Process(this_win_master);
 					/* Enable new thumbnail */
-					this_win->wi_data->img.img_id = this_win_master->wi_thumb->thumbs_list_array[i + 1].thumb_id;
-					this_win->wi_data->img.img_index = this_win_master->wi_thumb->thumbs_list_array[i + 1].thumb_index;
-					this_win_master->wi_thumb->thumbs_selected_nb = this_win_master->wi_thumb->thumbs_list_array[i + 1].thumb_index;
+					this_win->wi_data->img.img_id = thumb_ptr->next->thumb_id;
+					this_win->wi_data->img.img_index = thumb_ptr->next->thumb_index;
+					this_win_master->wi_thumb->thumbs_selected_nb = thumb_ptr->next->thumb_index;
 					this_win_master->wi_thumb->thumbs_area_refresh = TRUE;				
 					this_win->wi_data->stop_original_data_load = FALSE;
 					this_win->wi_data->fx_on = FALSE;
@@ -268,18 +273,22 @@ void* st_Img_up(void* p_param){
 		if(this_win->wi_thumb != NULL){
 			int16_t i = this_win->wi_data->img.img_id;
 			struct_window* this_win_master = detect_window(this_win->wi_thumb->master_win_handle);
-			if(this_win_master != NULL && i > 0){	
+			if(this_win_master != NULL && i > 0){
+				struct_st_thumbs_list *thumb_ptr = this_win_master->wi_thumb->thumbs_list_array;
+				while(thumb_ptr->thumb_id != i){
+					thumb_ptr = thumb_ptr->next;
+				}
 				this_win->wi_data->img.img_id = NIL;
 				/* Disbable selected thumnail */
-				this_win_master->wi_thumb->thumbs_selected_nb = this_win_master->wi_thumb->thumbs_list_array[i].thumb_index;
+				this_win_master->wi_thumb->thumbs_selected_nb = thumb_ptr->thumb_index;
 				this_win_master->wi_thumb->thumbs_area_refresh = TRUE;
 				st_Start_Window_Process(this_win_master);
 				this_win_master->refresh_win(this_win_master->wi_handle);
 				st_End_Window_Process(this_win_master);
 				/* Enable new thumbnail */
-                this_win->wi_data->img.img_id = this_win_master->wi_thumb->thumbs_list_array[i - 1].thumb_id;
-            	this_win->wi_data->img.img_index = this_win_master->wi_thumb->thumbs_list_array[i - 1].thumb_index;
-            	this_win_master->wi_thumb->thumbs_selected_nb = this_win_master->wi_thumb->thumbs_list_array[i - 1].thumb_index;
+                this_win->wi_data->img.img_id = thumb_ptr->prev->thumb_id;
+            	this_win->wi_data->img.img_index = thumb_ptr->prev->thumb_index;
+            	this_win_master->wi_thumb->thumbs_selected_nb = thumb_ptr->prev->thumb_index;
 				this_win_master->wi_thumb->thumbs_area_refresh = TRUE;				
                 this_win->wi_data->stop_original_data_load = FALSE;
                 this_win->wi_data->fx_on = FALSE;

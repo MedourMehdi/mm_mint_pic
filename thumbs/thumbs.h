@@ -22,4 +22,6 @@ void st_Thumb_List_Generic(struct_window *this_win,
                             u_int16_t wanted_width, u_int16_t wanted_height,
                             u_int16_t wanted_padx, u_int16_t wanted_pady,
                             bool open_new_win);
+
+void st_Check_Thumbs_Chain(struct_st_thumbs_list* thumb_ptr);
 #endif

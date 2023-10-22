@@ -71,6 +71,7 @@ void st_Init_PSD(struct_window *this_win){
     this_win->wi_data->image_media = TRUE;
     this_win->wi_data->window_size_limited = TRUE;
     this_win->wi_data->remap_displayed_mfdb = TRUE;
+    this_win->prefers_file_instead_mem = TRUE;
 	this_win->refresh_win = st_Win_Print_PSD;
     this_win->wi_progress_bar = global_progress_bar;
     if(!st_Set_Renderer(this_win)){
@@ -80,8 +81,14 @@ void st_Init_PSD(struct_window *this_win){
     }
     /* thumbnails stuff */
     if(this_win->wi_thumb == NULL){
-        _st_Handle_Thumbs_PSD_Generic(this_win->wi_handle, this_win->prefers_file_instead_mem);
-        // _st_Handle_Thumbs_PSD(this_win->wi_handle, this_win->prefers_file_instead_mem);
+        _st_Handle_Thumbs_PSD(this_win->wi_handle, this_win->prefers_file_instead_mem);
+        // st_Check_Thumbs_Chain(this_win->wi_thumb->thumbs_list_array);
+        // _st_Handle_Thumbs_PSD_Generic(this_win->wi_handle, this_win->prefers_file_instead_mem);
+        // if(cpu_type < 40){
+        //     _st_Handle_Thumbs_PSD_Generic(this_win->wi_handle, this_win->prefers_file_instead_mem);
+        // }else{
+        //     _st_Handle_Thumbs_PSD(this_win->wi_handle, this_win->prefers_file_instead_mem);
+        // }
     }
 }
 
@@ -116,7 +123,8 @@ unsigned int FindChannel(Layer* layer, int16_t channelType) {
 template <typename T, typename DataHolder>
 static void* ExpandChannelToCanvas(Allocator* allocator, const DataHolder* layer, const void* data, unsigned int canvasWidth, unsigned int canvasHeight)
 {
-    T* canvasData = static_cast<T*>(allocator->Allocate(sizeof(T)*canvasWidth*canvasHeight, 16u));
+    // T* canvasData = static_cast<T*>(allocator->Allocate(sizeof(T)*canvasWidth*canvasHeight, 16u));
+    T* canvasData = static_cast<T*>(mem_alloc(sizeof(T)*canvasWidth*canvasHeight));
     memset(canvasData, 0u, sizeof(T)*canvasWidth*canvasHeight);
 
     imageUtil::CopyLayerData(static_cast<const T*>(data), canvasData, layer->left, layer->top, layer->right, layer->bottom, canvasWidth, canvasHeight);
@@ -139,7 +147,8 @@ static void* ExpandChannelToCanvas(const Document* document, Allocator* allocato
 template <typename T>
 T* CreateInterleavedImage(Allocator* allocator, const void* srcR, const void* srcG, const void* srcB, unsigned int width, unsigned int height)
 {
-    T* image = static_cast<T*>(allocator->Allocate(width*height * 4u*sizeof(T), 16u));
+    // T* image = static_cast<T*>(allocator->Allocate(width*height * 4u*sizeof(T), 16u));
+    T* image = static_cast<T*>(mem_alloc(width*height * 4u*sizeof(T)));
 
     const T* r = static_cast<const T*>(srcR);
     const T* g = static_cast<const T*>(srcG);
@@ -152,8 +161,8 @@ T* CreateInterleavedImage(Allocator* allocator, const void* srcR, const void* sr
 template <typename T>
 T* CreateInterleavedImage(Allocator* allocator, const void* srcR, const void* srcG, const void* srcB, const void* srcA, unsigned int width, unsigned int height)
 {
-    T* image = static_cast<T*>(allocator->Allocate(width*height * 4u*sizeof(T), 16u));
-
+    // T* image = static_cast<T*>(allocator->Allocate(width*height * 4u*sizeof(T), 16u));
+    T* image = static_cast<T*>(mem_alloc(width*height * 4u*sizeof(T)));
     const T* r = static_cast<const T*>(srcR);
     const T* g = static_cast<const T*>(srcG);
     const T* b = static_cast<const T*>(srcB);
@@ -280,6 +289,7 @@ void _st_Read_PSD(int16_t this_win_handle, boolean file_process, long img_id){
             if(destination_buffer == NULL){
                 sprintf(alert_message, "Out Of Mem Error\nAsked for %doctets", width * height * 4);
                 st_form_alert(FORM_EXCLAM, alert_message);
+                goto destroy_doc;
             }
             if(this_win->wi_original_mfdb.fd_addr != NULL){
                 mem_free(this_win->wi_original_mfdb.fd_addr);
@@ -320,19 +330,22 @@ void _st_Read_PSD(int16_t this_win_handle, boolean file_process, long img_id){
 
                 width = right - left;
                 height = bottom - top;
-
+                if(width == 0 | height == 0){
+                    sprintf(alert_message, "Can not parse layer %d", img_id);
+                    st_form_alert(FORM_EXCLAM, alert_message);
+                    goto destroy_doc;
+                }
                 destination_buffer = st_ScreenBuffer_Alloc_bpp(width, height, 32);
                 if(destination_buffer == NULL){
                     sprintf(alert_message, "Out Of Mem Error\nAsked for %doctets", width * height * 4);
                     st_form_alert(FORM_EXCLAM, alert_message);
+                    goto destroy_doc;
                 }
                 if(this_win->wi_original_mfdb.fd_addr != NULL){
                     mem_free(this_win->wi_original_mfdb.fd_addr);
                 }
                 mfdb_update_bpp(&this_win->wi_original_mfdb, (int8_t *)destination_buffer, width, height, 32);
-                if(!document){
-                    goto end;
-                }
+
                 st_Extract_PSD_Layer(document, layer, &allocator, destination_buffer);
             }
         }
@@ -421,11 +434,14 @@ bool st_Expand_PSD_Layer(Document* document, Layer* layer, MallocAllocator* allo
             break;
         }
     }
-    allocator->Free(canvasData[0]);
-    allocator->Free(canvasData[1]);
-    allocator->Free(canvasData[2]);
-    allocator->Free(canvasData[3]);
-
+    // allocator->Free(canvasData[0]);
+    // allocator->Free(canvasData[1]);
+    // allocator->Free(canvasData[2]);
+    // allocator->Free(canvasData[3]);
+    mem_free(canvasData[0]);
+    mem_free(canvasData[1]);
+    mem_free(canvasData[2]);
+    mem_free(canvasData[3]);
     if(channelCount >= 3){
         uint8_t* maskCanvasData = (uint8_t*)ExpandMaskToCanvas(document, allocator, layer->layerMask);
         uint8_t* maskCanvasDataV = (uint8_t*)ExpandMaskToCanvas(document, allocator, layer->vectorMask);
@@ -433,8 +449,12 @@ bool st_Expand_PSD_Layer(Document* document, Layer* layer, MallocAllocator* allo
 
         st_Extract_ARGB_PSD(layer, maskCanvasData, maskCanvasDataV, (u_int32_t*)destination_buffer, imgdata, document->width, document->height, true);
         ret_value = true;
+        // allocator->Free(maskCanvasData);
+        // allocator->Free(maskCanvasDataV);
+        mem_free(maskCanvasData);
+        mem_free(maskCanvasDataV);        
     }
-    allocator->Free(image8);
+    mem_free(image8);
     mem_free(imgdata);
     return ret_value;
 }
@@ -519,11 +539,14 @@ bool st_Extract_PSD_Layer(Document* document, Layer* layer, MallocAllocator* all
             break;
         }
     }
-    allocator->Free(canvasData[0]);
-    allocator->Free(canvasData[1]);
-    allocator->Free(canvasData[2]);
-    allocator->Free(canvasData[3]);
-
+    // allocator->Free(canvasData[0]);
+    // allocator->Free(canvasData[1]);
+    // allocator->Free(canvasData[2]);
+    // allocator->Free(canvasData[3]);
+    mem_free(canvasData[0]);
+    mem_free(canvasData[1]);
+    mem_free(canvasData[2]);
+    mem_free(canvasData[3]);
     if(channelCount >= 3){
         uint8_t* maskCanvasData = (uint8_t*)layer->layerMask->data;
         uint8_t* maskCanvasDataV = (uint8_t*)layer->vectorMask->data;
@@ -532,7 +555,8 @@ bool st_Extract_PSD_Layer(Document* document, Layer* layer, MallocAllocator* all
         st_Extract_ARGB_PSD(layer, maskCanvasData, maskCanvasDataV, (u_int32_t*)destination_buffer, imgdata, lwidth, lheight, false);
         ret_value = true;
     }
-    allocator->Free(image8);
+    // allocator->Free(image8);
+    mem_free(image8);
     mem_free(imgdata);
     return ret_value;
 }
@@ -564,7 +588,8 @@ bool st_Extract_PSD_Image(Document* document, ImageDataSection* imageData, Mallo
                     ret_value = true;
                 }
             }
-            allocator->Free(image8);
+            // allocator->Free(image8);
+            mem_free(image8);
 		}
 	}
     return ret_value;
@@ -643,8 +668,8 @@ void _st_Handle_Thumbs_PSD(int16_t this_win_handle, boolean file_process){
     MallocAllocator allocator;
     NativeFile file(&allocator);
     if (!file.OpenRead(st_Char_to_WChar(this_win->wi_data->path))) {
-            sprintf(alert_message, "Can't load this PSD file");
-            st_form_alert(FORM_STOP, alert_message);
+        sprintf(alert_message, "Can't load this PSD file");
+        st_form_alert(FORM_STOP, alert_message);
     }
     Document* document = CreateDocument(&file, &allocator);
     if (!document) {
@@ -690,84 +715,115 @@ void _st_Handle_Thumbs_PSD(int16_t this_win_handle, boolean file_process){
 
         this_win->wi_data->thumbnail_slave = true;
         this_win->wi_thumb = st_Thumb_Alloc(this_win->wi_data->img.img_total, this_win_handle, wanted_padx, wanted_pady, wanted_width, wanted_height);
+ 
+        this_win->wi_thumb->thumbs_list_array = (struct_st_thumbs_list*)mem_alloc(sizeof(struct_st_thumbs_list));
+        struct_st_thumbs_list* thumb_ptr = this_win->wi_thumb->thumbs_list_array;
+        struct_st_thumbs_list* prev_thumb_ptr = NULL;
 
         this_win->wi_thumb->thumbs_open_new_win = true;
 
+/* Needed ?*/
         this_win->wi_thumb->thumbs_area_w = 0;
         this_win->wi_thumb->thumbs_area_h = this_win->wi_thumb->pady;
+/**/
         this_win->wi_thumb->thumbs_nb = this_win->wi_data->img.img_total;
 
-        for (int16_t i = 0; i < this_win->wi_thumb->thumbs_nb; i++) {
-            this_win->wi_thumb->thumbs_list_array[i].thumb_id = i;
-            this_win->wi_thumb->thumbs_list_array[i].thumb_index = i + 1;
-            this_win->wi_thumb->thumbs_list_array[i].thumb_visible = false;
-            this_win->wi_thumb->thumbs_list_array[i].thumb_selectable = false;
-            char progess_bar_indication[96];
-            int16_t bar_pos = mul_100_fast(i) / this_win->wi_thumb->thumbs_nb;
-            sprintf(progess_bar_indication, "Thumbnail id.%d/%d - Image id.%d", i, this_win->wi_thumb->thumbs_nb, this_win->wi_thumb->thumbs_list_array[i].thumb_id);
-            st_Progress_Bar_Signal(this_win->wi_progress_bar, bar_pos, (int8_t*)progess_bar_indication);
+        u_int16_t index = 0;
 
+        for (int16_t i = 0; i < this_win->wi_thumb->thumbs_nb; i++) {
+            char progess_bar_indication[96], thumb_txt[38] = {'\0'};
+            bool thumb_valid = false;
             u_int16_t lwidth, lheight;
             u_int8_t* temp_buffer;
             MFDB* temp_mfdb;
             Layer* layer;
+            int16_t bar_pos = mul_100_fast(i) / this_win->wi_thumb->thumbs_nb;
+
+            sprintf(progess_bar_indication, "Thumbnail %d/%d", i, this_win->wi_thumb->thumbs_nb);
+            st_Progress_Bar_Signal(this_win->wi_progress_bar, bar_pos, (int8_t*)progess_bar_indication);
             if(layerMaskSection) {
                 layer = &layerMaskSection->layers[i];
                 ExtractLayer(document, &file, &allocator, layer);
                 bool layer_visible = layer->isVisible;
-                if(layer_visible){
+                if(layer_visible){                
                     const int left = layer->left > 0 ? layer->left : 0;
                     const int top = layer->top > 0 ? layer->top : 0;
                     const int right = layer->right < document->width ? layer->right : document->width;
                     const int bottom = layer->bottom < document->height ? layer->bottom : document->height;    
                     lwidth = right - left;
                     lheight = bottom - top;
-                    if(lwidth == 0 || lheight == 0){
-                        temp_buffer = st_ScreenBuffer_Alloc_bpp(final_width, final_height, 32);
-                        temp_mfdb = mfdb_alloc_bpp((int8_t*)temp_buffer, final_width, final_height, 32);
-                        st_MFDB_Fill_bpp(temp_mfdb, 0x00FFFFFF, 32);                        
-                    }else{
+                    if(lwidth > 0 && lheight > 0){
                         temp_buffer = st_ScreenBuffer_Alloc_bpp(lwidth, lheight, 32);
                         temp_mfdb = mfdb_alloc_bpp((int8_t*)temp_buffer, lwidth, lheight, 32);
                         st_MFDB_Fill_bpp(temp_mfdb, 0x00FFFFFF, 32);
-                        if(st_Extract_PSD_Layer(document, layer, &allocator, temp_buffer)){
-                            this_win->wi_thumb->thumbs_list_array[i].thumb_selectable = true;
-                            this_win->wi_thumb->thumbs_list_array[i].thumb_visible = true;
-                        } else {
-                            this_win->wi_thumb->thumbs_list_array[i].thumb_visible = false;
-                            this_win->wi_thumb->thumbs_list_array[i].thumb_selectable = false;
+                        if(!st_Extract_PSD_Layer(document, layer, &allocator, temp_buffer)){
+                            mfdb_free(temp_mfdb);
+                        }else{
+                            thumb_valid = true;
                         }
                     }
-
                 }
-            }else{
-                temp_buffer = st_ScreenBuffer_Alloc_bpp(final_width, final_height, 32);
-                temp_mfdb = mfdb_alloc_bpp((int8_t*)temp_buffer, final_width, final_height, 32);
-                st_MFDB_Fill_bpp(temp_mfdb, 0x00FFFFFF, 32);              
             }
 
-            u_int16_t new_width = wanted_width;
-            u_int16_t new_height = wanted_height;
+            if(!thumb_valid){
+                continue;
+            }
 
-            u_int8_t* destination_buffer = st_ScreenBuffer_Alloc_bpp(new_width, new_height, 32);
-            MFDB* thumb_original_mfdb = mfdb_alloc_bpp( (int8_t*)destination_buffer, new_width, new_height, 32);
+            if(thumb_ptr == NULL){
+                thumb_ptr = (struct_st_thumbs_list*)mem_alloc(sizeof(struct_st_thumbs_list));
+            } 
+            thumb_ptr->thumb_id = i;
+            thumb_ptr->thumb_index = i + 1;
+            thumb_ptr->thumb_selectable = TRUE;
+            thumb_ptr->thumb_visible = TRUE;
+            thumb_ptr->next = NULL;
+            thumb_ptr->prev = prev_thumb_ptr;
+            if(thumb_ptr->prev != NULL){
+                thumb_ptr->prev->next = thumb_ptr;
+            }
 
-            st_Rescale_ARGB(temp_mfdb, thumb_original_mfdb, new_width, new_height);
+            u_int8_t* destination_buffer = st_ScreenBuffer_Alloc_bpp(wanted_width, wanted_height, 32);
+            MFDB* thumb_original_mfdb = mfdb_alloc_bpp( (int8_t*)destination_buffer, wanted_width, wanted_height, 32);
 
-            char thumb_txt[38] = {'\0'};
-            sprintf(thumb_txt,"%s", &layer->name );
-            print_ft_simple(2, thumb_original_mfdb->fd_h - 2, thumb_original_mfdb, (char*)TTF_DEFAULT_PATH, 14, thumb_txt);
+            st_Rescale_ARGB(temp_mfdb, thumb_original_mfdb, wanted_width, wanted_height);
+
+            // if(!thumb_ptr->thumb_selectable){
+            //     sprintf(thumb_txt,"Not Available" );
+            //     print_ft_simple(((thumb_original_mfdb->fd_w) >> 1 ) - 40, ((thumb_original_mfdb->fd_h) >> 1 ), thumb_original_mfdb, (char*)TTF_DEFAULT_PATH, 14, thumb_txt);
+            // }
+            
+            // if(strlen((const char*)&layer->name) > 1){
+            //     sprintf(thumb_txt,"%s", &layer->name );
+            //     print_ft_simple(2, thumb_original_mfdb->fd_h - 2, thumb_original_mfdb, (char*)TTF_DEFAULT_PATH, 14, thumb_txt);
+            // }
 
             if(screen_workstation_bits_per_pixel != 32){
-                this_win->wi_thumb->thumbs_list_array[i].thumb_mfdb = this_win->render_win(thumb_original_mfdb);
+                thumb_ptr->thumb_mfdb = this_win->render_win(thumb_original_mfdb);
                 mfdb_free(thumb_original_mfdb);
             } else {
-                this_win->wi_thumb->thumbs_list_array[i].thumb_mfdb = thumb_original_mfdb;
+                thumb_ptr->thumb_mfdb = thumb_original_mfdb;
             }
             
-            this_win->wi_thumb->thumbs_area_w = MAX( (this_win->wi_thumb->padx << 1) + new_width, this_win->wi_thumb->thumbs_area_w);
-            this_win->wi_thumb->thumbs_area_h += new_height + this_win->wi_thumb->pady;
-            this_win->wi_thumb->thumbs_list_array[i].thumb_selected = FALSE;
+            this_win->wi_thumb->thumbs_area_w = MAX( (this_win->wi_thumb->padx << 1) + wanted_width, this_win->wi_thumb->thumbs_area_w);
+            this_win->wi_thumb->thumbs_area_h += wanted_height + this_win->wi_thumb->pady;
+            thumb_ptr->thumb_selected = FALSE;
+
+printf("\n###\tthumb_ptr->thumb_id\t%d\n",thumb_ptr->thumb_id);
+printf("###\tthumb_ptr->thumb_index\t%d\n",thumb_ptr->thumb_index);
+if(i != 0){
+printf("\n###\tthumb_ptr->prev->thumb_id\t%d\n",thumb_ptr->prev->thumb_id);
+printf("###\tthumb_ptr->prev->thumb_index\t%d\n",thumb_ptr->prev->thumb_index);
+}
+
+printf("###\tthumb_ptr->thumb_id\t%d\n",thumb_ptr->thumb_id);
+printf("###\tthumb_ptr->thumb_index\t%d\n",thumb_ptr->thumb_index);
+printf("###\tthumb_ptr->thumb_selectable\t%d\n",thumb_ptr->thumb_selectable);
+printf("###\tthumb_ptr->thumb_visible\t%d\n",thumb_ptr->thumb_visible);
+printf("###\tthumb_ptr->thumb_mfdb->fd_w\t%d\n",thumb_ptr->thumb_mfdb->fd_w);
+printf("###\tthumb_ptr->thumb_mfdb->fd_h\t%d\n",thumb_ptr->thumb_mfdb->fd_h);
+
+            prev_thumb_ptr = thumb_ptr;
+            thumb_ptr = NULL;    
             mfdb_free(temp_mfdb);
         }
         this_win->wi_thumb->thumbs_area_h += this_win->wi_thumb->pady;
@@ -795,14 +851,16 @@ void _st_Handle_Thumbs_PSD_Generic(int16_t this_win_handle, boolean file_process
     MallocAllocator allocator;
     NativeFile file(&allocator);
     if (!file.OpenRead(st_Char_to_WChar(this_win->wi_data->path))) {
-            sprintf(alert_message, "Can't load this PSD file");
-            st_form_alert(FORM_STOP, alert_message);
+        sprintf(alert_message, "Can't load this PSD file");
+        st_form_alert(FORM_STOP, alert_message);
+        return;
     }
     Document* document = CreateDocument(&file, &allocator);
     if (!document) {
         sprintf(alert_message, "Can't load this PSD file");
         st_form_alert(FORM_STOP, alert_message);        
         file.Close();
+        return;
     }
 
     LayerMaskSection* layerMaskSection = ParseLayerMaskSection(document, &file, &allocator);
@@ -817,14 +875,15 @@ void _st_Handle_Thumbs_PSD_Generic(int16_t this_win_handle, boolean file_process
             DestroyLayerMaskSection(layerMaskSection, &allocator);
             DestroyDocument(document, &allocator);
             file.Close();                 
-            return;
+            goto end;
         }
     }else{
-        return;
+        goto end;
     }
     if(this_win->wi_data->img.img_total > 1){
         st_Thumb_List_Generic(this_win, "PSD Building layers index", "Layer", 80, 20, 4, 4, TRUE);
     }
+end:
     DestroyLayerMaskSection(layerMaskSection, &allocator);
     DestroyDocument(document, &allocator);
     file.Close();    

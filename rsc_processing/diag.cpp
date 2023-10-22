@@ -771,7 +771,7 @@ void st_Form_Events_Change_Resolution(int16_t this_win_handle) {
         this_win_master->wi_data->fx_requested = TRUE;
         this_win_master->wi_data->resized = TRUE;
 		this_win_master->refresh_win(this_win_master->wi_handle);
-		send_message(this_win_master->wi_handle, WM_REDRAW);
+		send_message(this_win_master->wi_handle, WM_SIZED);
         break;
     default:
         break;
@@ -797,14 +797,10 @@ void st_Form_Init_Change_Resolution(int16_t this_win_form_handle){
     char* obj_gui_ftext_new_width = tree[DiagResize_FTEXTNewW].ob_spec.tedinfo->te_ptext;
     char* obj_gui_ftext_new_height = tree[DiagResize_FTEXTNewH].ob_spec.tedinfo->te_ptext;
     
-    // int16_t window_width = this_win_master->total_length_w;
-    // int16_t window_height = this_win_master->total_length_h;
-    int16_t window_width = wdesk;
-    int16_t window_height = hdesk;
+    int16_t window_width = wrez;
+    int16_t window_height = hrez;
     int16_t original_width = this_win_master->total_length_w;
-    int16_t original_height = this_win_master->total_length_h;    
-    // int16_t original_width = this_win_master->wi_data->img.original_width;
-    // int16_t original_height = this_win_master->wi_data->img.original_height;
+    int16_t original_height = this_win_master->total_length_h;
 
 	sprintf(&obj_gui_ftext_curr_width[ strlen(obj_gui_ftext_curr_width) - (original_width < 1000 ? 3 : 4) ],"%d", original_width);
 	replace_char(obj_gui_ftext_curr_width, str1[3], str1[4]);

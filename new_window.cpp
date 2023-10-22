@@ -92,6 +92,7 @@ bool new_win_img(const char *new_file){
 					st_Init_PNG(&win_struct_array[i]);
 				} else if (check_ext(file_extension, "PSD")){
 					st_Init_PSD(&win_struct_array[i]);
+					// st_Check_Thumbs_Chain(win_struct_array[i].wi_thumb->thumbs_list_array);
 				} else if (check_ext(file_extension, "JPG") || check_ext(file_extension, "JPEG") || check_ext(file_extension, "JPE")){
 					st_Init_JPEG(&win_struct_array[i]);
 				} else if (check_ext(file_extension, "TIF") || check_ext(file_extension, "TIFF")){
@@ -164,11 +165,14 @@ bool new_win_img(const char *new_file){
                 if(win_struct_array[i].rendering_time == FALSE){
                     start_time = st_Supexec(get200hz);
                 }
+				
 				if(win_struct_array[i].wi_data->video_media){
 					int th_idx = st_Open_Thread(video_function, (void*)&win_struct_array[i].wi_handle);
 					win_struct_array[i].wi_data->wi_pth = &threads[th_idx];
 				}else{
+					// st_Check_Thumbs_Chain(win_struct_array[i].wi_thumb->thumbs_list_array);
 					win_struct_array[i].refresh_win(win_struct_array[i].wi_handle);
+					// st_Check_Thumbs_Chain(win_struct_array[i].wi_thumb->thumbs_list_array);
 				}
                 if(win_struct_array[i].rendering_time == FALSE){
                     end_time = st_Supexec(get200hz);
@@ -185,6 +189,7 @@ bool new_win_img(const char *new_file){
 					st_Init_WinImage_Control_Bar((void*)&win_struct_array[i]);
 				}
 				if(win_struct_array[i].wi_data->thumbnail_slave){
+					
 					char* file = basename(win_struct_array[i].wi_data->path);
 					char thumbs_title[strlen(file) + 16] = {0};
 					sprintf(thumbs_title, "%s (%d elements)", file, win_struct_array[i].wi_data->img.img_total);
@@ -313,7 +318,7 @@ int16_t new_win_thumbnails(const char* win_title, int16_t slave_win_handle){
 				win_struct_array[i].wi_thumb->master_win_handle = 0;
 				
 				win_struct_array[i].refresh_win = st_Thumb_Refresh;
-
+				
 				win_struct_array[i].wi_to_display_mfdb = (MFDB*)st_Thumb_MFDB_Update((void*)dest_win->wi_thumb);
 
 				win_struct_array[i].total_length_w = dest_win->wi_thumb->thumbs_area_w;
@@ -324,7 +329,9 @@ int16_t new_win_thumbnails(const char* win_title, int16_t slave_win_handle){
 				win_struct_array[i].wi_thumb->master_win_handle = win_struct_array[i].wi_handle;
 				win_struct_array[i].wi_thumb->open_win_func = &new_win_img;
 
+				
 				win_struct_array[i].refresh_win(win_struct_array[i].wi_handle);
+
 			}
 			return win_struct_array[i].wi_handle;
 		}

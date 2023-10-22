@@ -205,6 +205,10 @@ void _st_Handle_Thumbs_Heif(int16_t this_win_handle, boolean file_process){
 
         this_win->wi_thumb = st_Thumb_Alloc(this_win->wi_data->img.img_total, this_win_handle, 4, 8, 110, 80);
 
+        this_win->wi_thumb->thumbs_list_array = (struct_st_thumbs_list*)mem_alloc(sizeof(struct_st_thumbs_list));
+        struct_st_thumbs_list* thumb_ptr = this_win->wi_thumb->thumbs_list_array;
+        struct_st_thumbs_list* prev_thumb_ptr = NULL;
+
         this_win->wi_thumb->thumbs_area_w = 0;
         this_win->wi_thumb->thumbs_area_h = this_win->wi_thumb->pady;
 
@@ -213,17 +217,30 @@ void _st_Handle_Thumbs_Heif(int16_t this_win_handle, boolean file_process){
             int16_t n_thumbnails = heif_image_handle_get_number_of_thumbnails(handle );
             int16_t n_items = heif_image_handle_get_list_of_thumbnail_IDs(handle, thumb_ids, 1 );
 
+            if(thumb_ptr == NULL){
+                thumb_ptr = (struct_st_thumbs_list*)mem_alloc(sizeof(struct_st_thumbs_list));
+            }
+            thumb_ptr->thumb_id = i;
+            thumb_ptr->thumb_index = i + 1;
+            thumb_ptr->thumb_selectable = TRUE;
+            thumb_ptr->thumb_visible = TRUE;
+            thumb_ptr->next = NULL;
+            thumb_ptr->prev = prev_thumb_ptr;
+            if(thumb_ptr->prev != NULL){
+                thumb_ptr->prev->next = thumb_ptr;
+            }
+
             if (n_thumbnails > 1){
                 heif_image_handle_get_thumbnail(handle, thumb_ids[0], &thumbnail_handle);
-                this_win->wi_thumb->thumbs_list_array[i].thumb_id = thumb_ids[0];
+                thumb_ptr->thumb_id = thumb_ids[0];
             } else {
                 heif_context_get_image_handle(ctx, id_array[i], &thumbnail_handle);
-                this_win->wi_thumb->thumbs_list_array[i].thumb_id = id_array[i];
+                thumb_ptr->thumb_id = id_array[i];
             }
-            this_win->wi_thumb->thumbs_list_array[i].thumb_index = i + 1;
+            thumb_ptr->thumb_index = i + 1;
 
             char progess_bar_indication[96];
-            sprintf(progess_bar_indication, "Thumbnail #%d/%d - Image id.%d", i+1, this_win->wi_thumb->thumbs_nb, this_win->wi_thumb->thumbs_list_array[i].thumb_id);
+            sprintf(progess_bar_indication, "Thumbnail #%d/%d - Image id.%d", i+1, this_win->wi_thumb->thumbs_nb, thumb_ptr->thumb_id);
             st_Progress_Bar_Signal(this_win->wi_progress_bar, (mul_100_fast(i) / this_win->wi_thumb->thumbs_nb), (int8_t*)progess_bar_indication);
 
             heif_decode_image(thumbnail_handle, &img, heif_colorspace_RGB, heif_chroma_interleaved_RGBA, NULL);
@@ -259,19 +276,20 @@ void _st_Handle_Thumbs_Heif(int16_t this_win_handle, boolean file_process){
             MFDB* thumb_original_mfdb = mfdb_alloc_bpp( (int8_t*)destination_buffer, new_width, new_height, nb_components_32bits << 3);
 
             if(screen_workstation_bits_per_pixel != 32){
-                this_win->wi_thumb->thumbs_list_array[i].thumb_mfdb = this_win->render_win(thumb_original_mfdb);
+                thumb_ptr->thumb_mfdb = this_win->render_win(thumb_original_mfdb);
                 mfdb_free(thumb_original_mfdb);
             } else {
-                this_win->wi_thumb->thumbs_list_array[i].thumb_mfdb = thumb_original_mfdb;
+                thumb_ptr->thumb_mfdb = thumb_original_mfdb;
             }
 
-            this_win->wi_thumb->thumbs_list_array[i].thumb_mfdb_stride = MFDB_STRIDE(new_width) - new_width;  
-            this_win->wi_thumb->thumbs_list_array[i].thumb_visible = true;
-            this_win->wi_thumb->thumbs_list_array[i].thumb_selectable = true;
+            thumb_ptr->thumb_visible = true;
+            thumb_ptr->thumb_selectable = true;
             this_win->wi_thumb->thumbs_area_w = MAX( (this_win->wi_thumb->padx << 1) + new_width, this_win->wi_thumb->thumbs_area_w);
             this_win->wi_thumb->thumbs_area_h += new_height + this_win->wi_thumb->pady;
-            this_win->wi_thumb->thumbs_list_array[i].thumb_selected = FALSE;
+            thumb_ptr->thumb_selected = FALSE;
 
+            prev_thumb_ptr = thumb_ptr;
+            thumb_ptr = NULL;
             heif_image_release(img);
             heif_image_handle_release(thumbnail_handle);
         }

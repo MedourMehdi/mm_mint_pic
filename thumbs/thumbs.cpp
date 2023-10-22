@@ -12,7 +12,7 @@
 
 void st_Thumb_Win_PXY_Update(struct_st_thumbs_list *thumbs_list_array, int16_t new_pos_x, int16_t new_pos_y);
 MFDB* st_Init_Outline_MFDB(struct_thumbs *this_win_thumb, u_int32_t background_color);
-MFDB* st_Outline_MFDB(struct_thumbs *this_win_thumb, u_int16_t thumb_idx);
+MFDB* st_Outline_MFDB(struct_thumbs *this_win_thumb, u_int32_t thumb_idx);
 
 void st_Thumb_Win_PXY_Update(struct_st_thumbs_list *thumbs_list_array, int16_t new_pos_x, int16_t new_pos_y){
     int16_t *x1, *y1, *x2, *y2;
@@ -31,20 +31,24 @@ void st_Thumb_Win_PXY_Update(struct_st_thumbs_list *thumbs_list_array, int16_t n
 
 void st_Thumb_Desk_PXY_Update(struct_thumbs *this_win_thumb, int16_t* win_pxy){
     int16_t x1, y1, x2, y2;
-    struct_st_thumbs_list *thumbs_list_array = this_win_thumb->thumbs_list_array;
+    struct_st_thumbs_list *thumb_ptr = this_win_thumb->thumbs_list_array;
 
-    for(int16_t i = 0; i < this_win_thumb->thumbs_nb; i++){
 
-        x1 = thumbs_list_array[i].thumb_win_pxy[0];
-        x2 = thumbs_list_array[i].thumb_win_pxy[2];
-        y1 = thumbs_list_array[i].thumb_win_pxy[1];
-        y2 = thumbs_list_array[i].thumb_win_pxy[3];
+    while (thumb_ptr != NULL){
 
-        thumbs_list_array[i].thumb_desk_pxy[0] = win_pxy[0] + x1;
-        thumbs_list_array[i].thumb_desk_pxy[2] = win_pxy[0] + x2;
-        thumbs_list_array[i].thumb_desk_pxy[1] = win_pxy[1] + y1;
-        thumbs_list_array[i].thumb_desk_pxy[3] = win_pxy[1] + y2;
+        struct_st_thumbs_list *thumb_ptr_next = thumb_ptr->next;
 
+        x1 = thumb_ptr->thumb_win_pxy[0];
+        x2 = thumb_ptr->thumb_win_pxy[2];
+        y1 = thumb_ptr->thumb_win_pxy[1];
+        y2 = thumb_ptr->thumb_win_pxy[3];
+
+        thumb_ptr->thumb_desk_pxy[0] = win_pxy[0] + x1;
+        thumb_ptr->thumb_desk_pxy[2] = win_pxy[0] + x2;
+        thumb_ptr->thumb_desk_pxy[1] = win_pxy[1] + y1;
+        thumb_ptr->thumb_desk_pxy[3] = win_pxy[1] + y2;
+
+        thumb_ptr = thumb_ptr_next;
     }
 }
 
@@ -72,7 +76,7 @@ struct_thumbs* st_Thumb_Alloc(int16_t thumbs_nb, int16_t slave_win_handle, int16
     this_win_thumb->thumbs_cols = 1;
     this_win_thumb->thumbs_rows = thumbs_nb;
 
-    this_win_thumb->thumbs_list_array = (struct_st_thumbs_list*)mem_alloc((this_win_thumb->thumbs_nb) * sizeof(struct_st_thumbs_list));
+    // this_win_thumb->thumbs_list_array = (struct_st_thumbs_list*)mem_alloc((this_win_thumb->thumbs_nb ) * sizeof(struct_st_thumbs_list));
 
     this_win_thumb->thumbs_area_w = this_win_thumb->thumb_w_Item + this_win_thumb->padx;
     this_win_thumb->thumbs_area_h = (this_win_thumb->thumb_w_Item * this_win_thumb->thumbs_nb) + this_win_thumb->pady;
@@ -97,14 +101,19 @@ void* st_Thumb_Free(void* p_param){
 
     struct_thumbs *this_win_thumb = (struct_thumbs *)p_param;
 
-    int16_t i = 0;
+    struct_st_thumbs_list* thumb_ptr = this_win_thumb->thumbs_list_array;
 
-    while (i < this_win_thumb->thumbs_nb)
+    while (thumb_ptr != NULL)
     {
-        mfdb_free(this_win_thumb->thumbs_list_array[i].thumb_mfdb);
-        i++;
+        struct_st_thumbs_list* thumb_ptr_next = thumb_ptr->next;
+
+        mfdb_free(thumb_ptr->thumb_mfdb);
+        mem_free(thumb_ptr);
+
+        thumb_ptr = thumb_ptr_next;
+
     }
-    mem_free(this_win_thumb->thumbs_list_array);
+    
     mfdb_free(this_win_thumb->wi_original_thumbs_mfdb);
     mfdb_free(this_win_thumb->thumb_background_mfdb);
     mfdb_free(this_win_thumb->thumb_selected_mfdb);
@@ -154,9 +163,14 @@ MFDB* st_Init_Outline_MFDB(struct_thumbs *this_win_thumb, u_int32_t background_c
     return mfdb_bpp;
 }
 
-MFDB* st_Outline_MFDB(struct_thumbs *this_win_thumb, u_int16_t thumb_idx){
-
-    MFDB* this_mfdb = this_win_thumb->thumbs_list_array[thumb_idx].thumb_mfdb;
+MFDB* st_Outline_MFDB(struct_thumbs *this_win_thumb, u_int32_t thumb_idx){
+    struct_st_thumbs_list *thumb_ptr = this_win_thumb->thumbs_list_array;
+    // printf("Before st_Outline_MFDB while loop\n");
+    while (thumb_ptr->thumb_id != thumb_idx){
+        thumb_ptr = thumb_ptr->next;
+    }
+    // printf("After st_Outline_MFDB while loop\n");
+    MFDB* this_mfdb = thumb_ptr->thumb_mfdb;
 
     u_int16_t width =  this_mfdb->fd_w + this_win_thumb->padx; 
     u_int16_t height = this_mfdb->fd_h + this_win_thumb->pady;    
@@ -164,7 +178,7 @@ MFDB* st_Outline_MFDB(struct_thumbs *this_win_thumb, u_int16_t thumb_idx){
 
     MFDB *dst_mfdb = (MFDB*)mem_alloc(sizeof(MFDB));
     MFDB *src_mfdb;
-    if(this_win_thumb->thumbs_list_array[thumb_idx].thumb_selected == true){
+    if(thumb_ptr->thumb_selected == TRUE){
         src_mfdb = this_win_thumb->thumb_selected_mfdb;
     }else{
         src_mfdb = this_win_thumb->thumb_background_mfdb;
@@ -195,23 +209,24 @@ MFDB* st_Outline_MFDB(struct_thumbs *this_win_thumb, u_int16_t thumb_idx){
 }
 
 void st_Handle_Click_Thumbnail(struct_window *this_win, int16_t mouse_x, int16_t mouse_y, int16_t mouse_button){
-	
+	printf("st_Handle_Click_Thumbnail\n");
     struct_thumbs* this_thumb_struct = this_win->wi_thumb;
-    int16_t i, j;
-
-    for( i = 0; i < this_thumb_struct->thumbs_nb; i++ ){
-        if( 
-            (   mouse_x + this_win->current_pos_x > this_thumb_struct->thumbs_list_array[i].thumb_desk_pxy[0] ) 
-            && ( mouse_x + this_win->current_pos_x < this_thumb_struct->thumbs_list_array[i].thumb_desk_pxy[2] )
-            && ( mouse_y + this_win->current_pos_y > this_thumb_struct->thumbs_list_array[i].thumb_desk_pxy[1] ) 
-            && ( mouse_y + this_win->current_pos_y < this_thumb_struct->thumbs_list_array[i].thumb_desk_pxy[3] )
+    struct_st_thumbs_list *thumb_ptr = this_win->wi_thumb->thumbs_list_array;
+    
+    while (thumb_ptr != NULL)
+    {
+        if(
+            (   mouse_x + this_win->current_pos_x > thumb_ptr->thumb_desk_pxy[0] ) 
+            && ( mouse_x + this_win->current_pos_x < thumb_ptr->thumb_desk_pxy[2] )
+            && ( mouse_y + this_win->current_pos_y > thumb_ptr->thumb_desk_pxy[1] ) 
+            && ( mouse_y + this_win->current_pos_y < thumb_ptr->thumb_desk_pxy[3] )
         ) {
-            if(this_thumb_struct->thumbs_list_array[i].thumb_selectable){
+            if(thumb_ptr->thumb_selectable == TRUE){
                 struct_window* dest_win;
-                this_win->wi_data->img.img_id = this_thumb_struct->thumbs_list_array[i].thumb_id;
-                this_win->wi_data->img.img_index = this_thumb_struct->thumbs_list_array[i].thumb_index;
-                this_thumb_struct->thumbs_selected_nb = this_thumb_struct->thumbs_list_array[i].thumb_index;
-
+                printf("selectable thumb id %d idx %d\n", thumb_ptr->thumb_id, thumb_ptr->thumb_index);
+                this_win->wi_data->img.img_id = thumb_ptr->thumb_id;
+                this_win->wi_data->img.img_index = thumb_ptr->thumb_index;
+                this_thumb_struct->thumbs_selected_nb = thumb_ptr->thumb_index;
                 if(this_thumb_struct->thumbs_open_new_win){
                     this_win->wi_thumb->open_win_func(this_win->wi_data->path);
                 } else {
@@ -229,7 +244,7 @@ void st_Handle_Click_Thumbnail(struct_window *this_win, int16_t mouse_x, int16_t
                     this_win->refresh_win(this_win->wi_handle);
                     st_End_Window_Process(this_win);
                     /* Enable new selected thumbs */
-                    dest_win->wi_data->img.img_id = this_thumb_struct->thumbs_list_array[i].thumb_id;
+                    dest_win->wi_data->img.img_id = thumb_ptr->thumb_id;
                     dest_win->wi_data->stop_original_data_load = FALSE;
                     dest_win->wi_data->fx_on = FALSE;
                     dest_win->wi_data->remap_displayed_mfdb = TRUE;
@@ -245,7 +260,9 @@ void st_Handle_Click_Thumbnail(struct_window *this_win, int16_t mouse_x, int16_t
                 st_End_Window_Process(this_win);
                 wind_set(this_win->wi_handle,WF_TOP,0,0,0,0);
             }
+            break;
         }
+        thumb_ptr = thumb_ptr->next;
     }
     return;
 }
@@ -280,9 +297,17 @@ void* st_Thumb_MFDB_Update(void *p_param){
                 u_int8_t* destination_buffer = st_ScreenBuffer_Alloc_bpp((nb_total_cols * this_win_thumb->thumb_w_Item) + (this_win_thumb->padx << 1), (nb_total_rows * this_win_thumb->thumb_h_Item) + (this_win_thumb->pady << 1), screen_workstation_bits_per_pixel);
 
                 if(this_win_thumb->wi_original_thumbs_mfdb != NULL){
-                    mfdb_free(this_win_thumb->wi_original_thumbs_mfdb);
+                    mem_free(this_win_thumb->wi_original_thumbs_mfdb->fd_addr);
+                    mfdb_update_bpp(this_win_thumb->wi_original_thumbs_mfdb, (int8_t*)destination_buffer, (nb_total_cols * this_win_thumb->thumb_w_Item) + (this_win_thumb->padx << 1), (nb_total_rows * this_win_thumb->thumb_h_Item) + (this_win_thumb->pady << 1), screen_workstation_bits_per_pixel);
+                }else{
+                    this_win_thumb->wi_original_thumbs_mfdb = mfdb_alloc_bpp((int8_t*)destination_buffer, (nb_total_cols * this_win_thumb->thumb_w_Item) + (this_win_thumb->padx << 1), (nb_total_rows * this_win_thumb->thumb_h_Item) + (this_win_thumb->pady << 1), screen_workstation_bits_per_pixel);
                 }
-                this_win_thumb->wi_original_thumbs_mfdb = mfdb_alloc_bpp((int8_t*)destination_buffer, (nb_total_cols * this_win_thumb->thumb_w_Item) + (this_win_thumb->padx << 1), (nb_total_rows * this_win_thumb->thumb_h_Item) + (this_win_thumb->pady << 1), screen_workstation_bits_per_pixel);
+                
+                // if(this_win_thumb->wi_original_thumbs_mfdb != NULL){
+                //     mfdb_free(this_win_thumb->wi_original_thumbs_mfdb);
+                // }
+                // this_win_thumb->wi_original_thumbs_mfdb = mfdb_alloc_bpp((int8_t*)destination_buffer, (nb_total_cols * this_win_thumb->thumb_w_Item) + (this_win_thumb->padx << 1), (nb_total_rows * this_win_thumb->thumb_h_Item) + (this_win_thumb->pady << 1), screen_workstation_bits_per_pixel);
+
                 if(screen_workstation_bits_per_pixel == 32){
                     st_MFDB_Fill(this_win_thumb->wi_original_thumbs_mfdb, 0xCCCCCCCC);
                 } 
@@ -295,47 +320,48 @@ void* st_Thumb_MFDB_Update(void *p_param){
             }
 
             int16_t xy[8];
-
+            struct_st_thumbs_list* thumb_ptr = this_win_thumb->thumbs_list_array;
             xy[0] = 0; xy[1] = 0;
-            int16_t i = 0;
-            while(i < this_win_thumb->thumbs_nb ){
+            
+            while( thumb_ptr != NULL ){
                 for( int16_t j = 0; j < nb_total_rows; j++) {
                     for ( int16_t k = 0; k < nb_total_cols; k++) {
-                        if( i == this_win_thumb->thumbs_nb ){
+                        if(thumb_ptr == NULL){
                             break;
                         }
-                        if(!this_win_thumb->thumbs_list_array[i].thumb_visible){
-                            i++;
+                        struct_st_thumbs_list *thumb_ptr_next = thumb_ptr->next;
+                        if(!thumb_ptr->thumb_visible){
+                            thumb_ptr = thumb_ptr->next;
                             continue;
                         }
-                        if(this_win_thumb->thumbs_selected_nb > NIL && this_win_thumb->thumbs_selected_nb != this_win_thumb->thumbs_list_array[i].thumb_index){
-                            i++;
+                        if(this_win_thumb->thumbs_selected_nb > NIL && this_win_thumb->thumbs_selected_nb != thumb_ptr->thumb_index){
+                            thumb_ptr = thumb_ptr->next;
                             continue;
                         }
                         if(this_win_thumb->master_win_handle > 0){
-                            if(get_win_thumb_slave_by_image_id(this_win_thumb->master_win_handle, this_win_thumb->thumbs_list_array[i].thumb_id) != NULL){
-                                this_win_thumb->thumbs_list_array[i].thumb_selected = TRUE;
+                            if(get_win_thumb_slave_by_image_id(this_win_thumb->master_win_handle, thumb_ptr->thumb_id) != NULL){
+                                thumb_ptr->thumb_selected = TRUE;
                             }else{
-                                this_win_thumb->thumbs_list_array[i].thumb_selected = FALSE;
+                                thumb_ptr->thumb_selected = FALSE;
                             }
                         }
 
                         int16_t thumb_xy[2];
                         thumb_xy[0] = (this_win_thumb->thumb_w_Item * k) + this_win_thumb->padx;
                         thumb_xy[1] = (this_win_thumb->thumb_h_Item * j) + this_win_thumb->pady;
-                        st_Thumb_Win_PXY_Update(&this_win_thumb->thumbs_list_array[i], thumb_xy[0], thumb_xy[1]);
-                        // printf("i %d - thumbs_list_array->thumb_mfdb->fd_w %d\n", i, this_win_thumb->thumbs_list_array[i].thumb_mfdb->fd_w);
-                        MFDB* thumb_mfdb = st_Outline_MFDB(this_win_thumb, i);
+                        st_Thumb_Win_PXY_Update(thumb_ptr, thumb_xy[0], thumb_xy[1]);
+
+                        MFDB* thumb_mfdb = st_Outline_MFDB(this_win_thumb, thumb_ptr->thumb_id);
+
                         xy[2] = thumb_mfdb->fd_w; 
                         xy[3] = thumb_mfdb->fd_h - 1;
-                        xy[4] = this_win_thumb->thumbs_list_array[i].thumb_win_pxy[0]; 
-                        xy[5] = this_win_thumb->thumbs_list_array[i].thumb_win_pxy[1]; 
-                        xy[6] = this_win_thumb->thumbs_list_array[i].thumb_win_pxy[2] + this_win_thumb->padx; 
-                        xy[7] = this_win_thumb->thumbs_list_array[i].thumb_win_pxy[3] + this_win_thumb->pady; 
-                        // printf("i %d x%d y%d w%d h%d\n",i, xy[4], xy[5], xy[6], xy[7]);
+                        xy[4] = thumb_ptr->thumb_win_pxy[0]; 
+                        xy[5] = thumb_ptr->thumb_win_pxy[1]; 
+                        xy[6] = thumb_ptr->thumb_win_pxy[2] + this_win_thumb->padx; 
+                        xy[7] = thumb_ptr->thumb_win_pxy[3] + this_win_thumb->pady; 
                         vro_cpyfm(st_vdi_handle, S_ONLY, xy, thumb_mfdb, this_win_thumb->wi_original_thumbs_mfdb);
                         mfdb_free(thumb_mfdb);
-                        i++;
+                        thumb_ptr = thumb_ptr_next;
                     }
                 }
             }
@@ -361,14 +387,28 @@ void st_Thumb_Refresh(int16_t win_thumb_handle){
         this_win->wi_thumb->thumbs_area_w = this_win->work_area.g_w;
         this_win->wi_thumb->thumbs_area_h = this_win->work_area.g_h;
         this_win->wi_to_display_mfdb = (MFDB*)st_Thumb_MFDB_Update((void*)this_win->wi_thumb);
-        // this_win->total_length_w = (this_win->wi_thumb->thumb_w_Item * this_win->wi_thumb->thumbs_cols ) + this_win->wi_thumb->padx;
-        // this_win->total_length_h = (this_win->wi_thumb->thumb_h_Item * this_win->wi_thumb->thumbs_rows ) + this_win->wi_thumb->pady;
         this_win->total_length_w = this_win->wi_to_display_mfdb->fd_w;
         this_win->total_length_h = this_win->wi_to_display_mfdb->fd_h;        
         st_Thumb_Desk_PXY_Update(this_win->wi_thumb, this_win->work_pxy);
     st_End_Window_Process(this_win);
     
 	return;
+}
+
+void st_Check_Thumbs_Chain(struct_st_thumbs_list* thumb_ptr){
+    while( thumb_ptr != NULL ){
+        printf("\n###\tthumb_ptr->thumb_id\t%d\n",thumb_ptr->thumb_id);
+        printf("###\tthumb_ptr->thumb_index\t%d\n",thumb_ptr->thumb_index);
+        if(thumb_ptr->thumb_id != 0){
+            printf("\n###\tthumb_ptr->prev->thumb_id\t%d\n",thumb_ptr->prev->thumb_id);
+            printf("###\tthumb_ptr->prev->thumb_index\t%d\n",thumb_ptr->prev->thumb_index);
+        }
+        if(thumb_ptr->next != NULL){
+            printf("\n###\tthumb_ptr->next->thumb_id\t%d\n",thumb_ptr->next->thumb_id);
+            printf("###\tthumb_ptr->next->thumb_index\t%d\n",thumb_ptr->next->thumb_index);
+        }
+        thumb_ptr = thumb_ptr->next;
+    }
 }
 
 void st_Thumb_List_Generic(struct_window *this_win, 
@@ -385,6 +425,10 @@ void st_Thumb_List_Generic(struct_window *this_win,
         this_win->wi_data->thumbnail_slave = true;
         this_win->wi_thumb = st_Thumb_Alloc(this_win->wi_data->img.img_total, this_win->wi_handle, wanted_padx, wanted_pady, wanted_width, wanted_height);
 
+        this_win->wi_thumb->thumbs_list_array = (struct_st_thumbs_list*)mem_alloc(sizeof(struct_st_thumbs_list));
+        struct_st_thumbs_list* thumb_ptr = this_win->wi_thumb->thumbs_list_array;
+        struct_st_thumbs_list* prev_thumb_ptr = NULL;
+
         this_win->wi_thumb->thumbs_open_new_win = open_new_win;
         
         this_win->wi_thumb->thumbs_area_w = 0;
@@ -393,42 +437,51 @@ void st_Thumb_List_Generic(struct_window *this_win,
 
         for (int16_t i = 0; i < this_win->wi_thumb->thumbs_nb; i++) {
 
-            this_win->wi_thumb->thumbs_list_array[i].thumb_id = i;
-            this_win->wi_thumb->thumbs_list_array[i].thumb_index = i + 1;
-            this_win->wi_thumb->thumbs_list_array[i].thumb_visible = true;
-            this_win->wi_thumb->thumbs_list_array[i].thumb_selectable = true;
             char progess_bar_indication[96];
             sprintf(progess_bar_indication, "Indexing media list: %s %d/%d", media_type, i+1, this_win->wi_thumb->thumbs_nb);
             st_Progress_Bar_Signal(this_win->wi_progress_bar, (mul_100_fast(i) / this_win->wi_thumb->thumbs_nb), (int8_t*)progess_bar_indication);
 
             MFDB* thumb_original_mfdb;
-
             u_int8_t* destination_buffer = st_ScreenBuffer_Alloc_bpp(wanted_width, wanted_height, 32);
             thumb_original_mfdb = mfdb_alloc_bpp( (int8_t*)destination_buffer, wanted_width, wanted_height, 32);
+            st_MFDB_Fill(thumb_original_mfdb,0x00FFFFFF);
 
-            st_MFDB_Fill(thumb_original_mfdb,0xFFFFFFFF);
+            if(thumb_ptr == NULL){
+                thumb_ptr = (struct_st_thumbs_list*)mem_alloc(sizeof(struct_st_thumbs_list));
+            }
+            thumb_ptr->thumb_id = i;
+            thumb_ptr->thumb_index = i + 1;
+            thumb_ptr->thumb_selectable = TRUE;
+            thumb_ptr->thumb_visible = TRUE;
+            thumb_ptr->next = NULL;
+            thumb_ptr->prev = prev_thumb_ptr;
+            if(thumb_ptr->prev != NULL){
+                thumb_ptr->prev->next = thumb_ptr;
+            }
 
             char thumb_txt[10] = {'\0'};
-            sprintf(thumb_txt,"%s %d", media_type, this_win->wi_thumb->thumbs_list_array[i].thumb_index );
+            sprintf(thumb_txt,"%s %d", media_type, thumb_ptr->thumb_index );
             print_ft_simple(4, thumb_original_mfdb->fd_h - 4, thumb_original_mfdb, (char*)TTF_DEFAULT_PATH, 14, thumb_txt);
 
             if(screen_workstation_bits_per_pixel != 32){
-                this_win->wi_thumb->thumbs_list_array[i].thumb_mfdb = this_win->render_win(thumb_original_mfdb);
+                thumb_ptr->thumb_mfdb = this_win->render_win(thumb_original_mfdb);
                 mfdb_free(thumb_original_mfdb);
             } else {
-                this_win->wi_thumb->thumbs_list_array[i].thumb_mfdb = thumb_original_mfdb;
+                thumb_ptr->thumb_mfdb = thumb_original_mfdb;
             }
-
-            this_win->wi_thumb->thumbs_list_array[i].thumb_mfdb_stride = MFDB_STRIDE(wanted_width) - wanted_width;  
 
             this_win->wi_thumb->thumbs_area_w = MAX( (this_win->wi_thumb->padx << 1) + wanted_width, this_win->wi_thumb->thumbs_area_w);
             this_win->wi_thumb->thumbs_area_h += wanted_height + this_win->wi_thumb->pady;
-            this_win->wi_thumb->thumbs_list_array[i].thumb_selected = FALSE;
+            thumb_ptr->thumb_selected = FALSE;
+
+            prev_thumb_ptr = thumb_ptr;
+            thumb_ptr = NULL;
+
         }
         st_Progress_Bar_Step_Done(this_win->wi_progress_bar);
         st_Progress_Bar_Finish(this_win->wi_progress_bar);
         this_win->wi_thumb->thumbs_area_h += this_win->wi_thumb->pady;
-        this_win->wi_thumb->thumbs_list_array[0].thumb_selected = TRUE;
+        this_win->wi_thumb->thumbs_list_array->thumb_selected = TRUE;
     } else {
         this_win->wi_data->thumbnail_slave = false;
         this_win->wi_data->img.img_id = PRIMARY_IMAGE_ID;

@@ -150,7 +150,9 @@ bool init_app(){
     v_opnvwk(work_in, &st_vdi_handle, work_out);
 
     hrez = work_out[1] + 1;
+	TRACE(("hrez %d\n",hrez))
 	wrez = work_out[0] + 1;
+	TRACE(("wrez %d\n",wrez))
 
 	vq_extnd(st_vdi_handle,1,work_out);
 	screen_workstation_bits_per_pixel = work_out[4];

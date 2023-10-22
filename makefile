@@ -28,6 +28,8 @@ _LDFLAGS  :=
 
 _LDLIBS   := -lgem -lpng -lz -lyuv -lheif -lwebp -lwebpdemux -ljpeg -ltiff -llzma -lde265 -lx265 -lpthread -lgif $(LIB_XPDF) $(LIB_FREETYPE) -lpsd
 
+# _CFLAGS += -Wl,--stack,10485760
+
 .PHONY: all clean
 
 all: $(BIN)
