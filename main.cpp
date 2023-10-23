@@ -29,6 +29,7 @@ int16_t hrez, wrez;
 
 int16_t screen_workstation_format;
 int16_t screen_workstation_bits_per_pixel;
+bool reverse_bits;
 
 int16_t butdown = FALSE;						/* button state tested for UP/DOWN */
 int16_t r1_flags;
@@ -233,6 +234,8 @@ int16_t st_VDI_Pixel_Format(VdiHdl vdi_handle){
 	*/
 	int16_t screen_vdi_info[272];
 	vq_scrninfo(vdi_handle, screen_vdi_info);
+	reverse_bits = (screen_vdi_info[16] < screen_vdi_info[48]);
+	// printf("Reverse %d\n", reverse_bits);
 	memcpy ( pix_palette, screen_vdi_info + 16, 512 );
 	return screen_vdi_info[0];
 }

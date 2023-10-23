@@ -167,6 +167,9 @@ u_int8_t RGB_to_8bits(u_int8_t *ARGBPixel){
     g = div_255_fast((ARGBPixel[1] << 3) - ARGBPixel[1]);
     b = div_255_fast((ARGBPixel[2] << 1) + ARGBPixel[2]);
     u_int8_t color_8bits = r << 5 | g << 2 | b;
+    if(!reverse_bits){
+        return reverse(color_8bits);
+    }
     return color_8bits;
 }
 
@@ -578,7 +581,7 @@ MFDB* st_MFDB32_To_MFDB8bpp(MFDB* MFDB32){
     int8_t* dst_buffer_8bits = (int8_t*)st_ScreenBuffer_Alloc_bpp(MFDB24->fd_w, MFDB24->fd_h, 8);
     MFDB* MFDB8C = mfdb_alloc_bpp(dst_buffer_8bits, MFDB24->fd_w, MFDB24->fd_h, 8);
     /* screen_workstation_format == 1 => Whole planes */
-    if(screen_workstation_format > 0 && !force_planar_mode){
+    if(screen_workstation_format > 1 && !force_planar_mode){
         st_Progress_Bar_Signal(global_progress_bar, 20, (int8_t*)"Floyd dithering");
         st_Floyd_Dithering(MFDB24, screen_workstation_bits_per_pixel);
         st_Progress_Bar_Signal(global_progress_bar, 50, (int8_t*)"RGB to 8bits conversion");

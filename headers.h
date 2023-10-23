@@ -66,6 +66,7 @@ extern int16_t xdesk, ydesk, wdesk, hdesk, wrez, hrez;
 
 extern int16_t screen_workstation_format;
 extern int16_t screen_workstation_bits_per_pixel;
+extern bool reverse_bits;
 extern int16_t st_vdi_handle;
 extern int16_t msg_buffer[8];
 

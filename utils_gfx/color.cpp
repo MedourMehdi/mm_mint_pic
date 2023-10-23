@@ -62,11 +62,6 @@ inline u_int16_t get_closest_value(u_int8_t* RGB_ptr, int16_t max_colors) {
             break;
         }
 
-        if(computer_type == 1){
-
-        } else {
-
-        }        
         j = distance_rgb(RGB,pal_value);
 
         if( j < better_distance ){
