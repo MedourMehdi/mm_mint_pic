@@ -61,6 +61,8 @@ int16_t vdi_palette[256][3]; /* Set as external in header.h */
 int16_t pix_palette[256];
 int16_t palette_ori[256] = {0};
 
+char current_path[256] = {'\0'};
+
 char *pfile, *va_file;
 
 struct_progress_bar *global_progress_bar;
@@ -212,6 +214,9 @@ bool init_app(){
 	if( (*(u_int32_t *)&((OSHEADER *)get_sysvar(_sysbase))->p_rsv2) == 0x45544f53){
 		emutos_rom = true;
 	}
+
+	st_Get_Current_Dir(current_path);
+
     st_Set_Mouse( FALSE );
 	graf_mouse(ARROW,0L);
 	st_Set_Mouse( TRUE );

@@ -538,14 +538,14 @@ Copyright (c) 2021 Jean Lusetti (vision.support@free.fr)
 
 void st_Get_Current_Dir(char* dst_char){
     if(strlen(dst_char) < 1){
-        int16_t current_drive;
-        char current_path[256] = {'\0'};
+        int16_t this_current_drive;
+        char this_current_path[256] = {'\0'};
 
-        current_drive = Dgetdrv();
-        Dgetpath(current_path,0);
-        dst_char[0] = current_drive + 65;
+        this_current_drive = Dgetdrv();
+        Dgetpath(this_current_path,0);
+        dst_char[0] = this_current_drive + 65;
         dst_char[1] = ':';
-        strcat(dst_char,current_path);
+        strcat(dst_char,this_current_path);
     }
 }
 

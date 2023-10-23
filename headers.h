@@ -102,6 +102,9 @@ extern u_int16_t tos_version;
 extern bool edDi_present;
 extern bool emutos_rom;
 
+/* App path */
+extern char current_path[256];
+
 #define FORM_EXCLAM     1
 #define FORM_QUESTION   2
 #define FORM_STOP       3

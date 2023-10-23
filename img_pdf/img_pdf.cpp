@@ -2,12 +2,12 @@
 #include "../img_handler.h"
 
 #include "../utils/utils.h"
+
 #include "../thumbs/thumbs.h"
 #include "../utils_gfx/pix_convert.h"
 #include "../utils_gfx/ttf.h"
 
 #define PRIMARY_IMAGE_ID    -1
-#define TTF_DEFAULT_PATH "./fonts/arial.ttf"
 
 /* XPDF */
 // typedef struct {
@@ -133,8 +133,7 @@ void _st_Read_PDF(int16_t this_win_handle, boolean file_process, int16_t img_id)
         st_Progress_Bar_Signal(this_win->wi_progress_bar, 35, (int8_t*)"Check for fonts");
         /* Global Parameters */
         char conf_file[256] = {0};
-        char current_dir[256] = {0};
-        st_Get_Current_Dir(conf_file);
+        strcpy(conf_file, current_path);
         strcat(conf_file, "\\conf\\xpdfrc");
         if(st_FileExistsAccess(conf_file)){
             globalParams = new GlobalParams(conf_file);
@@ -145,8 +144,7 @@ void _st_Read_PDF(int16_t this_win_handle, boolean file_process, int16_t img_id)
             }
         }
         st_Progress_Bar_Signal(this_win->wi_progress_bar, 45, (int8_t*)"Setting global parameters");
-        st_Get_Current_Dir(current_dir);
-        globalParams->setupBaseFonts(current_dir);
+        globalParams->setupBaseFonts(current_path);
 
         globalParams->setEnableFreeType((char*)"yes");
         globalParams->setAntialias((char*)"yes");
@@ -423,8 +421,11 @@ void _st_Handle_Thumbs_PDF(int16_t this_win_handle, boolean file_process){
             MFDB* thumb_final_mfdb = thumb_original_mfdb;
 
             char thumb_txt[10] = {'\0'};
+            char font_path[strlen(current_path) + strlen(TTF_DEFAULT_PATH) + 1] = {'\0'};
+            strcpy(font_path, current_path);
+            strcat(font_path, TTF_DEFAULT_PATH);            
             sprintf(thumb_txt,"%d", thumb_ptr->thumb_index );
-            print_ft_simple((thumb_original_mfdb->fd_w >> 1) - 4, thumb_original_mfdb->fd_h - 4, thumb_original_mfdb, (char*)TTF_DEFAULT_PATH, 14, thumb_txt);
+            print_ft_simple((thumb_original_mfdb->fd_w >> 1) - 4, thumb_original_mfdb->fd_h - 4, thumb_original_mfdb, font_path, 14, thumb_txt);
 
             if(screen_workstation_bits_per_pixel != 32){
                 thumb_ptr->thumb_mfdb = this_win->render_win(thumb_final_mfdb);

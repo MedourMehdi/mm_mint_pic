@@ -3,9 +3,7 @@
 #include "../utils/utils.h"
 
 #include "../utils_gfx/ttf.h"
-#ifndef TTF_DEFAULT_PATH
-#define TTF_DEFAULT_PATH "./fonts/arial.ttf"
-#endif
+
 #ifndef PRIMARY_IMAGE_ID
 #define PRIMARY_IMAGE_ID    -1
 #endif
@@ -460,8 +458,11 @@ void st_Thumb_List_Generic(struct_window *this_win,
             }
 
             char thumb_txt[10] = {'\0'};
+            char font_path[strlen(current_path) + strlen(TTF_DEFAULT_PATH) + 1] = {'\0'};
+            strcpy(font_path, current_path);
+            strcat(font_path, TTF_DEFAULT_PATH);            
             sprintf(thumb_txt,"%s %d", media_type, thumb_ptr->thumb_index );
-            print_ft_simple(4, thumb_original_mfdb->fd_h - 4, thumb_original_mfdb, (char*)TTF_DEFAULT_PATH, 14, thumb_txt);
+            print_ft_simple(4, thumb_original_mfdb->fd_h - 4, thumb_original_mfdb, font_path, 14, thumb_txt);
 
             if(screen_workstation_bits_per_pixel != 32){
                 thumb_ptr->thumb_mfdb = this_win->render_win(thumb_original_mfdb);

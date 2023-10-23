@@ -187,6 +187,7 @@ void _st_Read_PNG(int16_t my_win_handle, boolean file_process) {
         }
 
         int16_t width_stride = mfdb_update_bpp(&this_win->wi_original_mfdb, (int8_t *)destination_buffer, width, height, nb_components_32bits << 3);
+        st_MFDB_Fill_bpp(&this_win->wi_original_mfdb, 0x00FFFFFF, 32);
         this_win->total_length_w = width;
         this_win->total_length_h = height;
         this_win->wi_data->img.scaled_pourcentage = 0;
@@ -217,7 +218,7 @@ void _st_Read_PNG(int16_t my_win_handle, boolean file_process) {
                     ALPHA_COMPOSITE( green, g, a, ( PNG_BACKGROUND_COLOR >> 8) & 0xFF);
                     ALPHA_COMPOSITE( blue,  b, a, ( PNG_BACKGROUND_COLOR) & 0xFF);
                 }
-                destination_buffer[i++] = 0xFF;
+                destination_buffer[i++] = a;
                 destination_buffer[i++] = red;
                 destination_buffer[i++] = green;
                 destination_buffer[i++] = blue;

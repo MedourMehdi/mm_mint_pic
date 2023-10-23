@@ -88,9 +88,8 @@ void st_Update_Comments(int16_t this_win_form_handle, void* p_param, OBJECT* thi
 struct_export this_export = {'\0'};
 
 void process_diag_export(int16_t this_win_form_handle){
-
     char default_extension[5] = ".png";
-    char* env_aesdir = getenv("AESDIR");
+    // char* env_aesdir = getenv("AESDIR");
     char file[64] = {'\0'}, final_path[256] = {'\0'};
     char ext[5] = {'\0'};
 

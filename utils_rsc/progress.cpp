@@ -1,5 +1,5 @@
 #include "progress.h"
-// #include "../utils/utils.h"
+#include "../utils/utils.h"
 
 /* Indices de fichier ressource pour PROGRESS. */
 
@@ -63,14 +63,7 @@ void st_Progress_Bar_Init(struct_progress_bar* progress_bar, int8_t *title){
     if(progress_bar != NULL){
         if(progress_bar->progress_bar_enabled && !progress_bar->progress_bar_in_use){
             if(strlen(rsc_path) < 1){
-                int16_t current_drive;
-                char current_path[256] = {'\0'};
-
-                current_drive = Dgetdrv();
-                Dgetpath(current_path,0);
-                rsc_path[0] = current_drive + 65;
-                rsc_path[1] = ':';
-                strcat(rsc_path,current_path);
+                strcpy(rsc_path,current_path);
                 strcat(rsc_path,rsc_progress_file_name);
             }
             if(!rsrc_load((const char*)&rsc_path)){

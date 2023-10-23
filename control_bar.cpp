@@ -34,40 +34,40 @@ struct_st_ico_png st_ico_wstart_1_mfdb, st_ico_wstart_2_mfdb, st_ico_wstart_3_mf
 */
 
 struct_st_ico_png_list control_bar_winimage_list[] = {
-	{	1,		 "ico24/open.png",		NULL,		&st_ico_1_mfdb,		NULL,		st_Img_Open, 	12,		4 ,		FALSE	},
-	{	2,		 "ico24/export.png",		NULL,		&st_ico_2_mfdb,		NULL,		st_Img_Export, 	48,		4 ,		FALSE	},
-	{	3,		 "ico24/collapse.png",		"ico24/expand.png",		&st_ico_3_mfdb,		&st_ico_4_mfdb,		st_Img_Autoscale, 	80,		4 ,		FALSE	},
-	{	4,		 "ico24/reload.png",		NULL,		&st_ico_5_mfdb,		NULL,		st_Img_Reload, 	112,		4 ,		FALSE	},
-	{	5,		 "ico24/resize.png",		NULL,		&st_ico_6_mfdb,		NULL,		st_Img_Resize, 	144,		4 ,		FALSE	},
-	{	6,		 "ico24/cut.png",		NULL,		&st_ico_7_mfdb,		NULL,		st_Img_Crop, 	176,		4 ,		FALSE	},
-	{	7,		 "ico24/rotate.png",		NULL,		&st_ico_8_mfdb,		NULL,		st_Img_Rotate, 	208,		4 ,		FALSE	},
-	{	8,		 "ico24/zoom_in.png",		NULL,		&st_ico_9_mfdb,		NULL,		st_Img_ZoomIn, 	240,		4 ,		FALSE	},
-	{	9,		 "ico24/zoom_out.png",		NULL,		&st_ico_10_mfdb,		NULL,		st_Img_ZoomOut, 	272,		4 ,		FALSE	},
+	{	1,		 "\\ico24\\open.png",		NULL,		&st_ico_1_mfdb,		NULL,		st_Img_Open, 	12,		4 ,		FALSE	},
+	{	2,		 "\\ico24\\export.png",		NULL,		&st_ico_2_mfdb,		NULL,		st_Img_Export, 	48,		4 ,		FALSE	},
+	{	3,		 "\\ico24\\collapse.png",		"\\ico24\\expand.png",		&st_ico_3_mfdb,		&st_ico_4_mfdb,		st_Img_Autoscale, 	80,		4 ,		FALSE	},
+	{	4,		 "\\ico24\\reload.png",		NULL,		&st_ico_5_mfdb,		NULL,		st_Img_Reload, 	112,		4 ,		FALSE	},
+	{	5,		 "\\ico24\\resize.png",		NULL,		&st_ico_6_mfdb,		NULL,		st_Img_Resize, 	144,		4 ,		FALSE	},
+	{	6,		 "\\ico24\\cut.png",		NULL,		&st_ico_7_mfdb,		NULL,		st_Img_Crop, 	176,		4 ,		FALSE	},
+	{	7,		 "\\ico24\\rotate.png",		NULL,		&st_ico_8_mfdb,		NULL,		st_Img_Rotate, 	208,		4 ,		FALSE	},
+	{	8,		 "\\ico24\\zoom_in.png",		NULL,		&st_ico_9_mfdb,		NULL,		st_Img_ZoomIn, 	240,		4 ,		FALSE	},
+	{	9,		 "\\ico24\\zoom_out.png",		NULL,		&st_ico_10_mfdb,		NULL,		st_Img_ZoomOut, 	272,		4 ,		FALSE	},
 	{	-1,		NULL,					NULL, 				NULL, 			 		NULL,				NULL,			0,		0 ,		0	},
 };
 
 struct_st_ico_png_list control_bar_winstart_list[] = {
-	{	1,		 "ico24/open.png",		NULL,		&st_ico_wstart_1_mfdb,		NULL,		st_Img_Open, 	12,		4 ,		FALSE	},
-	{	2,		 "ico24/cut.png",		NULL,		&st_ico_wstart_2_mfdb,		NULL,		st_Img_Crop, 	48,		4 ,		FALSE	},
-	{	3,		 "ico24/quit.png",		NULL,		&st_ico_wstart_3_mfdb,		NULL,		st_Img_Close_All, 	80,		4 ,		FALSE	},
+	{	1,		 "\\ico24\\open.png",		NULL,		&st_ico_wstart_1_mfdb,		NULL,		st_Img_Open, 	12,		4 ,		FALSE	},
+	{	2,		 "\\ico24\\cut.png",		NULL,		&st_ico_wstart_2_mfdb,		NULL,		st_Img_Crop, 	48,		4 ,		FALSE	},
+	{	3,		 "\\ico24\\quit.png",		NULL,		&st_ico_wstart_3_mfdb,		NULL,		st_Img_Close_All, 	80,		4 ,		FALSE	},
 	{	-1,		NULL,					NULL, 				NULL, 			 		NULL,				NULL,			0,		0 ,		0	},
 };
 
 struct_st_ico_png_list control_bar_windocument_list[] = {
-	{	1,		 "ico24/open.png",		NULL,		&st_ico_wdoc_1_mfdb,		NULL,		st_Img_Open, 	12,		4 ,		FALSE	},
-	{	2,		 "ico24/export.png",		NULL,		&st_ico_wdoc_2_mfdb,		NULL,		st_Img_Export, 	48,		4 ,		FALSE	},
-	{	3,		 "ico24/collapse.png",		"ico24/expand.png",		&st_ico_wdoc_3_mfdb,		&st_ico_wdoc_4_mfdb,		st_Img_Autoscale, 	80,		4 ,		FALSE	},
-	{	4,		 "ico24/up.png", NULL,		&st_ico_wdoc_11_mfdb,		NULL,		st_Img_up, 	112,		4 ,		FALSE	},
-	{	5,		 "ico24/down.png",		NULL,		&st_ico_wdoc_12_mfdb,		NULL,		st_Img_down, 	144,		4 ,		FALSE	},
-	{	6,		 "ico24/cut.png",		NULL,		&st_ico_wdoc_7_mfdb,		NULL,		st_Img_Crop, 	176,		4 ,		FALSE	},
-	{	7,		 "ico24/rotate.png",		NULL,		&st_ico_wdoc_8_mfdb,		NULL,		st_Img_Rotate, 	208,		4 ,		FALSE	},
-	{	8,		 "ico24/zoom_in.png",		NULL,		&st_ico_wdoc_9_mfdb,		NULL,		st_Img_ZoomIn, 	240,		4 ,		FALSE	},
-	{	9,		 "ico24/zoom_out.png",		NULL,		&st_ico_wdoc_10_mfdb,		NULL,		st_Img_ZoomOut, 	272,		4 ,		FALSE	},
+	{	1,		 "\\ico24\\open.png",		NULL,		&st_ico_wdoc_1_mfdb,		NULL,		st_Img_Open, 	12,		4 ,		FALSE	},
+	{	2,		 "\\ico24\\export.png",		NULL,		&st_ico_wdoc_2_mfdb,		NULL,		st_Img_Export, 	48,		4 ,		FALSE	},
+	{	3,		 "\\ico24\\collapse.png",		"\\ico24\\expand.png",		&st_ico_wdoc_3_mfdb,		&st_ico_wdoc_4_mfdb,		st_Img_Autoscale, 	80,		4 ,		FALSE	},
+	{	4,		 "\\ico24\\up.png", NULL,		&st_ico_wdoc_11_mfdb,		NULL,		st_Img_up, 	112,		4 ,		FALSE	},
+	{	5,		 "\\ico24\\down.png",		NULL,		&st_ico_wdoc_12_mfdb,		NULL,		st_Img_down, 	144,		4 ,		FALSE	},
+	{	6,		 "\\ico24\\cut.png",		NULL,		&st_ico_wdoc_7_mfdb,		NULL,		st_Img_Crop, 	176,		4 ,		FALSE	},
+	{	7,		 "\\ico24\\rotate.png",		NULL,		&st_ico_wdoc_8_mfdb,		NULL,		st_Img_Rotate, 	208,		4 ,		FALSE	},
+	{	8,		 "\\ico24\\zoom_in.png",		NULL,		&st_ico_wdoc_9_mfdb,		NULL,		st_Img_ZoomIn, 	240,		4 ,		FALSE	},
+	{	9,		 "\\ico24\\zoom_out.png",		NULL,		&st_ico_wdoc_10_mfdb,		NULL,		st_Img_ZoomOut, 	272,		4 ,		FALSE	},
 	{	-1,		NULL,					NULL, 				NULL, 			 		NULL,				NULL,			0,		0 ,		0	},
 };
 
 struct_st_ico_png_list control_bar_winvideo_list[] = {
-	{	1,		 "ico24/play.png",		"ico24/pause.png",		&st_ico_wvid_13_mfdb,		&st_ico_wvid_14_mfdb,		st_Img_Play, 	12,		4 ,		FALSE	},
+	{	1,		 "\\ico24\\play.png",		"\\ico24\\pause.png",		&st_ico_wvid_13_mfdb,		&st_ico_wvid_14_mfdb,		st_Img_Play, 	12,		4 ,		FALSE	},
 	{	-1,		NULL,					NULL, 				NULL, 			 		NULL,				NULL,			0,		0 ,		0	},
 };
 
@@ -344,8 +344,11 @@ void* st_Img_Crop(void* p_param){
 
 void* st_Img_Resize(void* p_param){
 
-	struct_window*	this_win_master = (struct_window*)p_param;
-	const char*		rsc_file_to_load = "rsc/diag.rsc";
+	struct_window*	this_win_master = (struct_window*)p_param; 
+	const char*		this_rsc_file_to_load = "\\rsc\\diag.rsc";
+	char rsc_file_to_load[strlen(current_path) + strlen(this_rsc_file_to_load) + 1] = {'\0'};
+	strcpy(rsc_file_to_load, current_path);
+	strcat(rsc_file_to_load, this_rsc_file_to_load);
 	const char*		window_form_title = "Resize an image";
 	int16_t			rsc_object_index = 0;
 
@@ -371,7 +374,10 @@ void* st_Img_Resize(void* p_param){
 void* st_Img_Export(void* p_param){
 
 	struct_window*	this_win_master = (struct_window*)p_param;
-	const char*		rsc_file_to_load = "rsc/diag.rsc";
+	const char*		this_rsc_file_to_load = "\\rsc\\diag.rsc";
+	char rsc_file_to_load[strlen(current_path) + strlen(this_rsc_file_to_load) + 1] = {'\0'};
+	strcpy(rsc_file_to_load, current_path);
+	strcat(rsc_file_to_load, this_rsc_file_to_load);	
 	const char*		window_form_title = "Export an image";
 	int16_t			rsc_object_index = 1;
 

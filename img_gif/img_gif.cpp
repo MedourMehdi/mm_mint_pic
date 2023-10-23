@@ -9,9 +9,6 @@
 #include "../utils_rsc/progress.h"
 #include "../thumbs/thumbs.h"
 
-#ifndef TTF_DEFAULT_PATH
-#define TTF_DEFAULT_PATH "./fonts/arial.ttf"
-#endif
 #ifndef PRIMARY_IMAGE_ID
 #define PRIMARY_IMAGE_ID    -1
 #endif
@@ -332,8 +329,11 @@ void _st_Handle_Thumbs_GIF(int16_t this_win_handle, boolean file_process){
             st_Rescale_ARGB(temp_mfdb, thumb_original_mfdb, new_width, new_height);
 
             char thumb_txt[10] = {'\0'};
+            char font_path[strlen(current_path) + strlen(TTF_DEFAULT_PATH) + 1] = {'\0'};
+            strcpy(font_path, current_path);
+            strcat(font_path, TTF_DEFAULT_PATH);
             sprintf(thumb_txt,"%d", thumb_ptr->thumb_index );
-            print_ft_simple((thumb_original_mfdb->fd_w >> 1) - 4, thumb_original_mfdb->fd_h - 4, thumb_original_mfdb, (char*)TTF_DEFAULT_PATH, 14, thumb_txt);
+            print_ft_simple((thumb_original_mfdb->fd_w >> 1) - 4, thumb_original_mfdb->fd_h - 4, thumb_original_mfdb, font_path, 14, thumb_txt);
 
 
             if(screen_workstation_bits_per_pixel != 32){

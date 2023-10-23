@@ -86,13 +86,13 @@ boolean mfdb_to_file(MFDB *this_mfdb, char* final_path){
 
 int16_t file_selector(char *final_path, char* title, char *file_selected){
 	int16_t current_drive, button_value, i;
-	char current_path[256] = {'\0'};
-
+	
+	char this_current_path[256] = {'\0'};
 	current_drive = st_Dgetdrv();
-	st_Dgetpath(current_path,0);
+	st_Dgetpath(this_current_path,0);
 	final_path[0] = current_drive + 65;
 	final_path[1] = ':';
-	strcat(final_path,current_path);
+	strcat(final_path,this_current_path);
 	strcat(final_path,"\\*.*");
 
 	// wind_update(BEG_MCTRL);

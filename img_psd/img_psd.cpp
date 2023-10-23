@@ -41,9 +41,6 @@
 
 #include <wchar.h>
 
-#ifndef TTF_DEFAULT_PATH
-#define TTF_DEFAULT_PATH "./fonts/arial.ttf"
-#endif
 #ifndef PRIMARY_IMAGE_ID
 #define PRIMARY_IMAGE_ID    -1
 #endif
@@ -788,13 +785,19 @@ void _st_Handle_Thumbs_PSD(int16_t this_win_handle, boolean file_process){
             st_Rescale_ARGB(temp_mfdb, thumb_original_mfdb, wanted_width, wanted_height);
 
             // if(!thumb_ptr->thumb_selectable){
+                // char font_path[strlen(current_path) + strlen(TTF_DEFAULT_PATH) + 1] = {'\0'};
+                // strcpy(font_path, current_path);
+                // strcat(font_path, TTF_DEFAULT_PATH);                
             //     sprintf(thumb_txt,"Not Available" );
-            //     print_ft_simple(((thumb_original_mfdb->fd_w) >> 1 ) - 40, ((thumb_original_mfdb->fd_h) >> 1 ), thumb_original_mfdb, (char*)TTF_DEFAULT_PATH, 14, thumb_txt);
+            //     print_ft_simple(((thumb_original_mfdb->fd_w) >> 1 ) - 40, ((thumb_original_mfdb->fd_h) >> 1 ), thumb_original_mfdb, font_path, 14, thumb_txt);
             // }
             
             // if(strlen((const char*)&layer->name) > 1){
+            // char font_path[strlen(current_path) + strlen(TTF_DEFAULT_PATH) + 1] = {'\0'};
+            // strcpy(font_path, current_path);
+            // strcat(font_path, TTF_DEFAULT_PATH);                
             //     sprintf(thumb_txt,"%s", &layer->name );
-            //     print_ft_simple(2, thumb_original_mfdb->fd_h - 2, thumb_original_mfdb, (char*)TTF_DEFAULT_PATH, 14, thumb_txt);
+            //     print_ft_simple(2, thumb_original_mfdb->fd_h - 2, thumb_original_mfdb, font_path, 14, thumb_txt);
             // }
 
             if(screen_workstation_bits_per_pixel != 32){

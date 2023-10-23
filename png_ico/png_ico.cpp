@@ -3,6 +3,8 @@
 #include "../utils/utils.h"
 #include "../utils_gfx/pix_convert.h"
 
+char ico_path[256] = {'\0'};
+
 bool st_PNG_Decompress(const char *file_name, MFDB *foreground_mfdb);/**/
 void st_Ico32_PNG_Load(struct_st_control_bar* this_control_bar, struct_st_ico_png *ico);/**/
 void st_Ico_PNG_Update(struct_st_ico_png_list *ico_list_array, int16_t new_pos_x, int16_t new_pos_y);/**/
@@ -49,9 +51,16 @@ void st_Control_Bar_PNG_Handle(int16_t mouse_x, int16_t mouse_y, int16_t mouse_b
 
 bool st_Ico_PNG_Init(struct_st_ico_png_list *ico_list_array){
 	u_int16_t i = 0;
+	int16_t ico_path_len = strlen(ico_path);
+	if( ico_path_len < 1){
+		strcpy(ico_path, current_path);
+	}
 	while(ico_list_array[ i ].icon_id > 0) {
 		ico_list_array[ i ].main_icon->filename = ico_list_array[ i ].main_icon_path;
-		if(!st_PNG_Decompress(ico_list_array[ i ].main_icon_path, &ico_list_array[ i ].main_icon->st_ico_mfdb)){
+		char this_ico_path[ico_path_len + strlen(ico_list_array[ i ].main_icon_path) + 1] = {'\0'};
+		strcpy(this_ico_path, ico_path);
+		strcat(this_ico_path, ico_list_array[ i ].main_icon_path);
+		if(!st_PNG_Decompress(this_ico_path, &ico_list_array[ i ].main_icon->st_ico_mfdb)){
 			return false;
 		}
 
@@ -59,7 +68,10 @@ bool st_Ico_PNG_Init(struct_st_ico_png_list *ico_list_array){
 
 			ico_list_array[ i ].mask_icon->filename = ico_list_array[ i ].mask_icon_path;
 
-			if(!st_PNG_Decompress(ico_list_array[ i ].mask_icon_path, &ico_list_array[ i ].mask_icon->st_ico_mfdb)){
+			strcpy(this_ico_path, ico_path);
+			strcat(this_ico_path, ico_list_array[ i ].mask_icon_path);
+
+			if(!st_PNG_Decompress(this_ico_path, &ico_list_array[ i ].mask_icon->st_ico_mfdb)){
 				return false;
 			}
 		}
