@@ -312,29 +312,28 @@ int16_t close_window( int16_t this_win_handle ){
 }
 
 void win_refresh_from_buffer(struct_window *this_win){
-
-	if(this_win->wi_to_display_mfdb->fd_addr != NULL){
-		TRACE(("win_refresh_from_buffer(%d)\n", this_win->wi_handle))
-		if(msg_buffer[0] != WM_HSLID && msg_buffer[0] != WM_VSLID){
-			win_slider_size(this_win->wi_handle, MIN(this_win->work_area.g_w, this_win->total_length_w), HORIZONTAL_MOVE);
-			if(this_win->total_length_w != this_win->work_area.g_w){
-				do_hslide(this_win->wi_handle, 1000L * this_win->current_pos_x / (this_win->total_length_w - this_win->work_area.g_w));
-			} else {
-				do_hslide(this_win->wi_handle, 1000L * this_win->current_pos_x);
+	if(!this_win->wi_data->rsc_media){
+		if(this_win->wi_to_display_mfdb->fd_addr != NULL){
+			TRACE(("win_refresh_from_buffer(%d)\n", this_win->wi_handle))
+			if(msg_buffer[0] != WM_HSLID && msg_buffer[0] != WM_VSLID){
+				win_slider_size(this_win->wi_handle, MIN(this_win->work_area.g_w, this_win->total_length_w), HORIZONTAL_MOVE);
+				if(this_win->total_length_w != this_win->work_area.g_w){
+					do_hslide(this_win->wi_handle, 1000L * this_win->current_pos_x / (this_win->total_length_w - this_win->work_area.g_w));
+				} else {
+					do_hslide(this_win->wi_handle, 1000L * this_win->current_pos_x);
+				}
+				win_slider_size(this_win->wi_handle, MIN(this_win->work_area.g_h, this_win->total_length_h), VERTICAL_MOVE);
+				if(this_win->total_length_h != this_win->work_area.g_h){
+					do_vslide(this_win->wi_handle, 1000L * this_win->current_pos_y / (this_win->total_length_h - this_win->work_area.g_h));
+				} else {
+					do_vslide(this_win->wi_handle, 1000L * this_win->current_pos_y);	
+				}
 			}
-			win_slider_size(this_win->wi_handle, MIN(this_win->work_area.g_h, this_win->total_length_h), VERTICAL_MOVE);
-			if(this_win->total_length_h != this_win->work_area.g_h){
-				do_vslide(this_win->wi_handle, 1000L * this_win->current_pos_y / (this_win->total_length_h - this_win->work_area.g_h));
-			} else {
-				do_vslide(this_win->wi_handle, 1000L * this_win->current_pos_y);	
+			if(msg_buffer[0] != WM_SIZED){
+				send_message(this_win->wi_handle, WM_REDRAW);
 			}
 		}
-		if(msg_buffer[0] != WM_SIZED){
-			send_message(this_win->wi_handle, WM_REDRAW);
-		}
-		
 	}
-
 }
 
 void win_slider_size(int16_t my_win_handle, int16_t length_seen, int16_t direction){
