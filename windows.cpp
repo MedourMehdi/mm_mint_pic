@@ -249,8 +249,6 @@ int16_t close_window( int16_t this_win_handle ){
 /*CONTROl BAR*/
 		if(this_win->wi_control_bar != NULL){
 			mem_free(this_win->wi_control_bar->control_bar_list);
-			mfdb_free(this_win->wi_control_bar->background_mfdb);
-			mfdb_free(&this_win->wi_control_bar->st_control_bar_mfdb);
 			mem_free(this_win->wi_control_bar);					
 		}
 
@@ -305,10 +303,10 @@ int16_t close_window( int16_t this_win_handle ){
 		if(this_win->wi_to_display_mfdb != NULL){
 			mfdb_free(this_win->wi_to_display_mfdb);
 		}
-		mfdb_free(this_win->wi_to_work_in_mfdb);
-		mfdb_free(this_win->wi_original_bitdepth_mfdb);
-		mfdb_free(this_win->wi_rendered_bitdepth_mfdb);
-		mfdb_free(&this_win->wi_buffer_mfdb);
+		// mfdb_free(this_win->wi_to_work_in_mfdb);
+		// mfdb_free(this_win->wi_original_bitdepth_mfdb);
+		// mfdb_free(this_win->wi_rendered_bitdepth_mfdb);
+		// mfdb_free(&this_win->wi_buffer_mfdb);
 		mem_free(this_win->wi_name);
 		if ( wind_delete( this_win_handle ) ){
 			number_of_opened_windows -= 1;
