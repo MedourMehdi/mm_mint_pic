@@ -4,6 +4,26 @@
 #include "rsc_processing/diag.h"
 #include "file.h"
 
+/* Functions executed when you click an icon from the control bar */
+
+void* st_Img_Open(void*);
+void* st_Img_Autoscale(void*);
+void* st_Img_Reload(void* p_param);
+
+void* st_Img_Resize(void* p_param);
+void* st_Img_Export(void* p_param);
+void* st_Img_Crop(void* p_param);
+void* st_Img_ZoomIn(void* p_param);
+void* st_Img_ZoomOut(void* p_param);
+void* st_Img_Rotate(void* p_param);
+
+void* st_Img_Close_All(void* p_param);
+
+void* st_Img_down(void* p_param);
+void* st_Img_up(void* p_param);
+
+void* st_Img_Play(void* p_param);
+
 #define GREY_COLOR 0x7AC0C0C0
 
 /* 
@@ -89,7 +109,7 @@ void st_Init_Default_Values_Control_Bar(struct_window *this_win){
 		/* Disabling transparency computing on ST */
 	}
 	this_win->wi_control_bar->background_mfdb = NULL;
-	this_win->wi_control_bar->need_to_reload_control_mfdb = TRUE;
+	this_win->wi_control_bar->need_to_reload_control_bar = TRUE;
 	/* Transparency color - ARGB: value 'A' represent the transparecny level */
 	this_win->wi_control_bar->transparency_color = GREY_COLOR;
 	/* VDI handle */
@@ -144,7 +164,7 @@ void st_Init_WinStart_Control_Bar(void* p_param){
 	this_win->wi_control_bar->control_bar_h = CONTROLBAR_H;
 	this_win->wi_control_bar->transparency = FALSE;
 	this_win->wi_control_bar->background_mfdb = NULL;
-	this_win->wi_control_bar->need_to_reload_control_mfdb = TRUE;
+	this_win->wi_control_bar->need_to_reload_control_bar = TRUE;
 	this_win->wi_control_bar->transparency_color = GREY_COLOR;
 	this_win->wi_control_bar->vdi_handle = &st_vdi_handle;
 	this_win->wi_control_bar->virtual_screen_mfdb = &screen_mfdb;
@@ -156,10 +176,10 @@ void st_Reload_Control_Bar(struct_window *this_win, struct_st_control_bar* contr
 		if(this_win->wi_control_bar->control_bar_h > 0){
 			if( this_win->wi_data->control_bar_media || screen_workstation_bits_per_pixel <= 8 || this_win->work_area.g_w > this_win->total_length_w || this_win->work_area.g_h > this_win->total_length_h || cpu_type < 30){
 				if(this_win->work_area.g_w > this_win->total_length_w || this_win->work_area.g_h > this_win->total_length_h){
-					control_bar->need_to_reload_control_mfdb = true;
+					control_bar->need_to_reload_control_bar = true;
 				}else{
-					control_bar->need_to_reload_control_mfdb = control_bar->st_control_bar_mfdb.fd_w == wrez ? control_bar->need_to_reload_control_mfdb : true;
-				}		// control_bar->need_to_reload_control_mfdb = control_bar->st_control_bar_mfdb.fd_w == wrez ? control_bar->need_to_reload_control_mfdb : true;		
+					control_bar->need_to_reload_control_bar = control_bar->st_control_bar_mfdb.fd_w == wrez ? control_bar->need_to_reload_control_bar : true;
+				}		// control_bar->need_to_reload_control_bar = control_bar->st_control_bar_mfdb.fd_w == wrez ? control_bar->need_to_reload_control_bar : true;		
 				st_Control_Bar_Refresh_Classic(control_bar, wrez, screen_workstation_bits_per_pixel);
 			} else {
 				st_Control_Bar_Refresh_MFDB(control_bar, this_win->wi_to_display_mfdb, this_win->current_pos_x, this_win->current_pos_y, this_win->work_area.g_w, this_win->work_area.g_h);

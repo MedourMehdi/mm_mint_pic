@@ -4,26 +4,6 @@
 #ifndef CUSTOM_CBAR_HEADERS
 #define CUSTOM_CBAR_HEADERS
 
-/* Functions executed when you click an icon from the control bar */
-
-void* st_Img_Open(void*);
-void* st_Img_Autoscale(void*);
-void* st_Img_Reload(void* p_param);
-
-void* st_Img_Resize(void* p_param);
-void* st_Img_Export(void* p_param);
-void* st_Img_Crop(void* p_param);
-void* st_Img_ZoomIn(void* p_param);
-void* st_Img_ZoomOut(void* p_param);
-void* st_Img_Rotate(void* p_param);
-
-void* st_Img_Close_All(void* p_param);
-
-void* st_Img_down(void* p_param);
-void* st_Img_up(void* p_param);
-
-void* st_Img_Play(void* p_param);
-
 /* st_Init_WinImage_Control_Bar() - Init the originals values for your control bar in an Init function */
 
 void st_Init_WinVideo_Control_Bar(void* p_param);
