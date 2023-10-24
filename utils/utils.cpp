@@ -157,9 +157,18 @@ void *mem_alloc(long size){
 	return mem_ptr;
 }
 
+void *mem_calloc(size_t elementCount, size_t size){
+	void *mem_ptr = NULL;
+	mem_ptr = (void*)Mxalloc(elementCount * size,3);
+    memset(mem_ptr, 0, elementCount * size);
+	return mem_ptr;
+}
+
 void *mem_free(void *ptr){
-	Mfree(ptr);
-    ptr = NULL;
+    if(ptr != NULL){
+        Mfree(ptr);
+        ptr = NULL;
+    }
 	// free(ptr);
 	return NULL;
 }

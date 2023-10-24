@@ -24,6 +24,7 @@ void st_clear_char_array(char* carray);
 char *basename(char const *path);
 
 void *mem_alloc(long size);
+void *mem_calloc(size_t elementCount, size_t size);
 void *mem_free(void *ptr);
 
 MFDB* mfdb_alloc_bpp( int8_t* buffer, int16_t width, int16_t height, int16_t bpp);
