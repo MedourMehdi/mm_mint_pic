@@ -108,81 +108,81 @@ void st_Win_Print_PSD(int16_t this_win_handle){
 unsigned int FindChannel(Layer* layer, int16_t channelType) {
     for (unsigned int i = 0; i < layer->channelCount; ++i) {
         Channel* channel = &layer->channels[i];
-        // printf("Channel type %d", channel->type);
         if (channel->data && channel->type == channelType){
             return i;
             }
     }
-    // printf("uintmax\n");
     return CHANNEL_NOT_FOUND;
 }
 
-template <typename T, typename DataHolder>
-static void* ExpandChannelToCanvas(Allocator* allocator, const DataHolder* layer, const void* data, unsigned int canvasWidth, unsigned int canvasHeight)
+namespace
 {
-    // T* canvasData = static_cast<T*>(allocator->Allocate(sizeof(T)*canvasWidth*canvasHeight, 16u));
-    T* canvasData = static_cast<T*>(mem_alloc(sizeof(T)*canvasWidth*canvasHeight));
-    memset(canvasData, 0u, sizeof(T)*canvasWidth*canvasHeight);
+    template <typename T, typename DataHolder>
+    static void* ExpandChannelToCanvas(Allocator* allocator, const DataHolder* layer, const void* data, unsigned int canvasWidth, unsigned int canvasHeight)
+    {
+        // T* canvasData = static_cast<T*>(allocator->Allocate(sizeof(T)*canvasWidth*canvasHeight, 16u));
+        T* canvasData = static_cast<T*>(mem_alloc(sizeof(T)*canvasWidth*canvasHeight));
+        memset(canvasData, 0u, sizeof(T)*canvasWidth*canvasHeight);
 
-    imageUtil::CopyLayerData(static_cast<const T*>(data), canvasData, layer->left, layer->top, layer->right, layer->bottom, canvasWidth, canvasHeight);
+        imageUtil::CopyLayerData(static_cast<const T*>(data), canvasData, layer->left, layer->top, layer->right, layer->bottom, canvasWidth, canvasHeight);
 
-    return canvasData;
+        return canvasData;
+    }
+
+    static void* ExpandChannelToCanvas(const Document* document, Allocator* allocator, Layer* layer, Channel* channel)
+    {
+        if (document->bitsPerChannel == 8)
+            return ExpandChannelToCanvas<uint8_t>(allocator, layer, channel->data, document->width, document->height);
+        else if (document->bitsPerChannel == 16)
+            return ExpandChannelToCanvas<uint16_t>(allocator, layer, channel->data, document->width, document->height);
+        else if (document->bitsPerChannel == 32)
+            return ExpandChannelToCanvas<float32_t>(allocator, layer, channel->data, document->width, document->height);
+
+        return NULL;
+    }
+
+    template <typename T>
+    T* CreateInterleavedImage(Allocator* allocator, const void* srcR, const void* srcG, const void* srcB, unsigned int width, unsigned int height)
+    {
+        // T* image = static_cast<T*>(allocator->Allocate(width*height * 4u*sizeof(T), 16u));
+        T* image = static_cast<T*>(mem_alloc(width*height * 4u*sizeof(T)));
+
+        const T* r = static_cast<const T*>(srcR);
+        const T* g = static_cast<const T*>(srcG);
+        const T* b = static_cast<const T*>(srcB);
+        imageUtil::InterleaveRGB(r, g, b, T(0), image, width, height);
+
+        return image;
+    }
+
+    template <typename T>
+    T* CreateInterleavedImage(Allocator* allocator, const void* srcR, const void* srcG, const void* srcB, const void* srcA, unsigned int width, unsigned int height)
+    {
+        // T* image = static_cast<T*>(allocator->Allocate(width*height * 4u*sizeof(T), 16u));
+        T* image = static_cast<T*>(mem_alloc(width*height * 4u*sizeof(T)));
+        const T* r = static_cast<const T*>(srcR);
+        const T* g = static_cast<const T*>(srcG);
+        const T* b = static_cast<const T*>(srcB);
+        const T* a = static_cast<const T*>(srcA);
+        imageUtil::InterleaveRGBA(r, g, b, a, image, width, height);
+
+        return image;
+    }
+
+    template <typename T>
+    static void* ExpandMaskToCanvas(const Document* document, Allocator* allocator, T* mask)
+    {
+        if (document->bitsPerChannel == 8)
+            return ExpandChannelToCanvas<uint8_t>(allocator, mask, mask->data, document->width, document->height);
+        else if (document->bitsPerChannel == 16)
+            return ExpandChannelToCanvas<uint16_t>(allocator, mask, mask->data, document->width, document->height);
+        else if (document->bitsPerChannel == 32)
+            return ExpandChannelToCanvas<float32_t>(allocator, mask, mask->data, document->width, document->height);
+
+        return NULL;
+    }
+    /* End - C++ functions taken from PsdSamples.cpp */
 }
-
-static void* ExpandChannelToCanvas(const Document* document, Allocator* allocator, Layer* layer, Channel* channel)
-{
-    if (document->bitsPerChannel == 8)
-        return ExpandChannelToCanvas<uint8_t>(allocator, layer, channel->data, document->width, document->height);
-    else if (document->bitsPerChannel == 16)
-        return ExpandChannelToCanvas<uint16_t>(allocator, layer, channel->data, document->width, document->height);
-    else if (document->bitsPerChannel == 32)
-        return ExpandChannelToCanvas<float32_t>(allocator, layer, channel->data, document->width, document->height);
-
-    return NULL;
-}
-
-template <typename T>
-T* CreateInterleavedImage(Allocator* allocator, const void* srcR, const void* srcG, const void* srcB, unsigned int width, unsigned int height)
-{
-    // T* image = static_cast<T*>(allocator->Allocate(width*height * 4u*sizeof(T), 16u));
-    T* image = static_cast<T*>(mem_alloc(width*height * 4u*sizeof(T)));
-
-    const T* r = static_cast<const T*>(srcR);
-    const T* g = static_cast<const T*>(srcG);
-    const T* b = static_cast<const T*>(srcB);
-    imageUtil::InterleaveRGB(r, g, b, T(0), image, width, height);
-
-    return image;
-}
-
-template <typename T>
-T* CreateInterleavedImage(Allocator* allocator, const void* srcR, const void* srcG, const void* srcB, const void* srcA, unsigned int width, unsigned int height)
-{
-    // T* image = static_cast<T*>(allocator->Allocate(width*height * 4u*sizeof(T), 16u));
-    T* image = static_cast<T*>(mem_alloc(width*height * 4u*sizeof(T)));
-    const T* r = static_cast<const T*>(srcR);
-    const T* g = static_cast<const T*>(srcG);
-    const T* b = static_cast<const T*>(srcB);
-    const T* a = static_cast<const T*>(srcA);
-    imageUtil::InterleaveRGBA(r, g, b, a, image, width, height);
-
-    return image;
-}
-
-template <typename T>
-static void* ExpandMaskToCanvas(const Document* document, Allocator* allocator, T* mask)
-{
-    if (document->bitsPerChannel == 8)
-        return ExpandChannelToCanvas<uint8_t>(allocator, mask, mask->data, document->width, document->height);
-    else if (document->bitsPerChannel == 16)
-        return ExpandChannelToCanvas<uint16_t>(allocator, mask, mask->data, document->width, document->height);
-    else if (document->bitsPerChannel == 32)
-        return ExpandChannelToCanvas<float32_t>(allocator, mask, mask->data, document->width, document->height);
-
-    return NULL;
-}
-/* End - C++ functions taken from PsdSamples.cpp */
-
 void st_Extract_ARGB_PSD(Layer* layer, uint8_t* maskCanvasData, uint8_t* maskCanvasDataV, u_int32_t* ptr_argb, u_int32_t* imgdata, u_int16_t width, u_int16_t height, bool expanded){
     long ii, jj, kk, x, y;
         if(layer->layerMask || layer->vectorMask) {

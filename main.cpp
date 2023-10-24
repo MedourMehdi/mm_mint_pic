@@ -127,7 +127,7 @@ close_ico_document:
 close_ico_image:
 	st_Ico_PNG_Release_Image();
 
-	st_Progress_Bar_Finish(global_progress_bar);
+	st_Progress_Bar_Destroy(global_progress_bar);
 
 quit:
 	mem_free(this_file);
@@ -318,10 +318,10 @@ void *event_loop(void *result) {
 						mem_free(va_file);
 					} while ( pfile ) ;
 				}
-				free( buff);
+				mem_free( buff);
 				ddclose( dd_hdl);
 			} else { ddreply(dd_hdl, DD_NAK);}
-			ddclose( dd_hdl); mem_free(name); mem_free(file);
+			ddclose( dd_hdl); mem_free(name); mem_free(file);mem_free(ext);
 			break;
 		case AP_RESCHG:
 		case AP_TERM:

@@ -135,8 +135,8 @@ typedef struct {
 } struct_video_metadata;
 
 typedef struct {
-	const char *path;
-	const char *extension;    
+	char *path;
+	char *extension;    
 	int8_t *original_buffer;
 	boolean crop_requested;
 	boolean fx_on;

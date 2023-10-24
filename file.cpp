@@ -25,7 +25,7 @@ boolean open_file(struct_window *this_win, const char *my_path){
 	}
 	if (this_win->wi_data->file_lock != NULL){
 		get_stat_file(this_win->wi_data);
-		this_win->wi_data->extension = get_filename_ext(this_win->wi_data->path);
+		this_win->wi_data->extension = (char*)get_filename_ext(this_win->wi_data->path);
 		fclose(this_win->wi_data->file_lock);
 	}
 	return true;

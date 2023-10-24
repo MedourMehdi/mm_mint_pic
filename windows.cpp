@@ -249,6 +249,8 @@ int16_t close_window( int16_t this_win_handle ){
 /*CONTROl BAR*/
 		if(this_win->wi_control_bar != NULL){
 			mem_free(this_win->wi_control_bar->control_bar_list);
+			mfdb_free(this_win->wi_control_bar->background_mfdb);
+			mfdb_free(&this_win->wi_control_bar->st_control_bar_mfdb);
 			mem_free(this_win->wi_control_bar);					
 		}
 
@@ -269,6 +271,7 @@ int16_t close_window( int16_t this_win_handle ){
 				
 				this_win->wi_thumb->thumb_clean_func(this_win->wi_thumb);
 			}
+
 			if(this_win->wi_data->thumbnail_slave == TRUE){
 				if(this_win->wi_thumb != NULL){
 					struct_window* this_win_master = detect_window(this_win->wi_thumb->master_win_handle);
@@ -283,9 +286,16 @@ int16_t close_window( int16_t this_win_handle ){
 					}
 				}
 			}
+
 			if(this_win->wi_data->original_buffer != NULL){
 				mem_free( this_win->wi_data->original_buffer );
 			}
+			if(this_win->wi_data->path != NULL){
+				mem_free(this_win->wi_data->path );
+			}			
+			if(this_win->wi_data->extension != NULL){
+				mem_free(this_win->wi_data->extension );
+			}		
 			/* Shutdown of data struct */
 			mem_free( this_win->wi_data );
 		}
@@ -295,6 +305,10 @@ int16_t close_window( int16_t this_win_handle ){
 		if(this_win->wi_to_display_mfdb != NULL){
 			mfdb_free(this_win->wi_to_display_mfdb);
 		}
+		mfdb_free(this_win->wi_to_work_in_mfdb);
+		mfdb_free(this_win->wi_original_bitdepth_mfdb);
+		mfdb_free(this_win->wi_rendered_bitdepth_mfdb);
+		mfdb_free(&this_win->wi_buffer_mfdb);
 		mem_free(this_win->wi_name);
 		if ( wind_delete( this_win_handle ) ){
 			number_of_opened_windows -= 1;

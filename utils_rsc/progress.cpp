@@ -24,7 +24,7 @@ void objc_xywh(OBJECT *tree, int16_t obj, GRECT *p);
 #endif
 
 struct_progress_bar* st_Progress_Bar_Alloc_Enable(){
-    struct_progress_bar* progress_bar = (struct_progress_bar*)Mxalloc(sizeof(struct_progress_bar), 3);
+    struct_progress_bar* progress_bar = (struct_progress_bar*)mem_alloc(sizeof(struct_progress_bar));
 	progress_bar->progress_bar_enabled = true;
     progress_bar->progress_bar_in_use = false;
     progress_bar->progress_bar_locked = false;
@@ -34,7 +34,7 @@ struct_progress_bar* st_Progress_Bar_Alloc_Enable(){
 }
 
 void st_Progress_Bar_Destroy(struct_progress_bar* progress_bar){
-    Mfree(progress_bar);
+    mem_free(progress_bar);
 }
 
 void st_Progress_Bar_Add_Step(struct_progress_bar* progress_bar){

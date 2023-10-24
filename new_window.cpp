@@ -299,10 +299,10 @@ int16_t new_win_thumbnails(const char* win_title, int16_t slave_win_handle){
 
 				win_struct_array[i].wi_data->original_buffer = dest_win->wi_data->original_buffer;
 
-				win_struct_array[i].wi_data->path = (const char*)mem_alloc(strlen(dest_win->wi_data->path));
+				win_struct_array[i].wi_data->path = ( char*)mem_alloc(strlen(dest_win->wi_data->path));
 				strcpy((char*)win_struct_array[i].wi_data->path, dest_win->wi_data->path);
 
-				win_struct_array[i].wi_data->extension = (const char*)mem_alloc(strlen(dest_win->wi_data->extension));
+				win_struct_array[i].wi_data->extension = (char*)mem_alloc(strlen(dest_win->wi_data->extension));
 				strcpy((char*)win_struct_array[i].wi_data->extension, dest_win->wi_data->extension);
 
 				win_struct_array[i].wi_data->file_lock = dest_win->wi_data->file_lock;
@@ -361,7 +361,7 @@ int16_t new_win_crop(struct_crop* this_crop, const char* win_title){
 
 				win_struct_array[i].wi_name = (char *)mem_alloc(strlen(win_title) + 1);
 				strcpy(win_struct_array[i].wi_name, win_title);
-				win_struct_array[i].wi_data->path = (const char *)mem_alloc(strlen(win_title) + 15);
+				win_struct_array[i].wi_data->path = (char *)mem_alloc(strlen(win_title) + 15);
 				strcpy((char*)win_struct_array[i].wi_data->path, win_title);
 
                 open_window(&win_struct_array[i]);
