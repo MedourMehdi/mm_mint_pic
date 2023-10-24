@@ -1,6 +1,7 @@
 #include "qdbmp.h"
 #include <stdlib.h>
 #include <string.h>
+#include "../../utils/utils.h"
 #define MFDB_STRIDE(w) (((w) + 15) & -16)
 
 #define UINT16_SWAP_LE_BE_CONSTANT(val)		\
@@ -99,7 +100,8 @@ BMP* BMP_Create( _UINT32 width, _UINT32 height, _UINT16 depth )
 
 
 	/* Allocate the bitmap data structure */
-	bmp = (BMP *)calloc( 1, sizeof( BMP ) );
+	bmp = (BMP *)mem_calloc( 1, sizeof( BMP ) );
+
 	if ( bmp == NULL )
 	{
 		BMP_LAST_ERROR_CODE = BMP_OUT_OF_MEMORY;
@@ -140,11 +142,11 @@ BMP* BMP_Create( _UINT32 width, _UINT32 height, _UINT16 depth )
 	/* Allocate palette */
 	if ( bmp->Header.BitsPerPixel == 8 || bmp->Header.BitsPerPixel == 4 )
 	{
-		bmp->Palette = (_UINT8*) calloc( palette_size, sizeof( _UINT8 ) );
+		bmp->Palette = (_UINT8*) mem_calloc( palette_size, sizeof( _UINT8 ) );
 		if ( bmp->Palette == NULL )
 		{
 			BMP_LAST_ERROR_CODE = BMP_OUT_OF_MEMORY;
-			free( bmp );
+			mem_free( bmp );
 			return NULL;
 		}
 	}
@@ -155,12 +157,12 @@ BMP* BMP_Create( _UINT32 width, _UINT32 height, _UINT16 depth )
 
 
 	/* Allocate pixels */
-	bmp->Data = (_UINT8*) calloc( bmp->Header.ImageDataSize, sizeof( _UINT8 ) );
+	bmp->Data = (_UINT8*) mem_calloc( bmp->Header.ImageDataSize, sizeof( _UINT8 ) );
 	if ( bmp->Data == NULL )
 	{
 		BMP_LAST_ERROR_CODE = BMP_OUT_OF_MEMORY;
-		free( bmp->Palette );
-		free( bmp );
+		mem_free( bmp->Palette );
+		mem_free( bmp );
 		return NULL;
 	}
 
@@ -183,15 +185,15 @@ void BMP_Free( BMP* bmp )
 
 	if ( bmp->Palette != NULL )
 	{
-		free( bmp->Palette );
+		mem_free( bmp->Palette );
 	}
 
 	if ( bmp->Data != NULL )
 	{
-		free( bmp->Data );
+		mem_free( bmp->Data );
 	}
 
-	free( bmp );
+	mem_free( bmp );
 
 	BMP_LAST_ERROR_CODE = BMP_OK;
 }
@@ -214,7 +216,7 @@ BMP* BMP_ReadBuffer( _INT8* buffer )
 
 
 	/* Allocate */
-	bmp = (BMP *)calloc( 1, sizeof( BMP ) );
+	bmp = (BMP *)mem_calloc( 1, sizeof( BMP ) );
 	if ( bmp == NULL )
 	{
 		BMP_LAST_ERROR_CODE = BMP_OUT_OF_MEMORY;
@@ -228,7 +230,7 @@ BMP* BMP_ReadBuffer( _INT8* buffer )
 	if ( bmp->Header.Magic != 0x4D42 )
 	{
 		BMP_LAST_ERROR_CODE = BMP_FILE_INVALID;
-		free( bmp );
+		mem_free( bmp );
 		printf("\nBMP_FILE_INVALID => 0x%04x\n",bmp->Header.Magic);
 		return NULL;
 	}
@@ -253,7 +255,7 @@ BMP* BMP_ReadBuffer( _INT8* buffer )
 		|| bmp->Header.CompressionType != 0 || bmp->Header.HeaderSize != 40 )
 	{
 		BMP_LAST_ERROR_CODE = BMP_FILE_NOT_SUPPORTED;
-		free( bmp );
+		mem_free( bmp );
 		printf("BMP_FILE_NOT_SUPPORTED");
 		return NULL;
 	}
@@ -262,11 +264,11 @@ BMP* BMP_ReadBuffer( _INT8* buffer )
 	/* Allocate and read palette */
 	if ( bmp->Header.BitsPerPixel == 8 || bmp->Header.BitsPerPixel == 4)
 	{
-		bmp->Palette = (_UINT8*) malloc( palette_size * sizeof( _UINT8 ) );
+		bmp->Palette = (_UINT8*) mem_alloc( palette_size * sizeof( _UINT8 ) );
 		if ( bmp->Palette == NULL )
 		{
 			BMP_LAST_ERROR_CODE = BMP_OUT_OF_MEMORY;
-			free( bmp );
+			mem_free( bmp );
 			printf("BMP_OUT_OF_MEMORY");
 			return NULL;
 		}
@@ -274,8 +276,8 @@ BMP* BMP_ReadBuffer( _INT8* buffer )
 		if( bmp->Palette == NULL )
 		{
 			BMP_LAST_ERROR_CODE = BMP_FILE_INVALID;
-			free( bmp->Palette );
-			free( bmp );
+			mem_free( bmp->Palette );
+			mem_free( bmp );
 			printf("BMP_FILE_INVALID bmp->Palette");
 			return NULL;
 		}
@@ -288,12 +290,12 @@ BMP* BMP_ReadBuffer( _INT8* buffer )
 
 
 	/* Allocate memory for image data */
-	bmp->Data = (_UINT8*) malloc( bmp->Header.ImageDataSize );
+	bmp->Data = (_UINT8*) mem_alloc( bmp->Header.ImageDataSize );
 	if ( bmp->Data == NULL )
 	{
 		BMP_LAST_ERROR_CODE = BMP_OUT_OF_MEMORY;
-		free( bmp->Palette );
-		free( bmp );
+		mem_free( bmp->Palette );
+		mem_free( bmp );
 		printf("BMP_OUT_OF_MEMORY");
 		return NULL;
 	}
@@ -305,9 +307,9 @@ BMP* BMP_ReadBuffer( _INT8* buffer )
 	if ( bmp->Data == NULL )
 	{
 		BMP_LAST_ERROR_CODE = BMP_FILE_INVALID;
-		free( bmp->Data );
-		free( bmp->Palette );
-		free( bmp );
+		mem_free( bmp->Data );
+		mem_free( bmp->Palette );
+		mem_free( bmp );
 		printf("BMP_FILE_INVALID : bmp->Data is NULL ");
 		return NULL;
 	}
@@ -335,7 +337,7 @@ BMP* BMP_ReadFile( const char* filename )
 
 
 	/* Allocate */
-	bmp = (BMP *)calloc( 1, sizeof( BMP ) );
+	bmp = (BMP *)mem_calloc( 1, sizeof( BMP ) );
 	if ( bmp == NULL )
 	{
 		BMP_LAST_ERROR_CODE = BMP_OUT_OF_MEMORY;
@@ -348,7 +350,7 @@ BMP* BMP_ReadFile( const char* filename )
 	if ( f == NULL )
 	{
 		BMP_LAST_ERROR_CODE = BMP_FILE_NOT_FOUND;
-		free( bmp );
+		mem_free( bmp );
 		return NULL;
 	}
 
@@ -358,7 +360,7 @@ BMP* BMP_ReadFile( const char* filename )
 	{
 		BMP_LAST_ERROR_CODE = BMP_FILE_INVALID;
 		fclose( f );
-		free( bmp );
+		mem_free( bmp );
 		return NULL;
 	}
 
@@ -381,7 +383,7 @@ BMP* BMP_ReadFile( const char* filename )
 	{
 		BMP_LAST_ERROR_CODE = BMP_FILE_NOT_SUPPORTED;
 		fclose( f );
-		free( bmp );
+		mem_free( bmp );
 		return NULL;
 	}
 
@@ -390,12 +392,12 @@ BMP* BMP_ReadFile( const char* filename )
 	// printf("bmp->Header.BitsPerPixel %d\n", bmp->Header.BitsPerPixel);
 	if ( bmp->Header.BitsPerPixel == 8 || bmp->Header.BitsPerPixel == 4 )
 	{
-		bmp->Palette = (_UINT8*) malloc( palette_size * sizeof( _UINT8 ) );
+		bmp->Palette = (_UINT8*) mem_alloc( palette_size * sizeof( _UINT8 ) );
 		if ( bmp->Palette == NULL )
 		{
 			BMP_LAST_ERROR_CODE = BMP_OUT_OF_MEMORY;
 			fclose( f );
-			free( bmp );
+			mem_free( bmp );
 			return NULL;
 		}
 
@@ -403,8 +405,8 @@ BMP* BMP_ReadFile( const char* filename )
 		{
 			BMP_LAST_ERROR_CODE = BMP_FILE_INVALID;
 			fclose( f );
-			free( bmp->Palette );
-			free( bmp );
+			mem_free( bmp->Palette );
+			mem_free( bmp );
 			return NULL;
 		}
 	}
@@ -418,13 +420,13 @@ if(!bmp->Header.ImageDataSize){
 	bmp->Header.ImageDataSize = bmp->Header.FileSize - bmp->Header.DataOffset;
 }
 	/* Allocate memory for image data */
-	bmp->Data = (_UINT8*) malloc( bmp->Header.ImageDataSize );
+	bmp->Data = (_UINT8*) mem_alloc( bmp->Header.ImageDataSize );
 	if ( bmp->Data == NULL )
 	{
 		BMP_LAST_ERROR_CODE = BMP_OUT_OF_MEMORY;
 		fclose( f );
-		free( bmp->Palette );
-		free( bmp );
+		mem_free( bmp->Palette );
+		mem_free( bmp );
 		return NULL;
 	}
 
@@ -435,9 +437,9 @@ if(!bmp->Header.ImageDataSize){
 	{
 		BMP_LAST_ERROR_CODE = BMP_FILE_INVALID;
 		fclose( f );
-		free( bmp->Data );
-		free( bmp->Palette );
-		free( bmp );
+		mem_free( bmp->Data );
+		mem_free( bmp->Palette );
+		mem_free( bmp );
 		return NULL;
 	}
 
