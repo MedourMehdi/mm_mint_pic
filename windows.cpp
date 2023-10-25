@@ -303,10 +303,6 @@ int16_t close_window( int16_t this_win_handle ){
 		if(this_win->wi_to_display_mfdb != NULL){
 			mfdb_free(this_win->wi_to_display_mfdb);
 		}
-		// mfdb_free(this_win->wi_to_work_in_mfdb);
-		// mfdb_free(this_win->wi_original_bitdepth_mfdb);
-		// mfdb_free(this_win->wi_rendered_bitdepth_mfdb);
-		// mfdb_free(&this_win->wi_buffer_mfdb);
 		mem_free(this_win->wi_name);
 		if ( wind_delete( this_win_handle ) ){
 			number_of_opened_windows -= 1;
@@ -559,13 +555,9 @@ void buffer_to_screen(int16_t my_win_handle, GRECT *raster_dest){
 	}
 
 	if(wipe){
-		// printf("wipe(%d)\n", this_win->wi_handle);
 	    vr_recfl(st_vdi_handle,this_win->work_pxy);	
     	vsf_interior(st_vdi_handle,0);
 	}
-
-	// printf("buffer_to_screen(%d)\n", this_win->wi_handle);
-
 	vro_cpyfm(st_vdi_handle, S_ONLY, xy, this_win->wi_to_display_mfdb, &screen_mfdb);
 
 	st_Set_Clipping(0,xy_clip);
@@ -582,12 +574,10 @@ void redraw_window(int16_t my_win_handle){
 		TRACE(("redraw_window(%d)\n", my_win_handle))
 		st_Set_Mouse(FALSE);
 		wind_update(BEG_UPDATE);
-		// update_struct_window(this_win);
 		wind_get(my_win_handle, WF_FIRSTXYWH, &rect.g_x, &rect.g_y, &rect.g_w, &rect.g_h);
 		while(rect.g_h  != 0 && rect.g_w != 0){
 			if ( rc_intersect((GRECT *)&msg_buffer[4], &rect) ){
 				grect_to_array(&rect,pxy_dest);
-				// wipe_pxy_area(pxy_dest);
 				if(this_win->wi_to_display_mfdb != NULL){
 					if(this_win->wi_to_display_mfdb->fd_addr != NULL){
 						buffer_to_screen(this_win->wi_handle, &rect);
@@ -753,7 +743,6 @@ struct_window* get_win_thumb_master_by_file(const char* this_path){
 }
 
 /* Pth stuff */
-
 int st_Open_Thread(void* func(void*), void* th_param){
 	long ret = 0;
 	for(int index = 0; index < NUM_THREADS; ++index){
