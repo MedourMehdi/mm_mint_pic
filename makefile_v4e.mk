@@ -26,7 +26,7 @@ _CFLAGS   := -mcfv4e -fomit-frame-pointer -fno-strict-aliasing -O2
 
 _LDFLAGS  :=
 
-_LDLIBS   := -lgem -lpng -lz -lyuv -lheif -lwebp -lwebpdemux -ljpeg -ltiff -lzstd -llzma -lde265 -lx265 -lpthread -lgif $(LIB_XPDF) $(LIB_FREETYPE) -lpsd
+_LDLIBS   := -lgem -lpng -lz -lyuv -lheif -lwebp -lwebpdemux -ljpeg -ltiff -lzstd -llzma -lde265 -lx265 -lpthread -lgif $(LIB_XPDF) $(LIB_FREETYPE) -lpsd_malloc
 
 .PHONY: all clean
 
