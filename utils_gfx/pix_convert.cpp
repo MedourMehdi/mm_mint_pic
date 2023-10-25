@@ -773,6 +773,36 @@ MFDB* st_MFDB32_To_MFDB4bpp(MFDB* MFDB32){
     return MFDB4P;
 }
 
+MFDB* st_MFDB32_To_MFDB4bpp_Gray(MFDB* MFDB32){
+
+    int16_t bpp = screen_workstation_bits_per_pixel;
+
+    int16_t max_colors = (1 << bpp);
+
+    st_Progress_Bar_Add_Step(global_progress_bar);
+    st_Progress_Bar_Init(global_progress_bar, (int8_t*)"ARGB to 16 colors");
+    st_Progress_Bar_Signal(global_progress_bar, 10, (int8_t*)"Palette fetching");
+
+    MFDB* MFDBGRAY = st_MFDB32_To_MFDBGRAY(MFDB32);
+    MFDB* MFDB24 = st_MFDB32_To_MFDB24(MFDBGRAY);
+
+    int8_t* dst_buffer_8bpp = (int8_t*)st_ScreenBuffer_Alloc_bpp(MFDB24->fd_w, MFDB24->fd_h, 8);
+    MFDB* MFDB8C = mfdb_alloc_bpp(dst_buffer_8bpp, MFDB24->fd_w, MFDB24->fd_h, 8);
+
+    classic_RGB_to_8bits_Indexed((uint8_t*)MFDB24->fd_addr, (uint8_t*)MFDB8C->fd_addr, MFDB24->fd_w, MFDB24->fd_h, max_colors);
+
+    mfdb_free(MFDB24);
+
+    st_Progress_Bar_Signal(global_progress_bar, 75, (int8_t*)"8bpp indexed image to 4bpp");
+    MFDB* MFDB4P = st_Chunky8bpp_to_Planar_4bpp(MFDB8C);
+    mfdb_free(MFDB8C);
+
+    st_Progress_Bar_Step_Done(global_progress_bar);
+    st_Progress_Bar_Finish(global_progress_bar);
+
+    return MFDB4P;
+}
+
 MFDB* st_MFDB4bpp_to_MFDB32(MFDB* MFDB4bpp, int16_t* this_palette){
 
     st_Progress_Bar_Add_Step(global_progress_bar);

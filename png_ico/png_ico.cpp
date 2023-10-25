@@ -475,7 +475,7 @@ void st_Control_Bar_Refresh_Classic(struct_st_control_bar *control_bar, int16_t 
 			mfdb_free(MFDB32);
 			break;
 		case 4:
-            dst_mfdb = st_MFDB32_To_MFDB4bpp(MFDB32);
+            dst_mfdb = st_MFDB32_To_MFDB4bpp_Gray(MFDB32);
 			mfdb_update_bpp(&control_bar->st_control_bar_mfdb, (int8_t*)dst_mfdb->fd_addr, dst_mfdb->fd_w, dst_mfdb->fd_h, bpp );
 			mfdb_free(MFDB32);
 			break;				
