@@ -26,7 +26,7 @@ _CFLAGS   := -m68020-60 -fomit-frame-pointer -fno-strict-aliasing -O2
 
 _LDFLAGS  :=
 
-_LDLIBS   := -lgem -lpng -lz -lyuv -lheif -lwebp -lwebpdemux -ljpeg -ltiff -llzma -lde265 -lx265 -lpthread -lgif $(LIB_XPDF) $(LIB_FREETYPE) -lpsd_sdk_dlalloc
+_LDLIBS   := -lgem -lpng -lz -lyuv -lheif -lwebp -lwebpdemux -ljpeg -ltiff -llzma -lde265 -lx265 -lpthread -lgif $(LIB_XPDF) $(LIB_FREETYPE) -lpsd_sdk_mxalloc
 
 # _CFLAGS += -Wl,--stack,10485760
 
