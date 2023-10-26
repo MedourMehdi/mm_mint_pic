@@ -147,17 +147,20 @@ void _st_Read_TIFF(int16_t this_win_handle,  boolean file_process, int16_t img_i
 
         st_Progress_Bar_Signal(this_win->wi_progress_bar, 85, (int8_t*)"Building ARGB image");
         mfdb_update_bpp(&this_win->wi_original_mfdb, (int8_t*)destination_buffer, width, height, 32);
-        st_MFDB_Fill(&this_win->wi_original_mfdb, 0XFFFFFFFF);
+        st_MFDB_Fill(&this_win->wi_original_mfdb, 0X00FFFFFF);
         long i, j;
 
         for(y = 0; y < height; y++){
             for(x = 0; x < width; x++){
                 i = (x + y * MFDB_STRIDE(width)) << 2;
                 j = (x + y * width);
-                destination_buffer[i++] = TIFFGetA(raster[j]);
-                destination_buffer[i++] = TIFFGetR(raster[j]);
-                destination_buffer[i++] = TIFFGetG(raster[j]);
-                destination_buffer[i++] = TIFFGetB(raster[j]);      
+                u_int32_t *ptr_dest = (u_int32_t*)&destination_buffer[i];
+                u_int32_t src = TIFFGetA(raster[j]) << 24 | TIFFGetR(raster[j]) << 16 | TIFFGetG(raster[j]) << 8 | TIFFGetB(raster[j]);
+                *ptr_dest = st_Blend_Pix(*ptr_dest, src);                
+                // destination_buffer[i++] = TIFFGetA(raster[j]);
+                // destination_buffer[i++] = TIFFGetR(raster[j]);
+                // destination_buffer[i++] = TIFFGetG(raster[j]);
+                // destination_buffer[i++] = TIFFGetB(raster[j]);      
             }
         }
 
@@ -257,17 +260,20 @@ void _st_Handle_Thumbs_TIFF(int16_t this_win_handle, boolean file_process){
 
             u_int8_t* temp_buffer = st_ScreenBuffer_Alloc_bpp(original_width, original_height, 32);
             MFDB* temp_mfdb = mfdb_alloc_bpp((int8_t*)temp_buffer, original_width, original_height, 32);
-
+            st_MFDB_Fill(temp_mfdb, 0x00FFFFFF);
             long ii, jj, x, y;
 
             for(y = 0; y < original_height; y++){
                 for(x = 0; x < original_width; x++){
                     ii = (x + y * MFDB_STRIDE(original_width)) << 2;
-                    jj = (x + y * original_width);                
-                    temp_buffer[ii++] = TIFFGetA(raster[jj]);
-                    temp_buffer[ii++] = TIFFGetR(raster[jj]);
-                    temp_buffer[ii++] = TIFFGetG(raster[jj]);
-                    temp_buffer[ii++] = TIFFGetB(raster[jj]);        
+                    jj = (x + y * original_width);
+                    u_int32_t *ptr_dest = (u_int32_t*)&temp_buffer[ii];
+                    u_int32_t src = TIFFGetA(raster[jj]) << 24 | TIFFGetR(raster[jj]) << 16 | TIFFGetG(raster[jj]) << 8 | TIFFGetB(raster[jj]);
+                    *ptr_dest = st_Blend_Pix(*ptr_dest, src);
+                    // temp_buffer[ii++] = TIFFGetA(raster[jj]);
+                    // temp_buffer[ii++] = TIFFGetR(raster[jj]);
+                    // temp_buffer[ii++] = TIFFGetG(raster[jj]);
+                    // temp_buffer[ii++] = TIFFGetB(raster[jj]);        
                 }
             }
 
