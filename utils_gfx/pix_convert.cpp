@@ -37,17 +37,28 @@ bool rgb2lab_Color_Init = false;
 
 u_int32_t st_Blend_Pix(u_int32_t background, u_int32_t foreground){
     const u_int32_t colorAlpha = ALPHA(foreground);
-    const u_int8_t colorR = UNMULTIPLY(RED(foreground), colorAlpha);
-    const u_int8_t colorG = UNMULTIPLY(GREEN(foreground), colorAlpha);
-    const u_int8_t colorB = UNMULTIPLY(BLUE(foreground), colorAlpha);
-    const u_int8_t dst_buffered_imageR = RED(background);
-    const u_int8_t dst_buffered_imageG = GREEN(background);
-    const u_int8_t dst_buffered_imageB = BLUE(background);
-    const u_int32_t R = BLEND(dst_buffered_imageR, colorR, colorAlpha);
-    const u_int32_t G = BLEND(dst_buffered_imageG, colorG, colorAlpha);
-    const u_int32_t B = BLEND(dst_buffered_imageB, colorB, colorAlpha);
+    switch (colorAlpha)
+    {
+    case 0xFF:
+        return foreground;
+        break;
+    case 0x00:
+        return background;
+        break;    
+    default:
+        const u_int8_t colorR = UNMULTIPLY(RED(foreground), colorAlpha);
+        const u_int8_t colorG = UNMULTIPLY(GREEN(foreground), colorAlpha);
+        const u_int8_t colorB = UNMULTIPLY(BLUE(foreground), colorAlpha);
+        const u_int8_t dst_buffered_imageR = RED(background);
+        const u_int8_t dst_buffered_imageG = GREEN(background);
+        const u_int8_t dst_buffered_imageB = BLUE(background);
+        const u_int32_t R = BLEND(dst_buffered_imageR, colorR, colorAlpha);
+        const u_int32_t G = BLEND(dst_buffered_imageG, colorG, colorAlpha);
+        const u_int32_t B = BLEND(dst_buffered_imageB, colorB, colorAlpha);
 
-    return ARGB(OPAQUE, R , G, B);
+        return ARGB(OPAQUE, R , G, B);    
+        break;
+    }
 }
 
 u_int8_t* st_Convert_RGBA_to_ARGB(u_int8_t* src, u_int16_t width, u_int16_t height){
