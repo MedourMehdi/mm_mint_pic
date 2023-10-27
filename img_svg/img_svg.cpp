@@ -7,6 +7,7 @@
 #include "../external/nanosvg/nanosvgrast.h"
 
 #include "../utils/utils.h"
+#include "../utils_gfx/pix_convert.h"
 
 void st_Win_Print_SVG(int16_t this_win_handle);
 void _st_Read_SVG(int16_t this_win_handle, boolean file_process);
@@ -59,9 +60,8 @@ void _st_Read_SVG(int16_t this_win_handle, boolean file_process){
 
         st_Progress_Bar_Init(this_win->wi_progress_bar, (int8_t*)"SVG processing");
 
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 20, (int8_t*)"Parsing from file");
+        st_Progress_Bar_Signal(this_win->wi_progress_bar, 20, (int8_t*)"Parsing...");
 
-        TRACE(("nsvgParseFromFile()\n"))
         image = nsvgParseFromFile(this_win->wi_data->path, "px", 96.0f);
         if (image == NULL) {
             sprintf(alert_message, "Could not open SVG image:\n%s", this_win->wi_data->path);
@@ -84,8 +84,7 @@ void _st_Read_SVG(int16_t this_win_handle, boolean file_process){
             st_form_alert(FORM_EXCLAM, alert_message);
             goto error;
         }
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 60, (int8_t*)"Rasterize");
-        TRACE(("nsvgCreateRasterizer()\n"))
+        st_Progress_Bar_Signal(this_win->wi_progress_bar, 60, (int8_t*)"SVG -> RGBA");
         rast = nsvgCreateRasterizer();
 
         if (rast == NULL) {
@@ -93,14 +92,14 @@ void _st_Read_SVG(int16_t this_win_handle, boolean file_process){
             st_form_alert(FORM_EXCLAM, alert_message);            
             goto error;
         }
-        TRACE(("nsvgRasterize()\n"))
         nsvgRasterize(rast, image, 0, 0, 1, destination_buffer, width, height, MFDB_STRIDE(width) << 2);
 
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 80, (int8_t*)"Convert RGBA to ARGB");
+        st_Progress_Bar_Signal(this_win->wi_progress_bar, 80, (int8_t*)"RGBA -> ARGB");
         dst_ptr = (u_int32_t*)destination_buffer;
         for(int16_t y = 0; y < height; y++ ){
             for(int16_t x = 0; x < width; x++){
-                dst_ptr[(y * MFDB_STRIDE(width)) + x] = ((dst_ptr[(y * MFDB_STRIDE(width)) + x] & 0x000000FF) << 24 ) | ((dst_ptr[(y * MFDB_STRIDE(width)) + x] & 0xFFFFFF00) >> 8);
+                u_int32_t fg_col = ((dst_ptr[(y * MFDB_STRIDE(width)) + x] & 0x000000FF) << 24 ) | ((dst_ptr[(y * MFDB_STRIDE(width)) + x] & 0xFFFFFF00) >> 8);
+                dst_ptr[(y * MFDB_STRIDE(width)) + x] = st_Blend_Pix(0x00FFFFFF, fg_col);
             }
         }
 
@@ -110,20 +109,11 @@ void _st_Read_SVG(int16_t this_win_handle, boolean file_process){
         TRACE(("mfdb_update_bpp()\n"))
 		mfdb_update_bpp(&this_win->wi_original_mfdb, (int8_t *)destination_buffer, width, height, 32);
 
-        this_win->wi_data->img.scaled_pourcentage = 0;
-        this_win->wi_data->img.rotate_degree = 0;
-        this_win->wi_data->resized = FALSE;
-        this_win->wi_data->img.original_width = width;
-        this_win->wi_data->img.original_height = height;
-        this_win->total_length_w = this_win->wi_original_mfdb.fd_w;
-        this_win->total_length_h = this_win->wi_original_mfdb.fd_h;     
+        st_Win_Set_Ready(this_win, width, height);
         this_win->wi_data->stop_original_data_load = TRUE;
-        this_win->wi_data->wi_buffer_modified = FALSE;	
         st_Progress_Bar_Signal(this_win->wi_progress_bar, 100, (int8_t*)"Finished");
     error:
-        TRACE(("nsvgDeleteRasterizer()\n"))
         nsvgDeleteRasterizer(rast);
-        TRACE(("nsvgDelete()\n"))
         nsvgDelete(image);
         st_Progress_Bar_Step_Done(this_win->wi_progress_bar);
         st_Progress_Bar_Finish(this_win->wi_progress_bar);	

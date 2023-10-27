@@ -72,12 +72,6 @@ void _st_Read_TGA(int16_t this_win_handle, boolean file_process)
         u_int32_t  i, j;
         int16_t x, y;
 
-        this_win->wi_data->img.scaled_pourcentage = 0;
-        this_win->wi_data->img.rotate_degree = 0;
-        this_win->wi_data->resized = FALSE;
-        this_win->wi_data->img.original_width = width;
-        this_win->wi_data->img.original_height = height;
-
         u_int8_t* destination_buffer = st_ScreenBuffer_Alloc_bpp(width, height, nb_components_32bits << 3);
         if(destination_buffer == NULL){
             sprintf(alert_message, "Out Of Mem Error\nAsked for %doctets", width * height * nb_components_32bits);
@@ -142,9 +136,9 @@ void _st_Read_TGA(int16_t this_win_handle, boolean file_process)
         }     
         
         mfdb_update_bpp(&this_win->wi_original_mfdb, (int8_t*)destination_buffer, width, height, nb_components_32bits << 3);
-        this_win->total_length_w = this_win->wi_original_mfdb.fd_w;
-        this_win->total_length_h = this_win->wi_original_mfdb.fd_h;
 
+        st_Win_Set_Ready(this_win, width, height);
+        this_win->wi_data->stop_original_data_load = TRUE;
 
         if(file_process == FALSE){
             mem_free(this_win->wi_data->original_buffer);

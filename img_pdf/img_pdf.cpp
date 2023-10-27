@@ -238,15 +238,8 @@ void _st_Read_PDF(int16_t this_win_handle, boolean file_process, int16_t img_id)
         if(old_ptr != NULL){
             mem_free(old_ptr);
         }
-        this_win->wi_data->img.scaled_pourcentage = 0;
-        this_win->wi_data->img.rotate_degree = 0;
-        this_win->wi_data->resized = FALSE;
-        this_win->wi_data->img.original_width = width;
-        this_win->wi_data->img.original_height = height;
-        this_win->total_length_w = this_win->wi_original_mfdb.fd_w;
-        this_win->total_length_h = this_win->wi_original_mfdb.fd_h;     
+        st_Win_Set_Ready(this_win, width, height);
         this_win->wi_data->stop_original_data_load = TRUE;
-        this_win->wi_data->wi_buffer_modified = FALSE;
 
         st_Progress_Bar_Signal(this_win->wi_progress_bar, 100, (int8_t*)"Finished");
         st_Progress_Bar_Step_Done(this_win->wi_progress_bar);

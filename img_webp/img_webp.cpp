@@ -214,13 +214,6 @@ void _st_Read_WEBP(int16_t this_win_handle, boolean file_process)
         int16_t width = input->width;
         int16_t height = input->height;
 
-        this_win->wi_data->img.scaled_pourcentage = 0;
-        this_win->wi_data->img.rotate_degree = 0;
-        this_win->wi_data->resized = FALSE;
-        this_win->wi_data->resized = FALSE;
-        this_win->wi_data->img.original_width = width;
-        this_win->wi_data->img.original_height = height;
-
         u_int32_t total_pixels = width * height;
         u_int8_t* temp_buffer = (u_int8_t*)mem_alloc((width * height) << 2);
         u_int8_t* destination_buffer = st_ScreenBuffer_Alloc_bpp(width, height, nb_components_32bits << 3);
@@ -237,8 +230,7 @@ void _st_Read_WEBP(int16_t this_win_handle, boolean file_process)
                 *dest_ptr++ = st_Blend_Pix(*dest_ptr, *src_ptr++);
                 index++;
             }
-            this_win->total_length_w = this_win->wi_original_mfdb.fd_w;
-            this_win->total_length_h = this_win->wi_original_mfdb.fd_h;
+            st_Win_Set_Ready(this_win, width, height);
             this_win->wi_data->stop_original_data_load = TRUE;
         }
 

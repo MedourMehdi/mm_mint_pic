@@ -78,14 +78,11 @@ void st_Init_PSD(struct_window *this_win){
     }
     /* thumbnails stuff */
     if(this_win->wi_thumb == NULL){
-        _st_Handle_Thumbs_PSD(this_win->wi_handle, this_win->prefers_file_instead_mem);
-        // st_Check_Thumbs_Chain(this_win->wi_thumb->thumbs_list_array);
-        // _st_Handle_Thumbs_PSD_Generic(this_win->wi_handle, this_win->prefers_file_instead_mem);
-        // if(cpu_type < 40){
-        //     _st_Handle_Thumbs_PSD_Generic(this_win->wi_handle, this_win->prefers_file_instead_mem);
-        // }else{
-        //     _st_Handle_Thumbs_PSD(this_win->wi_handle, this_win->prefers_file_instead_mem);
-        // }
+        if(cpu_type < 40){
+            _st_Handle_Thumbs_PSD_Generic(this_win->wi_handle, this_win->prefers_file_instead_mem);
+        }else{
+            _st_Handle_Thumbs_PSD(this_win->wi_handle, this_win->prefers_file_instead_mem);
+        }
     }
 }
 
@@ -120,7 +117,6 @@ namespace
     template <typename T, typename DataHolder>
     static void* ExpandChannelToCanvas(Allocator* allocator, const DataHolder* layer, const void* data, unsigned int canvasWidth, unsigned int canvasHeight)
     {
-        // T* canvasData = static_cast<T*>(allocator->Allocate(sizeof(T)*canvasWidth*canvasHeight, 16u));
         T* canvasData = static_cast<T*>(mem_alloc(sizeof(T)*canvasWidth*canvasHeight));
         memset(canvasData, 0u, sizeof(T)*canvasWidth*canvasHeight);
 
@@ -144,7 +140,6 @@ namespace
     template <typename T>
     T* CreateInterleavedImage(Allocator* allocator, const void* srcR, const void* srcG, const void* srcB, unsigned int width, unsigned int height)
     {
-        // T* image = static_cast<T*>(allocator->Allocate(width*height * 4u*sizeof(T), 16u));
         T* image = static_cast<T*>(mem_alloc(width*height * 4u*sizeof(T)));
 
         const T* r = static_cast<const T*>(srcR);
@@ -158,7 +153,6 @@ namespace
     template <typename T>
     T* CreateInterleavedImage(Allocator* allocator, const void* srcR, const void* srcG, const void* srcB, const void* srcA, unsigned int width, unsigned int height)
     {
-        // T* image = static_cast<T*>(allocator->Allocate(width*height * 4u*sizeof(T), 16u));
         T* image = static_cast<T*>(mem_alloc(width*height * 4u*sizeof(T)));
         const T* r = static_cast<const T*>(srcR);
         const T* g = static_cast<const T*>(srcG);
@@ -183,6 +177,7 @@ namespace
     }
     /* End - C++ functions taken from PsdSamples.cpp */
 }
+
 void st_Extract_ARGB_PSD(Layer* layer, uint8_t* maskCanvasData, uint8_t* maskCanvasDataV, u_int32_t* ptr_argb, u_int32_t* imgdata, u_int16_t width, u_int16_t height, bool expanded){
     long ii, jj, kk, x, y;
         if(layer->layerMask || layer->vectorMask) {
@@ -352,15 +347,8 @@ destroy_doc:
         DestroyDocument(document, &allocator);
         file.Close();
 end:        
-        this_win->wi_data->img.scaled_pourcentage = 0;
-        this_win->wi_data->img.rotate_degree = 0;
-        this_win->wi_data->resized = FALSE;
-        this_win->wi_data->img.original_width = width;
-        this_win->wi_data->img.original_height = height;
-        this_win->total_length_w = this_win->wi_original_mfdb.fd_w;
-        this_win->total_length_h = this_win->wi_original_mfdb.fd_h;     
-        this_win->wi_data->stop_original_data_load = TRUE;
-        this_win->wi_data->wi_buffer_modified = FALSE;			
+        st_Win_Set_Ready(this_win, width, height);
+        this_win->wi_data->stop_original_data_load = TRUE;		
 	}
 }
 
@@ -431,10 +419,6 @@ bool st_Expand_PSD_Layer(Document* document, Layer* layer, MallocAllocator* allo
             break;
         }
     }
-    // allocator->Free(canvasData[0]);
-    // allocator->Free(canvasData[1]);
-    // allocator->Free(canvasData[2]);
-    // allocator->Free(canvasData[3]);
     mem_free(canvasData[0]);
     mem_free(canvasData[1]);
     mem_free(canvasData[2]);
@@ -446,8 +430,6 @@ bool st_Expand_PSD_Layer(Document* document, Layer* layer, MallocAllocator* allo
 
         st_Extract_ARGB_PSD(layer, maskCanvasData, maskCanvasDataV, (u_int32_t*)destination_buffer, imgdata, document->width, document->height, true);
         ret_value = true;
-        // allocator->Free(maskCanvasData);
-        // allocator->Free(maskCanvasDataV);
         mem_free(maskCanvasData);
         mem_free(maskCanvasDataV);        
     }
@@ -477,29 +459,24 @@ bool st_Extract_PSD_Layer(Document* document, Layer* layer, MallocAllocator* all
     indexA = FindChannel(layer, channelType::TRANSPARENCY_MASK);
     if (indexA != CHANNEL_NOT_FOUND) {
         canvasData[0] = layer->channels[indexA].data;
-        // canvasData[0] = ExpandChannelToCanvas<uint8_t>(allocator, layer, layer->channels[indexA].data, lwidth, lheight);
         channelCount += 1;
     }
     indexR = FindChannel(layer, channelType::R);
     if (indexR != CHANNEL_NOT_FOUND){
         canvasData[1] = layer->channels[indexR].data;
-        // canvasData[1] = ExpandChannelToCanvas<uint8_t>(allocator, layer, layer->channels[indexR].data, lwidth, lheight);
         channelCount += 1;
     }
     indexG = FindChannel(layer, channelType::G);
     if (indexG != CHANNEL_NOT_FOUND){
         canvasData[2] = layer->channels[indexG].data;
-        // canvasData[2] = ExpandChannelToCanvas<uint8_t>(allocator, layer, layer->channels[indexG].data, lwidth, lheight);
         channelCount += 1;
     }
     indexB = FindChannel(layer, channelType::B);
     if (indexB != CHANNEL_NOT_FOUND){
         canvasData[3] = layer->channels[indexB].data;
-        // canvasData[3] = ExpandChannelToCanvas<uint8_t>(allocator, layer, layer->channels[indexB].data, lwidth, lheight);
         channelCount += 1;
     }
 
-    // printf("channelCount %d, document->bitsPerChannel %d\n", channelCount, document->bitsPerChannel );
     if(document->colorMode == colorMode::RGB){
         switch (channelCount)
         {         
@@ -536,10 +513,6 @@ bool st_Extract_PSD_Layer(Document* document, Layer* layer, MallocAllocator* all
             break;
         }
     }
-    // allocator->Free(canvasData[0]);
-    // allocator->Free(canvasData[1]);
-    // allocator->Free(canvasData[2]);
-    // allocator->Free(canvasData[3]);
     mem_free(canvasData[0]);
     mem_free(canvasData[1]);
     mem_free(canvasData[2]);
@@ -552,7 +525,6 @@ bool st_Extract_PSD_Layer(Document* document, Layer* layer, MallocAllocator* all
         st_Extract_ARGB_PSD(layer, maskCanvasData, maskCanvasDataV, (u_int32_t*)destination_buffer, imgdata, lwidth, lheight, false);
         ret_value = true;
     }
-    // allocator->Free(image8);
     mem_free(image8);
     mem_free(imgdata);
     return ret_value;
@@ -585,7 +557,6 @@ bool st_Extract_PSD_Image(Document* document, ImageDataSection* imageData, Mallo
                     ret_value = true;
                 }
             }
-            // allocator->Free(image8);
             mem_free(image8);
 		}
 	}

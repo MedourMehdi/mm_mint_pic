@@ -777,3 +777,14 @@ void st_Win_Close_All(void){
 	i++;
 	}
 }
+
+void st_Win_Set_Ready(struct_window* this_win, u_int16_t width, u_int16_t height){
+        this_win->wi_data->img.scaled_pourcentage = 0;
+        this_win->wi_data->img.rotate_degree = 0;
+        this_win->wi_data->resized = FALSE;
+        this_win->wi_data->img.original_width = width;
+        this_win->wi_data->img.original_height = height;
+        this_win->total_length_w = this_win->wi_original_mfdb.fd_w;
+        this_win->total_length_h = this_win->wi_original_mfdb.fd_h;
+		this_win->wi_data->wi_buffer_modified = FALSE;
+}

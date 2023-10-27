@@ -73,52 +73,36 @@ void _st_Read_BMP(int16_t this_win_handle, boolean file_process)
             sprintf(alert_message, "Out Of Mem Error\nAsked for %doctets", width * height * nb_components_32bits);
             st_form_alert(FORM_STOP, alert_message);
             return;
-        } else {
-            for (y = 0; y < height; y++)
-            {
-                for (x = 0; x < width; x++)
-                {
-                    
-                    if(depth == 8 || depth == 4){
-                        BMP_GetPixelIndex( img, x, y, &index_color );
-                        BMP_GetPaletteColor( img, index_color, &r, &g, &b);
-                    }
-                    else{
-                        BMP_GetPixelRGB( img, (u_int32_t)x, (u_int32_t)y, &r, &g, &b );
-                    }
-
-                    i = (x + (y * (MFDB_STRIDE(width)))) * nb_components_32bits;
-                    destination_buffer[i++] = 0xFF;
-                    destination_buffer[i++] = r;
-                    destination_buffer[i++] = g;
-                    destination_buffer[i++] = b;
-
-                }
-            }     
-
-            this_win->total_length_w = this_win->wi_original_mfdb.fd_w;
-            this_win->total_length_h = this_win->wi_original_mfdb.fd_h;
-            if(this_win->wi_original_mfdb.fd_addr != NULL){
-                mem_free(this_win->wi_original_mfdb.fd_addr);
-            }            
-            mfdb_update_bpp(&this_win->wi_original_mfdb, (int8_t*)destination_buffer, width, height, nb_components_32bits << 3);
- 
-            // if(file_process == TRUE){
-            //     mem_free(this_win->wi_data->original_buffer);
-            // }
-            BMP_Free( img );
-            this_win->wi_data->stop_original_data_load = TRUE;
         }
-        this_win->wi_data->img.scaled_pourcentage = 0;
-        this_win->wi_data->img.rotate_degree = 0;
-        this_win->wi_data->resized = FALSE;
-        this_win->wi_data->img.original_width = width;
-        this_win->wi_data->img.original_height = height;
 
-        this_win->total_length_w = this_win->wi_original_mfdb.fd_w;
-        this_win->total_length_h = this_win->wi_original_mfdb.fd_h;
+        for (y = 0; y < height; y++)
+        {
+            for (x = 0; x < width; x++)
+            {
+                if(depth == 8 || depth == 4){
+                    BMP_GetPixelIndex( img, x, y, &index_color );
+                    BMP_GetPaletteColor( img, index_color, &r, &g, &b);
+                }
+                else{
+                    BMP_GetPixelRGB( img, (u_int32_t)x, (u_int32_t)y, &r, &g, &b );
+                }
+
+                i = (x + (y * (MFDB_STRIDE(width)))) * nb_components_32bits;
+                destination_buffer[i++] = 0xFF;
+                destination_buffer[i++] = r;
+                destination_buffer[i++] = g;
+                destination_buffer[i++] = b;
+            }
+        }     
+
+        if(this_win->wi_original_mfdb.fd_addr != NULL){
+            mem_free(this_win->wi_original_mfdb.fd_addr);
+        }            
+        mfdb_update_bpp(&this_win->wi_original_mfdb, (int8_t*)destination_buffer, width, height, nb_components_32bits << 3);
+
+        BMP_Free( img );
+        st_Win_Set_Ready(this_win, width, height);
         this_win->wi_data->stop_original_data_load = TRUE;
-        this_win->wi_data->wi_buffer_modified = FALSE;
 
         st_Progress_Bar_Signal(this_win->wi_progress_bar, 100, (int8_t*)"Finished");
         st_Progress_Bar_Step_Done(this_win->wi_progress_bar);

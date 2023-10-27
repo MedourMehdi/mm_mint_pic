@@ -102,12 +102,6 @@ void _st_Read_HEIF(int16_t this_win_handle, boolean file_process, long img_id) {
         int16_t height = heif_image_handle_get_height(handle);
         int16_t nb_components_32bits = 4;
 
-        this_win->wi_data->img.scaled_pourcentage = 0;
-        this_win->wi_data->img.rotate_degree = 0;
-        this_win->wi_data->resized = FALSE;
-        this_win->wi_data->img.original_width = width;
-        this_win->wi_data->img.original_height = height;
-
         st_Progress_Bar_Signal(this_win->wi_progress_bar, 55, (int8_t*)"HEIF Decode Image");
 
         // Decode the image and convert colorspace to RGB, saved as 32bit interleaved
@@ -134,13 +128,12 @@ void _st_Read_HEIF(int16_t this_win_handle, boolean file_process, long img_id) {
         if(destination_buffer == NULL){
             sprintf(alert_message, "Out Of Mem Error\nAsked for %doctets", (width * height) << 2);
             st_form_alert(FORM_EXCLAM, alert_message);
-        } else {
+        }else{
             _st_Heif_RGBA_To_ARGB((u_int8_t *)data, destination_buffer, width, height);
             mfdb_update_bpp(&this_win->wi_original_mfdb, (int8_t*)destination_buffer, width, height, 32);
-            this_win->total_length_w = this_win->wi_original_mfdb.fd_w;
-            this_win->total_length_h = this_win->wi_original_mfdb.fd_h;
-            this_win->wi_data->stop_original_data_load = TRUE;
         }
+        st_Win_Set_Ready(this_win, width, height);
+        this_win->wi_data->stop_original_data_load = TRUE;
 
         st_Progress_Bar_Signal(this_win->wi_progress_bar, 100, (int8_t*)"Finished");
         st_Progress_Bar_Step_Done(this_win->wi_progress_bar);

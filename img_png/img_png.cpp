@@ -188,13 +188,7 @@ void _st_Read_PNG(int16_t my_win_handle, boolean file_process) {
 
         int16_t width_stride = mfdb_update_bpp(&this_win->wi_original_mfdb, (int8_t *)destination_buffer, width, height, nb_components_32bits << 3);
         st_MFDB_Fill_bpp(&this_win->wi_original_mfdb, 0x00FFFFFF, 32);
-        this_win->total_length_w = width;
-        this_win->total_length_h = height;
-        this_win->wi_data->img.scaled_pourcentage = 0;
-        this_win->wi_data->img.rotate_degree = 0;
-        this_win->wi_data->resized = FALSE;
-        this_win->wi_data->img.original_width = width;
-        this_win->wi_data->img.original_height = height;        
+   
         st_Progress_Bar_Signal(this_win->wi_progress_bar, 75, (int8_t*)"Building ARGB bitmap");
         for (y = (height - 1); y != -1; y--) {
             for (x = 0; x < width; x++) {
@@ -242,11 +236,13 @@ void _st_Read_PNG(int16_t my_win_handle, boolean file_process) {
             mem_free(row_pointers[y]);
         }
         mem_free(row_pointers);
+
+        st_Win_Set_Ready(this_win, width, height);
+        this_win->wi_data->stop_original_data_load = TRUE;
+
         st_Progress_Bar_Signal(this_win->wi_progress_bar, 100, (int8_t*)"Finished");
         st_Progress_Bar_Step_Done(this_win->wi_progress_bar);
         st_Progress_Bar_Finish(this_win->wi_progress_bar);
-        this_win->wi_data->stop_original_data_load = TRUE;
-        this_win->wi_data->wi_buffer_modified = FALSE;
     }
 }
 

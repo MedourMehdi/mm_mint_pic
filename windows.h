@@ -265,4 +265,6 @@ int st_Open_Thread(void* func(void*), void* th_param);
 void st_Wait_For_Threads();
 void st_Win_Close_All(void);
 
+void st_Win_Set_Ready(struct_window* this_win, u_int16_t width, u_int16_t height);
+
 #endif
