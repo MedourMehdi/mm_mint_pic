@@ -127,13 +127,12 @@ void _st_Read_PDF(int16_t this_win_handle, boolean file_process, int16_t img_id)
         st_Progress_Bar_Signal(this_win->wi_progress_bar, 15, (int8_t*)"Opening file");
         if(!(st_FileExistsAccess(fileName))){
             sprintf(alert_message, "File not found %s\n", fileName);
-            st_form_alert(FORM_EXCLAM, alert_message);            
-            // printf("File not found %s\n", fileName);
+            st_form_alert(FORM_EXCLAM, alert_message);
         }
         st_Progress_Bar_Signal(this_win->wi_progress_bar, 35, (int8_t*)"Check for fonts");
         /* Global Parameters */
         char conf_file[256] = {0};
-        strcpy(conf_file, current_path);
+        strcpy(conf_file,current_path);
         strcat(conf_file, "\\conf\\xpdfrc");
         if(st_FileExistsAccess(conf_file)){
             globalParams = new GlobalParams(conf_file);
@@ -155,7 +154,6 @@ void _st_Read_PDF(int16_t this_win_handle, boolean file_process, int16_t img_id)
         // globalParams->setPrintStatusInfo(gTrue);
         // globalParams->setErrQuiet(gFalse);
 
-/* User/Password */
         // if (ownerPassword[0]) {
         //     ownerPW = new GString(ownerPassword);
         // }
@@ -178,7 +176,6 @@ void _st_Read_PDF(int16_t this_win_handle, boolean file_process, int16_t img_id)
         if (!doc->isOk()) {
             sprintf(alert_message, "Error opening PDF document %s\n", fileName);
             st_form_alert(FORM_STOP, alert_message);
-            return;            
         }
         double hDPI, vDPI;
         double page_width = doc->getPageMediaWidth(this_page);
@@ -247,6 +244,7 @@ void _st_Read_PDF(int16_t this_win_handle, boolean file_process, int16_t img_id)
 
     	delete splashOut;
         delete doc;
+end_global_param:
         delete globalParams;    
            
 	}
@@ -276,7 +274,7 @@ void _st_Handle_Thumbs_PDF(int16_t this_win_handle, boolean file_process){
     }
     /* Global Parameters */
     char conf_file[256] = {0};
-    st_Get_Current_Dir(conf_file);
+    strcpy(conf_file,current_path);
     strcat(conf_file, "\\conf\\xpdfrc");
     if(st_FileExistsAccess(conf_file)){
         globalParams = new GlobalParams(conf_file);
@@ -472,7 +470,7 @@ void _st_Handle_Thumbs_PDF_Generic(int16_t this_win_handle, boolean file_process
     }
     /* Global Parameters */
     char conf_file[256] = {0};
-    st_Get_Current_Dir(conf_file);
+    strcpy(conf_file,current_path);
     strcat(conf_file, "\\conf\\xpdfrc");
     if(st_FileExistsAccess(conf_file)){
         globalParams = new GlobalParams(conf_file);
