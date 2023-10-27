@@ -337,37 +337,20 @@ void st_Convert_RGB888_to_ARGB(MFDB* src_mfdb, MFDB* dst_mfdb){
 void st_Convert_ARGB_to_RGB888(MFDB* src_mfdb, MFDB* dst_mfdb){
 
     u_int8_t* src_ptr = (u_int8_t*)src_mfdb->fd_addr;
-    u_int32_t* dst_ptr = (u_int32_t*)dst_mfdb->fd_addr;
+    u_int8_t* dst_ptr = (u_int8_t*)dst_mfdb->fd_addr;
 
-    u_int8_t r1, g1, b1, r2, g2, b2;
-    u_int8_t r3, g3, b3, r4, g4, b4;
+    const size_t size = MFDB_STRIDE(src_mfdb->fd_w) * src_mfdb->fd_h * 3;
 
-    const size_t totalPixels = MFDB_STRIDE(src_mfdb->fd_w) * src_mfdb->fd_h;
-    u_int32_t index24 = 0;
-    u_int32_t index = 0;
-    while (index < (totalPixels << 2))
-    {
-        index++;
-        r1 = src_ptr[index++];
-        g1 = src_ptr[index++];
-        b1 = src_ptr[index++];
-        index++;
-        r2 = src_ptr[index++];
-        g2 = src_ptr[index++];
-        b2 = src_ptr[index++];
-        index++;
-        r3 = src_ptr[index++];
-        g3 = src_ptr[index++];
-        b3 = src_ptr[index++];
-        index++;
-        r4 = src_ptr[index++];
-        g4 = src_ptr[index++];
-        b4 = src_ptr[index++];
+    u_int32_t i = 0;
 
-        dst_ptr[index24++] = (r1 << 24) | (g1 << 16) | (b1 << 8) | r2;
-        dst_ptr[index24++] = (g2 << 24) | (b2 << 16) | (r3 << 8) | g3;
-        dst_ptr[index24++] = (b3 << 24) | (r4 << 16) | (g4 << 8) | b4;
+    while(i < size){
+        src_ptr++;
+        *dst_ptr++ = *src_ptr++;
+        *dst_ptr++ = *src_ptr++;
+        *dst_ptr++ = *src_ptr++;
+        i += 3;
     }
+
 }
 
 void st_Color_Transparency_ARGB(u_int32_t* dst_buffered_image, u_int32_t* color, const uint16_t width, const uint16_t height) {
@@ -524,14 +507,13 @@ MFDB* st_MFDB24_To_MFDB32(MFDB* MFDB24){
         int8_t*     dst_buffer = (int8_t*)st_ScreenBuffer_Alloc_bpp(MFDB24->fd_w, MFDB24->fd_h, 32);
         MFDB*       dst_argb = mfdb_alloc_bpp(dst_buffer, MFDB24->fd_w, MFDB24->fd_h, 32);
 
-        u_int32_t   dst_size = MFDB_STRIDE(MFDB24->fd_w) * MFDB24->fd_h << 2;
-        u_int32_t   i = 0, j = 0;
+        u_int32_t* ptr_32 = (u_int32_t*)dst_buffer;
+
+        u_int32_t   dst_size = MFDB_STRIDE(MFDB24->fd_w) * MFDB24->fd_h * 3;
+        u_int32_t   i = 0;
 
         while(i < dst_size){
-            dst_buffer[i++] = 0xFF;
-            dst_buffer[i++] = src_buffer[j++];
-            dst_buffer[i++] = src_buffer[j++];
-            dst_buffer[i++] = src_buffer[j++];
+            *ptr_32++ = 0x00 << 24 | src_buffer[i++] << 16 | src_buffer[i++] << 8 | src_buffer[i++];
         }
 
         return dst_argb;
