@@ -207,7 +207,7 @@ MFDB* st_Outline_MFDB(struct_thumbs *this_win_thumb, u_int32_t thumb_idx){
 }
 
 void st_Handle_Click_Thumbnail(struct_window *this_win, int16_t mouse_x, int16_t mouse_y, int16_t mouse_button){
-	printf("st_Handle_Click_Thumbnail\n");
+	// printf("st_Handle_Click_Thumbnail\n");
     struct_thumbs* this_thumb_struct = this_win->wi_thumb;
     struct_st_thumbs_list *thumb_ptr = this_win->wi_thumb->thumbs_list_array;
     
@@ -221,7 +221,7 @@ void st_Handle_Click_Thumbnail(struct_window *this_win, int16_t mouse_x, int16_t
         ) {
             if(thumb_ptr->thumb_selectable == TRUE){
                 struct_window* dest_win;
-                printf("selectable thumb id %d idx %d\n", thumb_ptr->thumb_id, thumb_ptr->thumb_index);
+                // printf("selectable thumb id %d idx %d\n", thumb_ptr->thumb_id, thumb_ptr->thumb_index);
                 this_win->wi_data->img.img_id = thumb_ptr->thumb_id;
                 this_win->wi_data->img.img_index = thumb_ptr->thumb_index;
                 this_thumb_struct->thumbs_selected_nb = thumb_ptr->thumb_index;
@@ -230,8 +230,10 @@ void st_Handle_Click_Thumbnail(struct_window *this_win, int16_t mouse_x, int16_t
                 } else {
                     dest_win = detect_window(this_win->wi_thumb->slave_win_handle);
                     if(dest_win == NULL){
-                        form_alert(1, "[1][ERROR WHILE OPENING IMAGE][Okay]");
-                        return;
+                        // form_alert(1, "[1][ERROR WHILE OPENING IMAGE][Okay]");
+                        this_win->wi_thumb->open_win_func(this_win->wi_data->path);
+                        goto end;
+                        // return;
                     }
 
                     /* Disable old selected thumbs */
@@ -248,10 +250,11 @@ void st_Handle_Click_Thumbnail(struct_window *this_win, int16_t mouse_x, int16_t
                     dest_win->wi_data->remap_displayed_mfdb = TRUE;
                     dest_win->wi_data->img.scaled_pourcentage = 0;
                     dest_win->wi_data->img.rotate_degree = 0;	
-                    dest_win->refresh_win(dest_win->wi_handle);
+                    dest_win->refresh_win(dest_win->wi_handle);              
                     send_message(dest_win->wi_handle, WM_REDRAW);
                 }
 
+end:
                 st_Start_Window_Process(this_win);
                 this_win->wi_thumb->thumbs_area_refresh = TRUE;
                 st_Thumb_Refresh(this_win->wi_handle);
