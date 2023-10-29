@@ -290,7 +290,7 @@ void st_Convert_RGB_to_8bits_Indexed(MFDB* src_mfdb, MFDB* dst_mfdb){
     for (unsigned long index = 0; index < totalPixels; index++)
     {
         *dst_ptr++ = RGB_to_8bits_Indexed(&src_ptr[i]);
-        i = i + 3;
+        i += 3;
     }
 }
 
@@ -305,7 +305,7 @@ void st_Convert_RGB_to_8bits(MFDB* src_mfdb, MFDB* dst_mfdb){
     for (unsigned long index = 0; index < totalPixels; index++)
     {
         *dst_ptr++ = RGB_to_8bits(&src_ptr[i]);
-        i = i + 3;
+        i += 3;
     }
 }
 

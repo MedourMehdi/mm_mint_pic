@@ -79,7 +79,7 @@ void classic_RGB_to_8bits_Indexed(u_int8_t* src_ptr, u_int8_t* dst_ptr, int16_t 
     u_int32_t i = 0;
     while(i < totalPixels){
         *dst_ptr++ = (u_int8_t)get_closest_value(&src_ptr[i], max_colors);
-        i = i + 3;
+        i += 3;
     }
 }
 

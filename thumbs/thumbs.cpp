@@ -443,9 +443,14 @@ void st_Thumb_List_Generic(struct_window *this_win,
             st_Progress_Bar_Signal(this_win->wi_progress_bar, (mul_100_fast(i) / this_win->wi_thumb->thumbs_nb), (int8_t*)progess_bar_indication);
 
             MFDB* thumb_original_mfdb;
+            /* Comment to not render MFDB */
             u_int8_t* destination_buffer = st_ScreenBuffer_Alloc_bpp(wanted_width, wanted_height, 32);
             thumb_original_mfdb = mfdb_alloc_bpp( (int8_t*)destination_buffer, wanted_width, wanted_height, 32);
             st_MFDB_Fill(thumb_original_mfdb,0x00FFFFFF);
+
+            /* Uncomment if you want to write TTF char directly in the MFDB without MFDB Rendering*/
+            // u_int8_t* destination_buffer = st_ScreenBuffer_Alloc_bpp(wanted_width, wanted_height, screen_workstation_bits_per_pixel);
+            // thumb_original_mfdb = mfdb_alloc_bpp( (int8_t*)destination_buffer, wanted_width, wanted_height, screen_workstation_bits_per_pixel);
 
             if(thumb_ptr == NULL){
                 thumb_ptr = (struct_st_thumbs_list*)mem_alloc(sizeof(struct_st_thumbs_list));
@@ -463,16 +468,20 @@ void st_Thumb_List_Generic(struct_window *this_win,
             char thumb_txt[10] = {'\0'};
             char font_path[strlen(current_path) + strlen(TTF_DEFAULT_PATH) + 1] = {'\0'};
             strcpy(font_path, current_path);
-            strcat(font_path, TTF_DEFAULT_PATH);            
+            strcat(font_path, TTF_DEFAULT_PATH);
             sprintf(thumb_txt,"%s %d", media_type, thumb_ptr->thumb_index );
             print_ft_simple(4, thumb_original_mfdb->fd_h - 4, thumb_original_mfdb, font_path, 14, thumb_txt);
-
+            
+            /* Comment to not render MFDB */
             if(screen_workstation_bits_per_pixel != 32){
                 thumb_ptr->thumb_mfdb = this_win->render_win(thumb_original_mfdb);
                 mfdb_free(thumb_original_mfdb);
             } else {
                 thumb_ptr->thumb_mfdb = thumb_original_mfdb;
             }
+            
+            /* Uncomment if you want to write TTF char directly in the MFDB without MFDB Rendering*/
+            // thumb_ptr->thumb_mfdb = thumb_original_mfdb;
 
             this_win->wi_thumb->thumbs_area_w = MAX( (this_win->wi_thumb->padx << 1) + wanted_width, this_win->wi_thumb->thumbs_area_w);
             this_win->wi_thumb->thumbs_area_h += wanted_height + this_win->wi_thumb->pady;

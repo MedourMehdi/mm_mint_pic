@@ -1,6 +1,8 @@
 #include "ttf.h"
 #include "../utils/utils.h"
 
+#include "../utils_gfx/pix_convert.h"
+
 #include <ft2build.h>
 #include <freetype/freetype.h>
 
@@ -31,7 +33,12 @@ boolean init_ft( const char *ttf_file, FT_Face *face, FT_Library *ft, FT_UInt re
         if (FT_New_Face(*ft, ttf_file, 0, face) == 0){
             if (FT_Set_Pixel_Sizes(*face, 0, req_size) == 0){
                 ret = TRUE;
-            } else {
+            } 
+            // if ( FT_Set_Char_Size( *face, 0, req_size*64, 50, 50 ) == 0){
+            //     ret = TRUE;
+            // }
+            
+             else {
                 printf("Can't set font size to %d", req_size);
             }
         } else {
@@ -117,14 +124,70 @@ UTF32 *utf8_to_utf32(const UTF8 *word) {
 
 void st_TTF_Set_Pixel(MFDB *this_mfdb, int x, int y, BYTE r, BYTE g, BYTE b){
     u_int8_t* ptr = (u_int8_t*)this_mfdb->fd_addr;
+    u_int16_t* ptr16 = (u_int16_t*)this_mfdb->fd_addr;
+    u_int32_t* ptr32 = (u_int32_t*)this_mfdb->fd_addr;
+    u_int32_t color = 0xFF << 24 | r << 16 | g << 8 | b;
     int index;
-    if (x > 0 && x < this_mfdb->fd_w && y > 0 && y < this_mfdb->fd_h) {
-        index = (y * MFDB_STRIDE(this_mfdb->fd_w) + x) << 2;
-        ptr[index++] = 0xFF;
-        ptr[index++] = r;
-        ptr[index++] = g;
-        ptr[index++] = b;
+    switch (this_mfdb->fd_nplanes)
+    {
+    case 32:
+        if (x > 0 && x < this_mfdb->fd_w && y > 0 && y < this_mfdb->fd_h) {
+            index = (y * MFDB_STRIDE(this_mfdb->fd_w) + x);
+            ptr32[index++] = color;
+        }
+        break;
+    case 24:
+        if (x > 0 && x < this_mfdb->fd_w && y > 0 && y < this_mfdb->fd_h) {
+            index = mul_3_fast( (y * MFDB_STRIDE(this_mfdb->fd_w)) + x);
+            ptr[index++] = r;
+            ptr[index++] = g;
+            ptr[index++] = b;
+        }
+        break;
+    case 16:
+        if (x > 0 && x < this_mfdb->fd_w && y > 0 && y < this_mfdb->fd_h) {
+            index = (y * MFDB_STRIDE(this_mfdb->fd_w) + x) << 1;
+            ptr16[index++] = ARGB_to_RGB565((u_int8_t*)&color);
+        }
+        break;
+    case 8:
+        switch (screen_workstation_format)
+        {
+        case 0:
+            if (x > 0 && x < this_mfdb->fd_w && y > 0 && y < this_mfdb->fd_h) {
+                index = (y * MFDB_STRIDE(this_mfdb->fd_w) + x);
+                /* RGB_to_8bits_Indexed uses edDi - use a switch case in case of colored text - there shouldn't give no incidence for b&w */
+                ptr[index++] = RGB_to_8bits_Indexed((u_int8_t*)&color);
+            }
+            break;  
+        default:
+            if (x > 0 && x < this_mfdb->fd_w && y > 0 && y < this_mfdb->fd_h) {
+                index = (y * MFDB_STRIDE(this_mfdb->fd_w) + x);
+                ptr[index++] = RGB_to_8bits((u_int8_t*)&color);
+            }       
+            break;
+        }
+        break;
+    case 4:
+        if (x > 0 && x < this_mfdb->fd_w && y > 0 && y < this_mfdb->fd_h) {
+            index = (y * MFDB_STRIDE(this_mfdb->fd_w) + x) >> 4;
+            u_int8_t xx = x % 16;
+            u_int64_t pix16 = (0x01 << (15 - xx));
+            u_int64_t* ptr64 = (u_int64_t*)this_mfdb->fd_addr;
+            ptr64[index++] |= ( pix16 << 47 | pix16 << 31 | pix16 << 15 | pix16 );
+        }
+        break;
+    case 1:
+        if (x > 0 && x < this_mfdb->fd_w && y > 0 && y < this_mfdb->fd_h) {
+            index = (y * MFDB_STRIDE(this_mfdb->fd_w) + x) >> 3;
+            u_int8_t xx = x % 8;
+            ptr[index++] |= (0x01 << (7 - xx));
+        }
+        break;                
+    default:
+        break;
     }
+
 }
 
 void print_ft_simple(int init_x, int init_y, MFDB* this_mfdb, char* ttf_file, int font_size, char* this_string){
