@@ -6,14 +6,23 @@ mm_mint_pic is an images viewer/re-scaler and can export them to different file 
 ![Product Name Screen Shot][product-screenshot]
 <div style="text-align: justify">
 mm_mint_pic is designed to display modern formats images in GEM windows.
+
 It lets you transform images by scaling or rotating them.
+
 It works in 1bpp, 4bpp (no screen cropping yet) and 8bpp planar modes, as well as 16bpp, 24bpp and 32bpp for large screen configurations.
+
 Note that the best performance is achieved in 32bpp mode.
+
 TIFF and HEIF containers are supported.
+
 You can export the current image as raw data (Xaaes MFD format) so that the current image size and screen format are preserved.
+
 Another feature is the ability to crop the part of the desktop you want by simply drawing a box on the screen.
+
 The control bar is rebuilt on the image respecting the alpha channel of png icons according to window size and scrolling.
+
 You can change the icons to suit your needs by simply replacing the files under the icon directory.
+
 No shared library or module is required to run it.
 </div>
 
@@ -104,6 +113,7 @@ This project is licensed under the GNU GENERAL PUBLIC LICENSE License - see the 
 Inspiration, code snippets, etc.
 * [AtariForum](https://www.atari-forum.com)
 * [T.Otto](https://tho-otto.de/crossmint.php)
+* [L.Pursell](https://atari.gfabasic.net/htm/imgview.htm)
 * [Myaes](http://myaes.lutece.net/)
 * [FreeMint](https://freemint.github.io/)
 
