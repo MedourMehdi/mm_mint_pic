@@ -204,6 +204,7 @@ void nsvgDelete(NSVGimage* image);
 
 #define NSVG_NOTUSED(v) do { (void)(1 ? (void)0 : ( (void)(v) ) ); } while(0)
 #define NSVG_RGB(r, g, b) (((unsigned int)r) | ((unsigned int)g << 8) | ((unsigned int)b << 16))
+#define NSVG_RGBA(r, g, b, a) (((unsigned int)r) | ((unsigned int)g << 8) | ((unsigned int)b << 16) | ((unsigned int)a << 24))
 
 #ifdef _MSC_VER
 	#pragma warning (disable: 4996) // Switch off security warnings
@@ -379,6 +380,11 @@ enum NSVGunits {
 	NSVG_UNITS_PERCENT,
 	NSVG_UNITS_EM,
 	NSVG_UNITS_EX
+};
+
+enum NSVGvisibility {
+	NSVG_VIS_DISPLAY = 1,
+	NSVG_VIS_VISIBLE = 2,
 };
 
 typedef struct NSVGcoordinate {
@@ -640,7 +646,8 @@ static NSVGparser* nsvg__createParser(void)
 	p->attr[0].miterLimit = 4;
 	p->attr[0].fillRule = NSVG_FILLRULE_NONZERO;
 	p->attr[0].hasFill = 1;
-	p->attr[0].visible = 1;
+	// p->attr[0].visible = 1;
+	p->attr[0].visible = NSVG_VIS_DISPLAY | NSVG_VIS_VISIBLE;
 
 	return p;
 
@@ -805,6 +812,14 @@ static float nsvg__convertToPixels(NSVGparser* p, NSVGcoordinate c, float orig, 
 	return c.value;
 }
 
+static float nsvg__convertToPixelsForGradient(NSVGparser* p, char units, NSVGcoordinate c, float orig, float length)
+{
+	if (units == NSVG_USER_SPACE || c.units == NSVG_UNITS_PERCENT)
+		return nsvg__convertToPixels(p, c, orig, length);
+
+	return orig + c.value * length;
+}
+
 static NSVGgradientData* nsvg__findGradientData(NSVGparser* p, const char* id)
 {
 	NSVGgradientData* grad = p->gradients;
@@ -868,10 +883,14 @@ static NSVGgradient* nsvg__createGradient(NSVGparser* p, const char* id, const f
 
 	if (data->type == NSVG_PAINT_LINEAR_GRADIENT) {
 		float x1, y1, x2, y2, dx, dy;
-		x1 = nsvg__convertToPixels(p, data->linear.x1, ox, sw);
-		y1 = nsvg__convertToPixels(p, data->linear.y1, oy, sh);
-		x2 = nsvg__convertToPixels(p, data->linear.x2, ox, sw);
-		y2 = nsvg__convertToPixels(p, data->linear.y2, oy, sh);
+		// x1 = nsvg__convertToPixels(p, data->linear.x1, ox, sw);
+		// y1 = nsvg__convertToPixels(p, data->linear.y1, oy, sh);
+		// x2 = nsvg__convertToPixels(p, data->linear.x2, ox, sw);
+		// y2 = nsvg__convertToPixels(p, data->linear.y2, oy, sh);
+		x1 = nsvg__convertToPixelsForGradient(p, data -> units, data->linear.x1, ox, sw);
+		y1 = nsvg__convertToPixelsForGradient(p, data -> units, data->linear.y1, oy, sh);
+		x2 = nsvg__convertToPixelsForGradient(p, data -> units, data->linear.x2, ox, sw);
+		y2 = nsvg__convertToPixelsForGradient(p, data -> units, data->linear.y2, oy, sh);		
 		// Calculate transform aligned to the line
 		dx = x2 - x1;
 		dy = y2 - y1;
@@ -880,11 +899,16 @@ static NSVGgradient* nsvg__createGradient(NSVGparser* p, const char* id, const f
 		grad->xform[4] = x1; grad->xform[5] = y1;
 	} else {
 		float cx, cy, fx, fy, r;
-		cx = nsvg__convertToPixels(p, data->radial.cx, ox, sw);
-		cy = nsvg__convertToPixels(p, data->radial.cy, oy, sh);
-		fx = nsvg__convertToPixels(p, data->radial.fx, ox, sw);
-		fy = nsvg__convertToPixels(p, data->radial.fy, oy, sh);
-		r = nsvg__convertToPixels(p, data->radial.r, 0, sl);
+		// cx = nsvg__convertToPixels(p, data->radial.cx, ox, sw);
+		// cy = nsvg__convertToPixels(p, data->radial.cy, oy, sh);
+		// fx = nsvg__convertToPixels(p, data->radial.fx, ox, sw);
+		// fy = nsvg__convertToPixels(p, data->radial.fy, oy, sh);
+		// r = nsvg__convertToPixels(p, data->radial.r, 0, sl);
+		cx = nsvg__convertToPixelsForGradient(p, data -> units, data->radial.cx, ox, sw);
+		cy = nsvg__convertToPixelsForGradient(p, data -> units, data->radial.cy, oy, sh);
+		fx = nsvg__convertToPixelsForGradient(p, data -> units, data->radial.fx, ox, sw);
+		fy = nsvg__convertToPixelsForGradient(p, data -> units, data->radial.fy, oy, sh);
+		r = nsvg__convertToPixelsForGradient(p, data -> units, data->radial.r, 0, sl);		
 		// Calculate transform aligned to the circle
 		grad->xform[0] = r; grad->xform[1] = 0;
 		grad->xform[2] = 0; grad->xform[3] = r;
@@ -1011,8 +1035,8 @@ static void nsvg__addShape(NSVGparser* p)
 	}
 
 	// Set flags
-	shape->flags = (attr->visible ? NSVG_FLAGS_VISIBLE : 0x00);
-
+	// shape->flags = (attr->visible ? NSVG_FLAGS_VISIBLE : 0x00);
+	shape->flags = ((attr->visible & NSVG_VIS_DISPLAY) && (attr->visible & NSVG_VIS_VISIBLE) ? NSVG_FLAGS_VISIBLE : 0x00);
 	// Add to tail
 	if (p->image->shapes == NULL)
 		p->image->shapes = shape;
@@ -1284,6 +1308,19 @@ static unsigned int nsvg__parseColorRGB(const char* str)
 	return NSVG_RGB(rgbi[0], rgbi[1], rgbi[2]);
 }
 
+static unsigned int nsvg__parseColorRGBA(const char* str)
+{
+	int r = -1, g = -1, b = -1;
+	float a = -1;
+	char s1[32]="", s2[32]="", s3[32]="";
+	sscanf(str + 5, "%d%[%%, \t]%d%[%%, \t]%d%[%%, \t]%f", &r, s1, &g, s2, &b, s3, &a);
+	if (strchr(s1, '%')) {
+		return NSVG_RGBA((r*255)/100,(g*255)/100,(b*255)/100,(a*255)/100);
+	} else {
+		return NSVG_RGBA(r,g,b,(a*255));
+	}
+}
+
 typedef struct NSVGNamedColor {
 	const char* name;
 	unsigned int color;
@@ -1465,6 +1502,8 @@ static unsigned int nsvg__parseColor(const char* str)
 		return nsvg__parseColorHex(str);
 	else if (len >= 4 && str[0] == 'r' && str[1] == 'g' && str[2] == 'b' && str[3] == '(')
 		return nsvg__parseColorRGB(str);
+	else if (len >= 5 && str[0] == 'r' && str[1] == 'g' && str[2] == 'b' && str[3] == 'a' && str[4] == '(')
+		return nsvg__parseColorRGBA(str);		
 	return nsvg__parseColorName(str);
 }
 
@@ -1786,8 +1825,15 @@ static int nsvg__parseAttr(NSVGparser* p, const char* name, const char* value)
 		nsvg__parseStyle(p, value);
 	} else if (strcmp(name, "display") == 0) {
 		if (strcmp(value, "none") == 0)
-			attr->visible = 0;
+			// attr->visible = 0;
+			attr->visible &= ~NSVG_VIS_DISPLAY;
 		// Don't reset ->visible on display:inline, one display:none hides the whole subtree
+	} else if (strcmp(name, "visibility") == 0) {
+		if (strcmp(value, "hidden") == 0) {
+			attr->visible &= ~NSVG_VIS_VISIBLE;
+		} else if (strcmp(value, "visible") == 0) {
+			attr->visible |= NSVG_VIS_VISIBLE;
+		}		
 
 	} else if (strcmp(name, "fill") == 0) {
 		if (strcmp(value, "none") == 0) {
@@ -1798,6 +1844,13 @@ static int nsvg__parseAttr(NSVGparser* p, const char* name, const char* value)
 		} else {
 			attr->hasFill = 1;
 			attr->fillColor = nsvg__parseColor(value);
+			// if the fillColor has an alpha value then use it to
+			// set the fillOpacity
+			if (attr->fillColor & 0xFF000000) {
+				attr->fillOpacity = ((attr->fillColor >> 24) & 0xFF) / 255.0;
+				// remove the alpha value from the color
+				attr->fillColor &= 0x00FFFFFF;
+			}			
 		}
 	} else if (strcmp(name, "opacity") == 0) {
 		attr->opacity = nsvg__parseOpacity(value);
@@ -1812,6 +1865,13 @@ static int nsvg__parseAttr(NSVGparser* p, const char* name, const char* value)
 		} else {
 			attr->hasStroke = 1;
 			attr->strokeColor = nsvg__parseColor(value);
+			// if the strokeColor has an alpha value then use it to
+			// set the strokeOpacity
+			if (attr->strokeColor & 0xFF000000) {
+				attr->strokeOpacity = ((attr->strokeColor >> 24) & 0xFF) / 255.0;
+				// remove the alpha value from the color
+				attr->strokeColor &= 0x00FFFFFF;
+			}			
 		}
 	} else if (strcmp(name, "stroke-width") == 0) {
 		attr->strokeWidth = nsvg__parseCoordinate(p, value, 0.0f, nsvg__actualLength(p));
@@ -2976,6 +3036,7 @@ static void nsvg__createGradients(NSVGparser* p)
 			if (shape->fill.type == NSVG_PAINT_UNDEF) {
 				shape->fill.type = NSVG_PAINT_NONE;
 			}
+			
 		}
 		if (shape->stroke.type == NSVG_PAINT_UNDEF) {
 			if (shape->strokeGradient[0] != '\0') {
