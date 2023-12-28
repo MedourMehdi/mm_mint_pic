@@ -67,3 +67,7 @@ temp/img_psd copy/img_psd.hxx
 .vscode/settings.json
 build/temp/cmyk_to_rgb.o
 .vscode/settings.json
+.vscode/settings.json
+bin/mm_pic_68k.prg
+bin/mm_pic_68k.tar.gz
+bin/fonts/emmasoph.ttf
