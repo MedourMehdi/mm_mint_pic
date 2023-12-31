@@ -564,3 +564,21 @@ const wchar_t *st_Char_to_WChar(const char *c) {
     mbstowcs (wc, c, cSize);
     return wc;
 }
+
+void st_Path_to_Linux(const char* st_path){
+    char* lnx_path = (char*)mem_calloc(1, strlen(st_path));
+    char str_tmp[] = "\\/";
+    if( strncmp(&st_path[1], ":", 1) == 0){
+        if( strncmp(&st_path[0], "U", 1) == 0 || strncmp(&st_path[0], "u", 1) == 0){
+            strcpy(lnx_path, "/");
+            strcat(&lnx_path[1], &st_path[3]);
+        }else{
+            strcpy(lnx_path, "/");
+            strncpy(&lnx_path[1], st_path, 1);
+            strcat(&lnx_path[2], &st_path[2]);
+        }
+        replace_char(lnx_path, str_tmp[0], str_tmp[1]);
+        // printf("--> New path is %s", lnx_path);
+        strcpy((char*)st_path, lnx_path);
+    }
+}
