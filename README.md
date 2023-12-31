@@ -3,7 +3,8 @@ mm_mint_pic is an images viewer/re-scaler and can export them to different file 
 
 ## Description
 
-![Product Name Screen Shot][product-screenshot]
+![IMAGE MMPIC ScreenShot][mmpic-image-screenshot]
+![VIDEO MMPIC ScreenShot][mmpic-video-screenshot]
 <div style="text-align: justify">
 mm_mint_pic is designed to display modern formats images in GEM windows.
 
@@ -162,4 +163,5 @@ Inspiration, code snippets, etc.
 * [Myaes](http://myaes.lutece.net/)
 * [FreeMint](https://freemint.github.io/)
 
-[product-screenshot]: screenshot.png
+[mmpic-image-screenshot]: screenshot.png
+[mmpic-video-screenshot]: screenshot_video.png
