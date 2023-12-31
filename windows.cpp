@@ -251,7 +251,10 @@ int16_t close_window( int16_t this_win_handle ){
 			mem_free(this_win->wi_control_bar->control_bar_list);
 			mem_free(this_win->wi_control_bar);					
 		}
-
+/*FFMPEG VIDEO*/		
+		if(this_win->wi_ffmpeg != NULL){
+			mem_free(this_win->wi_ffmpeg);				
+		}
 /*WI_DATA*/
 		if( this_win->wi_data != NULL ){
 /*FORM*/
@@ -658,6 +661,7 @@ void st_Init_Default_Win(struct_window *this_win){
 	this_win->wi_form			= NULL;
 	this_win->wi_thumb			= NULL;
 	this_win->wi_crop			= NULL;
+	this_win->wi_ffmpeg			= NULL;
 	this_win->win_is_topped		= FALSE;
 	this_win->total_length_w = 0; this_win->total_length_h = 0;
 

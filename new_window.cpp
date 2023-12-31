@@ -20,6 +20,7 @@
 #include "img_psd/img_psd.h"
 
 #include "vid_flic/vid_flic.h"
+#include "vid_ffmpeg/vid_ffmpeg.h"
 
 #include "img_dummy/img_dummy.h"
 
@@ -127,7 +128,25 @@ bool new_win_img(const char *new_file){
 						}
 					}
 					st_Init_Flic(&win_struct_array[i]);
-				} else if (check_ext(file_extension, "WEB") || check_ext(file_extension, "WEBP")){
+				} 
+				#ifdef WITH_FFMPEG
+				else if (st_check_ffmpeg_ext(file_extension)){
+					if(win_master_thumb == NULL && screen_workstation_bits_per_pixel > 8){
+						win_struct_array[i].wi_data->video_media = TRUE;
+						video_function = st_Win_Play_ffmpeg_Video;
+					}else{
+						if(st_form_alert_choice(FORM_QUESTION, (char*)"Video support only for >=16bpp", (char*)"Cancel", (char*)"Continue") == 1){
+							close_window(win_struct_array[i].wi_handle);
+							return false;
+						}else{
+							win_struct_array[i].wi_data->video_media = TRUE;
+							video_function = st_Win_Play_ffmpeg_Video;							
+						}
+					}
+					st_Init_ffmpeg(&win_struct_array[i]);
+				} 
+				#endif
+				else if (check_ext(file_extension, "WEB") || check_ext(file_extension, "WEBP")){
 					if(st_Detect_Webp_Animated(win_struct_array[i].wi_handle)){
 						if(win_master_thumb == NULL && screen_workstation_bits_per_pixel > 8){
 							win_struct_array[i].wi_data->video_media = TRUE;
@@ -159,9 +178,7 @@ bool new_win_img(const char *new_file){
 				else{
 					win_struct_array[i].wi_data->original_buffer = NULL;
 				}
-				
                 st_Set_Clipping(CLIPPING_ON, win_struct_array[i].work_pxy);
-
                 if(win_struct_array[i].rendering_time == FALSE){
                     start_time = st_Supexec(get200hz);
                 }

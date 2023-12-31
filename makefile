@@ -3,6 +3,14 @@ SRC_DIR := ./
 OBJ_DIR := ./build
 BIN_DIR := ./bin
 
+DEFINES :=
+WITH_FFMPEG := YES
+
+ifeq ($(WITH_FFMPEG), YES)
+DEFINES += -DWITH_FFMPEG=1
+endif
+
+LIB_FFMPEG := -lavformat -lavcodec -lavutil -lswscale -lswresample -lfribidi -llcms2 -lxml2 -liconv -lssl -lcrypto -lfreetype -lbz2 -lpng16 -lm -lz -lpthread -lwebp -lvpx -llzma -lx264 -lx265 -lstdc++ -ltheora -lopus -lwebpdemux -lwebpmux -lwebpdecoder -lvorbisenc -lvorbis -logg -lmp3lame -laacplus -laom -lfdk-aac
 LIB_XPDF := -lxpdf -lfofi -lgoo -lsplash 
 LIB_FREETYPE := -lfreetype -lbz2
 
@@ -22,11 +30,15 @@ OBJ := $(SRC:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 
 _CPPFLAGS := -I./
 
-_CFLAGS   := -m68020-60 -fomit-frame-pointer -fno-strict-aliasing -O2 
+_CFLAGS   := -m68020-60 -fomit-frame-pointer -fno-strict-aliasing -O2 $(DEFINES)
 
 _LDFLAGS  :=
 
-_LDLIBS   := -lgem -lpng -lz -lyuv -lheif -lwebp -lwebpdemux -ljpeg -ltiff -llzma -lde265 -lx265 -lpthread -lgif $(LIB_XPDF) $(LIB_FREETYPE) -lpsd_malloc
+_LDLIBS   := -lgem -lpng -lz -lyuv -lheif -lwebp -lwebpdemux -ljpeg -ltiff -llzma -lde265 -lx265 -lpthread -lgif $(LIB_XPDF) $(LIB_FREETYPE) -lpsd_malloc 
+
+ifeq ($(WITH_FFMPEG), YES)
+_LDLIBS += $(LIB_FFMPEG)
+endif
 
 # _CFLAGS += -Wl,--stack,10485760
 

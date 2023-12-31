@@ -127,12 +127,25 @@ typedef struct {
 	int8_t	dither_size;
 	long img_id;
 	int16_t img_index;
-	int16_t img_total;
+	u_int32_t img_total;
 } struct_image_metadata;
 
 typedef struct {
 	u_int32_t frame_delay;
 } struct_video_metadata;
+
+typedef struct {
+	void *pFormatCtx;
+	void *pCodecCtx;
+	void *pCodecParam;
+	void *pCodec;
+	void *pFrame;
+	void *pFrameRGB;	
+	void *pPacket;
+	int16_t videoStream;
+	double fps;
+	double delay;
+} struct_ffmpeg;
 
 typedef struct {
 	char *path;
@@ -205,6 +218,7 @@ typedef struct {
 	MFDB *wi_to_work_in_mfdb;
 	MFDB *wi_to_display_mfdb;
 
+	struct_ffmpeg			(*wi_ffmpeg);
 	struct_video_metadata	(*wi_video);
 	struct_crop				(*wi_crop);
 	struct_thumbs			(*wi_thumb);

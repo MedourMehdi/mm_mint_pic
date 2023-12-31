@@ -71,3 +71,5 @@ build/temp/cmyk_to_rgb.o
 bin/mm_pic_68k.prg
 bin/mm_pic_68k.tar.gz
 bin/fonts/emmasoph.ttf
+temp/ffmpeg_misc.txt
+build/vid_ffmpeg/vid_ffmpeg.o
