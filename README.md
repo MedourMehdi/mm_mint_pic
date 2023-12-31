@@ -49,6 +49,16 @@ No shared library or module is required to run it.
 ### Write
 * MFD (Screen memory RAW format)
 
+### Video with FFMPEG
+* All formats listed [here](https://github.com/MedourMehdi/mm_mint_pic/blob/main/vid_ffmpeg/vid_ffmpeg.cpp#L29)
+
+Notice that it's actually in testing plus no sound support is actually implemented.
+
+There're two possibilities for the future:
+
+* Use zitaresample library in order to dynamically rescale the sound frequency
+* Use pre existing frequencies available on Atari platforms: then the video will be faster/slower depending the selected frequency
+
 ## Getting Started
 
 ### Build Dependencies
@@ -67,11 +77,14 @@ No shared library or module is required to run it.
 * [Xpdf](https://github.com/MedourMehdi/xpdf)
 * [Psd_Sdk](https://github.com/MolecularMatters/psd_sdk)
 
+For video build you'll need ffmpeg package.
+
 You should found most of these libraries here: https://tho-otto.de/crossmint.php or you can read https://www.atari-forum.com/viewforum.php?f=70 if you want to rebuild them.
 
 ### Installing
 
 * "make" command will produce bin/mm_pic.prg.
+* If you want enbable the video support you have to set WITH_FFMPEG variable to YES in the makefile.
 * This repository contains sample icons but you should replace them with yours (32bpp / 24px or just adjust your struct_st_ico_png_list array for other sizes).
 
 ### Executing program
@@ -100,9 +113,41 @@ Medour Mehdi
 [@M.Medour](www.linkedin.com/in/mehdi-medour-2968b3b2)
 
 ## Version History
-
+* 0.8
+    * Video player support via ffmpeg libraries (LibAV) 
+* 0.7.5.3
+    * Read and write support for PSD pictures (Libpsd 0.9 replaced by Psd_Sdk)
+    * Grayscaling for control bar icons in 4bpp planar mode
+* 0.7
+    * Added support for PSD files (It uses LibPsd 0.9)
+    * Support icons Drag&Drop
+    * Friendly app name set in the desktop menu
+    * Respond correctly to AP_TERM & AP_RESCHG messages    
+* 0.6
+    * Video engine implemented
+    * Multiple process logic (via pthread functions)
+    * New formats supported (read):
+        * GIF
+        * FLIC
+        * WEBP (Animated)
+* 0.5
+    * New format supported (read):
+        * PDF
+* 0.4
+    * New format supported (read):
+        * SVG
+* 0.3
+    * New formats supported:
+        * Degas PI1
+        * Degas PI3
 * 0.1
-    * Initial Release
+    * Formats supported:
+        * HEIF
+        * TIFF
+        * PNG
+        * JPEG
+        * WEBP
+        * MFD
 
 ## License
 
