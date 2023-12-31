@@ -123,36 +123,38 @@ void st_Init_Default_Values_Control_Bar(struct_window *this_win){
 void st_Init_WinImage_Control_Bar(void* p_param){
 	/* depend of your application - I need this in order to get a win_handle linked to this control bar */
 	struct_window *this_win = (struct_window*)p_param;
-	if( this_win->wi_to_display_mfdb->fd_addr != NULL ){
+	// if( this_win->wi_to_display_mfdb->fd_addr != NULL ){
 		this_win->wi_control_bar = (struct_st_control_bar*)mem_alloc(sizeof(struct_st_control_bar));
 		this_win->wi_control_bar->control_bar_list = (struct_st_ico_png_list*)mem_alloc(sizeof(control_bar_winimage_list));
 		memcpy(this_win->wi_control_bar->control_bar_list, &control_bar_winimage_list, sizeof(control_bar_winimage_list));
 		st_Init_Default_Values_Control_Bar(this_win);
-	}
+	// }
 }
 
 void st_Init_WinVideo_Control_Bar(void* p_param){
 	/* depend of your application - I need this in order to get a win_handle linked to this control bar */
 	struct_window *this_win = (struct_window*)p_param;
-	if( this_win->wi_to_display_mfdb->fd_addr != NULL ){
-		this_win->wi_control_bar = (struct_st_control_bar*)mem_alloc(sizeof(struct_st_control_bar));
-		/* The array of struct you declared below - It contain indexes, path, etc... */
-		this_win->wi_control_bar->control_bar_list = (struct_st_ico_png_list*)mem_alloc(sizeof(control_bar_winvideo_list));
-		memcpy(this_win->wi_control_bar->control_bar_list, &control_bar_winvideo_list, sizeof(control_bar_winvideo_list));
-		st_Init_Default_Values_Control_Bar(this_win);
-	}
+	// if( this_win->wi_to_display_mfdb != NULL ){
+	// 	if( this_win->wi_to_display_mfdb->fd_addr != NULL ){
+			this_win->wi_control_bar = (struct_st_control_bar*)mem_alloc(sizeof(struct_st_control_bar));
+			/* The array of struct you declared below - It contain indexes, path, etc... */
+			this_win->wi_control_bar->control_bar_list = (struct_st_ico_png_list*)mem_alloc(sizeof(control_bar_winvideo_list));
+			memcpy(this_win->wi_control_bar->control_bar_list, &control_bar_winvideo_list, sizeof(control_bar_winvideo_list));
+			st_Init_Default_Values_Control_Bar(this_win);
+	// 	}
+	// }
 }
 
 void st_Init_WinDoc_Control_Bar(void* p_param){
 	/* depend of your application - I need this in order to get a win_handle linked to this control bar */
 	struct_window *this_win = (struct_window*)p_param;
-	if( this_win->wi_to_display_mfdb->fd_addr != NULL ){
+	// if( this_win->wi_to_display_mfdb->fd_addr != NULL ){
 		this_win->wi_control_bar = (struct_st_control_bar*)mem_alloc(sizeof(struct_st_control_bar));
 		/* The array of struct you declared below - It contain indexes, path, etc... */
 		this_win->wi_control_bar->control_bar_list = (struct_st_ico_png_list*)mem_alloc(sizeof(control_bar_windocument_list));
 		memcpy(this_win->wi_control_bar->control_bar_list, &control_bar_windocument_list, sizeof(control_bar_windocument_list));
 		st_Init_Default_Values_Control_Bar(this_win);
-	}
+	// }
 }
 
 void st_Init_WinStart_Control_Bar(void* p_param){
@@ -172,23 +174,26 @@ void st_Init_WinStart_Control_Bar(void* p_param){
 }
 
 void st_Reload_Control_Bar(struct_window *this_win, struct_st_control_bar* control_bar){
-	if( this_win->wi_to_display_mfdb->fd_addr != NULL && this_win->wi_control_bar != NULL ){
-		if(this_win->wi_control_bar->control_bar_h > 0){
-			if( this_win->wi_data->control_bar_media || screen_workstation_bits_per_pixel <= 8 || this_win->work_area.g_w > this_win->total_length_w || this_win->work_area.g_h > this_win->total_length_h || cpu_type < 30){
-				if(this_win->work_area.g_w > this_win->total_length_w || this_win->work_area.g_h > this_win->total_length_h){
-					control_bar->need_to_reload_control_bar = true;
-				}else{
-					control_bar->need_to_reload_control_bar = control_bar->st_control_bar_mfdb.fd_w == wrez ? control_bar->need_to_reload_control_bar : true;
-				}		// control_bar->need_to_reload_control_bar = control_bar->st_control_bar_mfdb.fd_w == wrez ? control_bar->need_to_reload_control_bar : true;		
-				st_Control_Bar_Refresh_Classic(control_bar, wrez, screen_workstation_bits_per_pixel);
-			} else {
-				st_Control_Bar_Refresh_MFDB(control_bar, this_win->wi_to_display_mfdb, this_win->current_pos_x, this_win->current_pos_y, this_win->work_area.g_w, this_win->work_area.g_h);
-			}
-			if(msg_buffer[0] != WM_VSLID && msg_buffer[0] != WM_HSLID){
-				st_Control_Bar_Buffer_to_Screen(control_bar, &control_bar->rect_control_bar);
+	if( this_win->wi_to_display_mfdb != NULL ){
+		if( this_win->wi_to_display_mfdb->fd_addr != NULL && this_win->wi_control_bar != NULL ){
+			if(this_win->wi_control_bar->control_bar_h > 0){
+				if( this_win->wi_data->control_bar_media || screen_workstation_bits_per_pixel <= 8 || this_win->work_area.g_w > this_win->total_length_w || this_win->work_area.g_h > this_win->total_length_h || cpu_type < 30){
+					if(this_win->work_area.g_w > this_win->total_length_w || this_win->work_area.g_h > this_win->total_length_h){
+						control_bar->need_to_reload_control_bar = true;
+					}else{
+						control_bar->need_to_reload_control_bar = control_bar->st_control_bar_mfdb.fd_w == wrez ? control_bar->need_to_reload_control_bar : true;
+					}		// control_bar->need_to_reload_control_bar = control_bar->st_control_bar_mfdb.fd_w == wrez ? control_bar->need_to_reload_control_bar : true;		
+					st_Control_Bar_Refresh_Classic(control_bar, wrez, screen_workstation_bits_per_pixel);
+				} else {
+					st_Control_Bar_Refresh_MFDB(control_bar, this_win->wi_to_display_mfdb, this_win->current_pos_x, this_win->current_pos_y, this_win->work_area.g_w, this_win->work_area.g_h);
+				}
+				if(msg_buffer[0] != WM_VSLID && msg_buffer[0] != WM_HSLID){
+					st_Control_Bar_Buffer_to_Screen(control_bar, &control_bar->rect_control_bar);
+				}
 			}
 		}
 	}
+
 }
 
 /* Functions for video */
