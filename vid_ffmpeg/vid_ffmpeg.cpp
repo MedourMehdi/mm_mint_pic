@@ -40,11 +40,8 @@ void st_Init_ffmpeg(struct_window *this_win){
 	this_win->refresh_win = st_Win_Video_ffmpeg;
     this_win->wi_data->img.img_id = 0;
     this_win->wi_data->img.img_index = 1;
-    if(!st_Set_Renderer(this_win)){
-        sprintf(alert_message, "screen_format: %d\nscreen_bits_per_pixel: %d", screen_workstation_format, screen_workstation_bits_per_pixel);
-        st_form_alert(FORM_STOP, alert_message);
-        return;
-    }
+    this_win->render_win = NULL;
+
     this_win->wi_ffmpeg = (struct_ffmpeg *)mem_alloc(sizeof(struct_ffmpeg));
     this_win->wi_ffmpeg->pFormatCtx = NULL;
     this_win->wi_ffmpeg->pCodecCtx = NULL;
@@ -53,21 +50,18 @@ void st_Init_ffmpeg(struct_window *this_win){
     this_win->wi_ffmpeg->pFrame = NULL;
     this_win->wi_ffmpeg->pPacket = NULL;
     this_win->wi_ffmpeg->pFrameRGB = NULL;
-
-    this_win->wi_data->play_on = FALSE;
+    this_win->wi_ffmpeg->videoStream = -1;
 }
 
 void st_Win_Video_ffmpeg(int16_t this_win_handle){
     struct_window *this_win;
     this_win = detect_window(this_win_handle);
 
-    if(this_win->wi_data->video_media){
-        this_win->wi_to_work_in_mfdb = &this_win->wi_original_mfdb;
-    }
-
-    if( st_Img32b_To_Window(this_win) == false ){
-        st_form_alert(FORM_STOP, alert_message);
-    }
+    this_win->wi_to_work_in_mfdb = &this_win->wi_original_mfdb;
+    st_Start_Window_Process(this_win);
+    this_win->wi_to_display_mfdb = this_win->wi_to_work_in_mfdb;
+    st_Limit_Work_Area(this_win);
+    st_End_Window_Process(this_win);
 }
 
 void *st_Win_Play_ffmpeg_Video(void *_this_win_handle){
@@ -75,6 +69,9 @@ void *st_Win_Play_ffmpeg_Video(void *_this_win_handle){
     int16_t this_win_handle = *(int16_t*)_this_win_handle;    
     struct_window *this_win;
     this_win = detect_window(this_win_handle);
+
+if(this_win->wi_ffmpeg->videoStream == -1){
+
     double time_start, time_end, total_duration, duration;
 
     int16_t videoStream = -1;
@@ -96,6 +93,28 @@ void *st_Win_Play_ffmpeg_Video(void *_this_win_handle){
     int numBytes;
 
     int response = 0;
+    AVPixelFormat screen_format;
+    // printf("--->screen_workstation_bits_per_pixel %d\n",screen_workstation_bits_per_pixel);
+    switch (screen_workstation_bits_per_pixel)
+    {
+    case 1:
+        screen_format = AV_PIX_FMT_MONOWHITE;
+        break;
+    case 16:
+        screen_format = AV_PIX_FMT_RGB565;
+        break;
+    case 24:
+        screen_format = AV_PIX_FMT_RGB24;
+        break;    
+    case 32:
+        screen_format = AV_PIX_FMT_RGB32;
+        break;
+    default:
+        sprintf(alert_message, "screen_workstation_bits_per_pixel not supported\n");
+        st_form_alert(FORM_EXCLAM, alert_message);
+        goto exit_1;
+        break;
+    }
 
     if(this_win->wi_ffmpeg->pFormatCtx == NULL){
         pFormatCtx = avformat_alloc_context();
@@ -106,10 +125,8 @@ void *st_Win_Play_ffmpeg_Video(void *_this_win_handle){
         }
      
         st_Path_to_Linux(this_win->wi_data->path);
-      
-        // printf("###\tformat %s\n###\tduration %lld us\n###\tbit_rate %lld\n", pFormatCtx->iformat->name, pFormatCtx->duration, pFormatCtx->bit_rate);
+
         if(avformat_open_input(&pFormatCtx, this_win->wi_data->path, NULL, NULL)!=0){
-            // printf("file %s\n", this_win->wi_data->path);
             sprintf(alert_message, "Can not open input file\n");
             st_form_alert(FORM_EXCLAM, alert_message);
             goto exit_1;
@@ -120,13 +137,10 @@ void *st_Win_Play_ffmpeg_Video(void *_this_win_handle){
             st_form_alert(FORM_EXCLAM, alert_message);
             goto exit_2;
         }
-        // av_dump_format(pFormatCtx, 0, this_win->wi_data->path, 0);
     } else {
         pFormatCtx = (AVFormatContext *)this_win->wi_ffmpeg->pFormatCtx;
     }
     if(this_win->wi_ffmpeg->pCodecParam == NULL){
-
-        // Find the first video stream
         for(int i = 0; i<pFormatCtx->nb_streams; i++){
             if(pFormatCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
                 videoStream = i;
@@ -149,9 +163,6 @@ void *st_Win_Play_ffmpeg_Video(void *_this_win_handle){
         pCodecParam = (AVCodecParameters *)this_win->wi_ffmpeg->pCodecParam;
         videoStream = this_win->wi_ffmpeg->videoStream;
     }    
-    printf("###\tVideo Codec: resolution %d x %d\n", pCodecParam->width , pCodecParam->height);
-    printf("###\tformat %s\n###\tduration %lld us\n###\tbit_rate %lld\n", pFormatCtx->iformat->name, pFormatCtx->duration, pFormatCtx->bit_rate);
-    printf("###\tFPS %f, Duration in second %f, delay %f\n", this_win->wi_ffmpeg->fps, (double)pFormatCtx->duration / (double)1000000, this_win->wi_ffmpeg->delay);
     if(this_win->wi_ffmpeg->pCodec == NULL){
         pCodec = (AVCodec*)avcodec_find_decoder(pCodecParam->codec_id);
         if(pCodec == NULL) {
@@ -179,9 +190,6 @@ void *st_Win_Play_ffmpeg_Video(void *_this_win_handle){
         pCodec = (AVCodec*)this_win->wi_ffmpeg->pCodec;
         pCodecCtx = (AVCodecContext *)this_win->wi_ffmpeg->pCodecCtx;
     }
-
-    printf("###\tCodec %s ID %d bit_rate %lld\n", pCodec->name, pCodec->id, pCodecParam->bit_rate);
-
     if(this_win->wi_ffmpeg->pFrame == NULL){
         pFrame=av_frame_alloc();
         if (pFrame == NULL) {
@@ -194,7 +202,6 @@ void *st_Win_Play_ffmpeg_Video(void *_this_win_handle){
     } else {
         pFrame = (AVFrame*)this_win->wi_ffmpeg->pFrame;
     }
-
     if(this_win->wi_ffmpeg->pFrameRGB == NULL){
         pFrameRGB=av_frame_alloc();
         if (pFrameRGB == NULL) {
@@ -207,7 +214,6 @@ void *st_Win_Play_ffmpeg_Video(void *_this_win_handle){
     } else {
         pFrameRGB = (AVFrame*)this_win->wi_ffmpeg->pFrameRGB;
     }
-
     if(this_win->wi_ffmpeg->pPacket == NULL){
         pPacket = av_packet_alloc();
             if (pPacket == NULL) {
@@ -220,58 +226,37 @@ void *st_Win_Play_ffmpeg_Video(void *_this_win_handle){
         } else {
             pPacket = (AVPacket*)this_win->wi_ffmpeg->pPacket;
     }
-
     /* You should first get width and height in order to build the destination buffer */
-restart:
-
-    if(this_win->wi_original_mfdb.fd_addr != NULL){
-        // av_free(this_win->wi_original_mfdb.fd_addr);
-        mem_free(this_win->wi_original_mfdb.fd_addr);
-    }
-
     width = pCodecParam->width;
     height = pCodecParam->height;
-    // Determine required buffer size and allocate buffer
-    numBytes = av_image_get_buffer_size(AV_PIX_FMT_RGB32, pCodecCtx->width + 1, pCodecCtx->height + 1, 1);
-    // buffer = (uint8_t *)av_malloc( numBytes * sizeof(uint8_t) );
+    /* Determine required buffer size and allocate buffer */
+    numBytes = av_image_get_buffer_size(screen_format, pCodecCtx->width + 1, pCodecCtx->height + 1, 1);
     buffer = (uint8_t *)mem_alloc( numBytes * sizeof(uint8_t) );
     memset(buffer, 0, numBytes);
     if(buffer == NULL){
-        sprintf(alert_message, "Out Of Mem Error\nAsked for %doctets", width * height * 4);
+        sprintf(alert_message, "Out Of Mem Error\nAsked for %doctets", width * height * (screen_workstation_bits_per_pixel >> 2));
         st_form_alert(FORM_EXCLAM, alert_message);
         goto exit_5;
     }
-    av_image_fill_arrays(pFrameRGB->data, pFrameRGB->linesize, buffer, AV_PIX_FMT_RGB32, pCodecCtx->width, pCodecCtx->height, 1);
+    av_image_fill_arrays(pFrameRGB->data, pFrameRGB->linesize, buffer, screen_format, pCodecCtx->width, pCodecCtx->height, 1);
 
-    // initialize SWS context for software scaling
-    sws_ctx = sws_getContext(pCodecCtx->width,
-        pCodecCtx->height,
-        pCodecCtx->pix_fmt,
-        pCodecCtx->width,
-        pCodecCtx->height,
-        AV_PIX_FMT_RGB32,
-        SWS_BILINEAR,
-        NULL,
-        NULL,
-        NULL
-        );
-    mfdb_update_bpp(&this_win->wi_original_mfdb, (int8_t *)buffer, width, height, 32);
-
-    this_win->wi_data->img.scaled_pourcentage = 0;
-    this_win->wi_data->img.rotate_degree = 0;
-    this_win->wi_data->resized = FALSE;
-    this_win->wi_data->img.original_width = width;
-    this_win->wi_data->img.original_height = height;
-
-    this_win->total_length_w = this_win->wi_original_mfdb.fd_w;
-    this_win->total_length_h = this_win->wi_original_mfdb.fd_h;
-    this_win->wi_data->stop_original_data_load = TRUE;
-    this_win->wi_data->wi_buffer_modified = FALSE;
-
+    /* Initialize SWS context for software scaling */ 
+    sws_ctx = sws_getContext(pCodecCtx->width, pCodecCtx->height,
+                                pCodecCtx->pix_fmt,
+                                pCodecCtx->width, pCodecCtx->height,
+                                screen_format, SWS_BILINEAR,
+                                NULL, NULL, NULL );
+    if(this_win->wi_original_mfdb.fd_addr != NULL){
+        mem_free(this_win->wi_original_mfdb.fd_addr);
+    }
+    mfdb_update_bpp(&this_win->wi_original_mfdb, (int8_t *)buffer, width, height, screen_workstation_bits_per_pixel);
+    st_Win_Set_Ready(this_win, width, height);
     this_win->refresh_win(this_win->wi_handle);
-    /* Then we fill the buffer with our frame and refresh until stop action is called */   
+    if((av_read_frame(pFormatCtx, pPacket) < 0) && videoStream != -1){
+        av_seek_frame(pFormatCtx, videoStream, 0, AVSEEK_FLAG_BYTE);
+    }       
     while(this_win->wi_data->wi_pth != NULL){
-        while( (av_read_frame(pFormatCtx, pPacket) >= 0) && this_win->wi_data->play_on){
+        while( (av_read_frame(pFormatCtx, pPacket) >= 0) && this_win->wi_data->play_on && this_win->wi_data->wi_pth != NULL){
             if( pPacket->stream_index == videoStream){
                 time_start = clock();
                 response = avcodec_send_packet(pCodecCtx, pPacket);
@@ -285,53 +270,49 @@ restart:
                         break;
                     } else if (response < 0) {
                         printf("Error while receiving a frame from the decoder: %d\n", response);
+                        break;
                     }
                     sws_scale(sws_ctx, (uint8_t const * const *)pFrame->data,
                     pFrame->linesize, 0, pCodecCtx->height,
                     pFrameRGB->data, pFrameRGB->linesize);
                     av_packet_unref(pPacket);
                 }
-        
                 time_end = clock();
                 duration = (double)5 * (double)(time_end - time_start);
 
                 while( duration <  this_win->wi_ffmpeg->delay){
                     duration = (double)5 * (double)(clock() - time_start);
                 }
-                if(screen_workstation_bits_per_pixel != 32){
-                    this_win->wi_data->wi_buffer_modified = FALSE;
-                    this_win->wi_data->remap_displayed_mfdb = TRUE;
-                    this_win->refresh_win(this_win->wi_handle);
-                }
                 st_Control_Bar_Refresh_MFDB(this_win->wi_control_bar, this_win->wi_to_display_mfdb, this_win->current_pos_x, this_win->current_pos_y, this_win->work_area.g_w, this_win->work_area.g_h);          
                 send_message(this_win_handle, WM_REDRAW);
-                // event_loop(NULL);
                 pthread_yield_np();
+                /*This is useful if you want to move or resize the movie in Xaaes while it's playing */
+                // pthread_yield_np(); 
             }
         }
-        if(this_win->wi_data->play_on){
+        if(this_win->wi_data->play_on && this_win->wi_data->wi_pth != NULL){
             if((av_read_frame(pFormatCtx, pPacket) < 0) && videoStream != -1){
                 av_seek_frame(pFormatCtx, videoStream, 0, AVSEEK_FLAG_BACKWARD);
             }
         }
         pthread_yield_np();
     }
-
-exit_5:
-    // Free the RGB image
-    av_free(pFrameRGB);    
-exit_4:
-    av_free(pFrame);
-exit_3:
-    // Close the codecs
-    avcodec_close(pCodecCtx);
-exit_2:
-    // Close the video file
-    avformat_close_input(&pFormatCtx);
-exit_1:
-    send_message(this_win_handle, WM_CLOSED);
-    return NULL;     
-
+    exit_5:
+        // Free the RGB image
+        av_free(pFrameRGB);    
+    exit_4:
+        av_free(pFrame);
+    exit_3:
+        // Close the codecs
+        avcodec_close(pCodecCtx);
+    exit_2:
+        // Close the video file
+        avformat_close_input(&pFormatCtx);
+    exit_1:
+        send_message(this_win_handle, WM_CLOSED);
+}
+send_message(this_win_handle, WM_CLOSED);
+return NULL; 
 }
 
 bool st_check_ffmpeg_ext(const char* this_ext){
