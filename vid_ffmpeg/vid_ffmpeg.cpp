@@ -244,7 +244,7 @@ if(this_win->wi_ffmpeg->videoStream == -1){
     sws_ctx = sws_getContext(pCodecCtx->width, pCodecCtx->height,
                                 pCodecCtx->pix_fmt,
                                 pCodecCtx->width, pCodecCtx->height,
-                                screen_format, SWS_BILINEAR,
+                                screen_format, SWS_FAST_BILINEAR,
                                 NULL, NULL, NULL );
     if(this_win->wi_original_mfdb.fd_addr != NULL){
         mem_free(this_win->wi_original_mfdb.fd_addr);
@@ -287,12 +287,13 @@ if(this_win->wi_ffmpeg->videoStream == -1){
                 send_message(this_win_handle, WM_REDRAW);
                 pthread_yield_np();
                 /*This is useful if you want to move or resize the movie in Xaaes while it's playing */
-                // pthread_yield_np(); 
+                pthread_yield_np(); 
             }
         }
         if(this_win->wi_data->play_on && this_win->wi_data->wi_pth != NULL){
             if((av_read_frame(pFormatCtx, pPacket) < 0) && videoStream != -1){
-                av_seek_frame(pFormatCtx, videoStream, 0, AVSEEK_FLAG_BACKWARD);
+                // av_seek_frame(pFormatCtx, videoStream, 0, AVSEEK_FLAG_BACKWARD);
+                av_seek_frame(pFormatCtx, videoStream, 0, AVSEEK_FLAG_BYTE);
             }
         }
         pthread_yield_np();
@@ -301,6 +302,7 @@ if(this_win->wi_ffmpeg->videoStream == -1){
         // Free the RGB image
         av_free(pFrameRGB);    
     exit_4:
+        // Free main frame image
         av_free(pFrame);
     exit_3:
         // Close the codecs
@@ -310,6 +312,7 @@ if(this_win->wi_ffmpeg->videoStream == -1){
         avformat_close_input(&pFormatCtx);
     exit_1:
         send_message(this_win_handle, WM_CLOSED);
+        return NULL; 
 }
 send_message(this_win_handle, WM_CLOSED);
 return NULL; 
