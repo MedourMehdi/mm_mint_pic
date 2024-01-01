@@ -40,9 +40,11 @@ int16_t mb, mc; /* Mouse button - clicks */
 int16_t ks, kc; /* Key state/code */
 u_int32_t msg_timer = 0L;
 int16_t events; /* What events are valid ? */
-long event_timer_default = 200;
-long event_timer_video = 8;
-long event_timer_used = event_timer_default;
+long event_timer_default = 200L;
+long event_timer_video = 8L;
+// long event_timer_used = event_timer_default;
+// long event_timer_used = event_timer_video;
+long event_timer_used = 0L;
 int16_t msg_buffer[8];
 
 struct_window *selected_window;
@@ -92,8 +94,6 @@ int main(int argc, char *argv[]){
 
 	if(!st_Ico_PNG_Init_Video()){ goto close_ico_video; }
 
-	st_Open_Thread(&exec_eventloop, NULL);
-
 	if (argc > 1){
 		for(int16_t i = 1; i < argc; i++) {
 			strcat(this_file, argv[i]);
@@ -111,8 +111,11 @@ int main(int argc, char *argv[]){
 		} while ( pfile ) ;
 	} else {
 		if(!st_Ico_PNG_Init_Main()){goto close_ico_main;}
-			st_Open_Thread(&new_win_start_threaded, NULL);
+			// st_Open_Thread(&new_win_start_threaded, NULL);
+			new_win_start_threaded(NULL);
 	}
+
+	st_Open_Thread(&exec_eventloop, NULL);
 
 	while(total_thread > 0){
 		st_Wait_For_Threads();
@@ -247,8 +250,7 @@ void exit_app(){
 }
 
 void* exec_eventloop(void* p_param){
-	while ( exit_call != TRUE )
-	{
+	while ( exit_call != TRUE ) {
 		event_loop(NULL);
 		pthread_yield_np();
 	}
@@ -258,9 +260,9 @@ void* exec_eventloop(void* p_param){
 
 void *event_loop(void *result) {
 	events = evnt_multi(
-		// MU_MESAG|MU_BUTTON|MU_KEYBD,
-		MU_MESAG|MU_BUTTON|MU_KEYBD|MU_TIMER,
-		256 | 2, 3, butdown, /* button state tested for UP/DOWN */
+		MU_MESAG|MU_BUTTON|MU_KEYBD,
+		// MU_MESAG|MU_BUTTON|MU_KEYBD|MU_TIMER,
+		256 | 1, 3, butdown, /* button state tested for UP/DOWN */
 		r1_flags, r1.g_x, r1.g_y, r1.g_w, r1.g_h, /* M1 event */
 		r2_flags, r2.g_x, r2.g_y, r2.g_w, r2.g_h, /* M2 event */
 		msg_buffer, /* Pointer to msg */
@@ -505,11 +507,12 @@ void *event_loop(void *result) {
 			}
 			break;
 		default:
+			pthread_yield_np();
 			break;
 		}
 	}
 	if (events & MU_BUTTON)
-	{	
+	{
 		int16_t this_win_handle, dummy;
 		wind_get(0,WF_TOP,&this_win_handle,&dummy,&dummy,&dummy);
 		selected_window = detect_window(this_win_handle);
@@ -558,6 +561,7 @@ void *event_loop(void *result) {
 						}
 						break;
 					default:
+						pthread_yield_np();
 						break;
 					}
 					st_Reload_Control_Bar(selected_window, selected_window->wi_control_bar);
@@ -600,10 +604,12 @@ void *event_loop(void *result) {
 					st_Reload_Control_Bar(selected_window, selected_window->wi_control_bar);
 					break;														
 				default:
+				pthread_yield_np();
 					break;
 				}
 			}
 		}
 	}
+	pthread_yield_np();
 	return NULL;
 }
