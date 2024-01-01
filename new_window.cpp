@@ -182,7 +182,20 @@ bool new_win_img(const char *new_file){
                 if(win_struct_array[i].rendering_time == FALSE){
                     start_time = st_Supexec(get200hz);
                 }
-				
+
+				if(win_struct_array[i].wi_data->doc_media){
+					st_Init_WinDoc_Control_Bar((void*)&win_struct_array[i]);
+				} else if(win_struct_array[i].wi_data->video_media){
+					st_Init_WinVideo_Control_Bar((void*)&win_struct_array[i]);
+					if(win_struct_array[i].wi_ffmpeg != NULL){
+						win_struct_array[i].wi_data->play_on = FALSE;
+						win_struct_array[i].wi_control_bar->control_bar_h = CONTROLBAR_H;
+					}
+				}
+				else{
+					st_Init_WinImage_Control_Bar((void*)&win_struct_array[i]);
+				}
+
 				if(win_struct_array[i].wi_data->video_media){
 					int th_idx = st_Open_Thread(video_function, (void*)&win_struct_array[i].wi_handle);
 					win_struct_array[i].wi_data->wi_pth = &threads[th_idx];
@@ -197,14 +210,6 @@ bool new_win_img(const char *new_file){
                 }
 				TRACE(("Rendering time %lums\n", win_struct_array[i].rendering_time))
                 st_Set_Clipping(CLIPPING_OFF, win_struct_array[i].work_pxy);
-				if(win_struct_array[i].wi_data->doc_media){
-					st_Init_WinDoc_Control_Bar((void*)&win_struct_array[i]);
-				} else if(win_struct_array[i].wi_data->video_media){
-					st_Init_WinVideo_Control_Bar((void*)&win_struct_array[i]);
-				}
-				else{
-					st_Init_WinImage_Control_Bar((void*)&win_struct_array[i]);
-				}
 				if(win_struct_array[i].wi_data->thumbnail_slave){
 					
 					char* file = basename(win_struct_array[i].wi_data->path);

@@ -385,6 +385,9 @@ void st_Control_Bar_Refresh_MFDB(struct_st_control_bar *control_bar,  MFDB *back
 
 	int16_t nb_components = background_mfdb->fd_nplanes >> 3;
 	u_int16_t control_bar_height = CONTROLBAR_H;
+	if(win_work_area_width < 1){
+		return;
+	}
 	u_int8_t* dst_buffer = st_ScreenBuffer_Alloc_bpp(win_work_area_width, control_bar_height, nb_components << 3);
 	if(dst_buffer == NULL){
 		sprintf(alert_message,"Error\nOut of memory");
