@@ -226,20 +226,19 @@ if(this_win->wi_ffmpeg->videoStream == -1){
         } else {
             pPacket = (AVPacket*)this_win->wi_ffmpeg->pPacket;
     }
-    /* You should first get width and height in order to build the destination buffer */
-    width = pCodecParam->width;
-    height = pCodecParam->height;
+    // /* You should first get width and height in order to build the destination buffer */
+    // width = pCodecParam->width;
+    // height = pCodecParam->height;
     /* Determine required buffer size and allocate buffer */
-    numBytes = av_image_get_buffer_size(screen_format, pCodecCtx->width + 1, pCodecCtx->height + 1, 1);
+    numBytes = av_image_get_buffer_size(screen_format, pCodecCtx->width , pCodecCtx->height , 16);
     buffer = (uint8_t *)mem_alloc( numBytes * sizeof(uint8_t) );
     memset(buffer, 0, numBytes);
     if(buffer == NULL){
-        sprintf(alert_message, "Out Of Mem Error\nAsked for %doctets", width * height * (screen_workstation_bits_per_pixel >> 2));
+        sprintf(alert_message, "Out Of Mem Error\nAsked for %doctets", numBytes);
         st_form_alert(FORM_EXCLAM, alert_message);
         goto exit_5;
     }
-    av_image_fill_arrays(pFrameRGB->data, pFrameRGB->linesize, buffer, screen_format, pCodecCtx->width, pCodecCtx->height, 1);
-
+    av_image_fill_arrays(pFrameRGB->data, pFrameRGB->linesize, buffer, screen_format, pCodecCtx->width, pCodecCtx->height, 16);
     /* Initialize SWS context for software scaling */ 
     sws_ctx = sws_getContext(pCodecCtx->width, pCodecCtx->height,
                                 pCodecCtx->pix_fmt,
@@ -249,11 +248,12 @@ if(this_win->wi_ffmpeg->videoStream == -1){
     if(this_win->wi_original_mfdb.fd_addr != NULL){
         mem_free(this_win->wi_original_mfdb.fd_addr);
     }
-    mfdb_update_bpp(&this_win->wi_original_mfdb, (int8_t *)buffer, width, height, screen_workstation_bits_per_pixel);
-    st_Win_Set_Ready(this_win, width, height);
+    mfdb_update_bpp(&this_win->wi_original_mfdb, (int8_t *)buffer, pCodecCtx->width, pCodecCtx->height, screen_workstation_bits_per_pixel);
+    st_Win_Set_Ready(this_win, pCodecCtx->width, pCodecCtx->height);
     this_win->refresh_win(this_win->wi_handle);
     if((av_read_frame(pFormatCtx, pPacket) < 0) && videoStream != -1){
-        av_seek_frame(pFormatCtx, videoStream, 0, AVSEEK_FLAG_BYTE);
+        av_seek_frame(pFormatCtx, videoStream, 0, AVSEEK_FLAG_BACKWARD);
+        // av_seek_frame(pFormatCtx, videoStream, 0, AVSEEK_FLAG_BYTE);
     }       
     while(this_win->wi_data->wi_pth != NULL){
         while( (av_read_frame(pFormatCtx, pPacket) >= 0) && this_win->wi_data->play_on && this_win->wi_data->wi_pth != NULL){
