@@ -230,7 +230,7 @@ if(this_win->wi_ffmpeg->videoStream == -1){
     // width = pCodecParam->width;
     // height = pCodecParam->height;
     /* Determine required buffer size and allocate buffer */
-    numBytes = av_image_get_buffer_size(screen_format, pCodecCtx->width , pCodecCtx->height , 16);
+    numBytes = av_image_get_buffer_size(screen_format, pCodecCtx->width , pCodecCtx->height , 32);
     buffer = (uint8_t *)mem_alloc( numBytes * sizeof(uint8_t) );
     memset(buffer, 0, numBytes);
     if(buffer == NULL){
@@ -238,7 +238,7 @@ if(this_win->wi_ffmpeg->videoStream == -1){
         st_form_alert(FORM_EXCLAM, alert_message);
         goto exit_5;
     }
-    av_image_fill_arrays(pFrameRGB->data, pFrameRGB->linesize, buffer, screen_format, pCodecCtx->width, pCodecCtx->height, 16);
+    av_image_fill_arrays(pFrameRGB->data, pFrameRGB->linesize, buffer, screen_format, pCodecCtx->width, pCodecCtx->height, 32);
     /* Initialize SWS context for software scaling */ 
     sws_ctx = sws_getContext(pCodecCtx->width, pCodecCtx->height,
                                 pCodecCtx->pix_fmt,
