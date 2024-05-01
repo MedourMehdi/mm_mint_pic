@@ -253,8 +253,7 @@ if(this_win->wi_ffmpeg->videoStream == -1){
     this_win->refresh_win(this_win->wi_handle);
     if((av_read_frame(pFormatCtx, pPacket) < 0) && videoStream != -1){
         av_seek_frame(pFormatCtx, videoStream, 0, AVSEEK_FLAG_BACKWARD);
-        // av_seek_frame(pFormatCtx, videoStream, 0, AVSEEK_FLAG_BYTE);
-    }       
+    }
     while(this_win->wi_data->wi_pth != NULL){
         while( (av_read_frame(pFormatCtx, pPacket) >= 0) && this_win->wi_data->play_on && this_win->wi_data->wi_pth != NULL){
             if( pPacket->stream_index == videoStream){
@@ -292,8 +291,7 @@ if(this_win->wi_ffmpeg->videoStream == -1){
         }
         if(this_win->wi_data->play_on && this_win->wi_data->wi_pth != NULL){
             if((av_read_frame(pFormatCtx, pPacket) < 0) && videoStream != -1){
-                // av_seek_frame(pFormatCtx, videoStream, 0, AVSEEK_FLAG_BACKWARD);
-                av_seek_frame(pFormatCtx, videoStream, 0, AVSEEK_FLAG_BYTE);
+                av_seek_frame(pFormatCtx, videoStream, 0, AVSEEK_FLAG_BACKWARD);
             }
         }
         pthread_yield_np();
