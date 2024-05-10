@@ -203,6 +203,10 @@ void* st_Img_Play(void* p_param){
 	this_win->wi_data->play_on = this_win->wi_data->play_on == TRUE ? FALSE : TRUE;
 	event_timer_used = this_win->wi_data->play_on == TRUE ? event_timer_video : event_timer_default;
 	global_progress_bar->progress_bar_enabled = this_win->wi_data->play_on == TRUE ? FALSE : TRUE;
+	if(this_win->wi_snd != NULL){
+		this_win->wi_snd->flip_play_action = TRUE;
+		this_win->wi_snd->play = this_win->wi_snd->play == TRUE ? FALSE : TRUE;
+	}
 	// printf("Timer %ld\n", event_timer_used);
 	return NULL;
 }

@@ -22,6 +22,8 @@
 #include "vid_flic/vid_flic.h"
 #include "vid_ffmpeg/vid_ffmpeg.h"
 
+#include "snd_wav/snd_wav.hpp"
+
 #include "img_dummy/img_dummy.h"
 
 void* new_win_img_threaded(void* _this_file){
@@ -162,7 +164,23 @@ bool new_win_img(const char *new_file){
 					}
 					st_Init_Vid_WEBP(&win_struct_array[i]);
 				}
-
+				#ifdef WITH_WAVLIB
+				else if (check_ext(file_extension, "WAV")){
+					if(win_master_thumb == NULL && screen_workstation_bits_per_pixel > 8){
+						win_struct_array[i].wi_data->video_media = TRUE;
+						video_function = st_Win_Play_WAV;
+					}else{
+						if(st_form_alert_choice(FORM_QUESTION, (char*)"Video support only for >=16bpp", (char*)"Cancel", (char*)"Continue") == 1){
+							close_window(win_struct_array[i].wi_handle);
+							return false;
+						}else{
+							win_struct_array[i].wi_data->video_media = TRUE;
+							video_function = st_Win_Play_WAV;							
+						}
+					}
+					st_Init_WAV(&win_struct_array[i]);
+				} 
+				#endif
 				else {
 					form_alert(1, "[1][Wrong file extension][Okay]");
 					close_window(win_struct_array[i].wi_handle);

@@ -4,7 +4,11 @@ OBJ_DIR := ./build
 BIN_DIR := ./bin
 
 DEFINES :=
+WITH_WAVLIB := NO
 WITH_FFMPEG := YES
+ifeq ($(WITH_WAVLIB), YES)
+DEFINES += -DWITH_WAVLIB=1
+endif
 
 ifeq ($(WITH_FFMPEG), YES)
 DEFINES += -DWITH_FFMPEG=1
@@ -23,6 +27,10 @@ SRC := $(wildcard $(SRC_DIR)/*.cpp) \
   $(wildcard $(SRC_DIR)/*/rgb2lab/*.cpp) \
   $(wildcard $(SRC_DIR)/*/tgafunc/*.cpp) \
   $(wildcard $(SRC_DIR)/*/flic/*.cpp)
+
+ifeq ($(WITH_WAVLIB), YES)
+SRC += $(wildcard $(SRC_DIR)/*/wav_lib/*.cpp)
+endif
 
 BIN := $(BIN_DIR)/mm_pic.prg
 
