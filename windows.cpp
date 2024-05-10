@@ -773,7 +773,6 @@ int st_Open_Thread(void* func(void*), void* th_param){
 	long ret = 0;
 	for(int index = 0; index < NUM_THREADS; ++index){
 		if (threads[index] == NULL){
-			// printf("Debug - th_param %s", (char*)th_param);
 			ret = pthread_create( &threads[index], NULL, func, th_param );
 			if(ret != 0){
 				printf("pthread_create() - Error\n");

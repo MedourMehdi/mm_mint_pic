@@ -84,7 +84,6 @@ bool new_win_img(const char *new_file){
 /* CLASSIC WINDOW - GET WIN HANDLE */
 					open_window(&win_struct_array[i]);
 					if(!open_file(&win_struct_array[i], new_file)){
-						TRACE(("Failed open_file()\n"))
 						return false;
 					}
 				}
@@ -134,20 +133,20 @@ bool new_win_img(const char *new_file){
 					st_Init_Flic(&win_struct_array[i]);
 				} 
 				#ifdef WITH_FFMPEG
-				else if (st_check_ffmpeg_ext(file_extension)){
+				else if (st_Check_FF_Ext(file_extension)){
 					if(win_master_thumb == NULL && screen_workstation_bits_per_pixel > 8){
 						win_struct_array[i].wi_data->video_media = TRUE;
-						video_function = st_Win_Play_ffmpeg_Video;
+						video_function = st_Win_Play_FF_Media;
 					}else{
 						if(st_form_alert_choice(FORM_QUESTION, (char*)"Video support only for >=16bpp", (char*)"Cancel", (char*)"Continue") == 1){
 							close_window(win_struct_array[i].wi_handle);
 							return false;
 						}else{
 							win_struct_array[i].wi_data->video_media = TRUE;
-							video_function = st_Win_Play_ffmpeg_Video;							
+							video_function = st_Win_Play_FF_Media;
 						}
 					}
-					st_Init_ffmpeg(&win_struct_array[i]);
+					st_Init_FF_Media(&win_struct_array[i]);
 				} 
 				#endif
 				else if (check_ext(file_extension, "WEB") || check_ext(file_extension, "WEBP")){

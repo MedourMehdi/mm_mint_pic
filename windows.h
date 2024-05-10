@@ -163,16 +163,28 @@ typedef struct {
 } struct_video_metadata;
 
 typedef struct {
+	void *sws_ctx;
+	void *swr_ctx;
 	void *pFormatCtx;
-	void *pCodecCtx;
-	void *pCodecParam;
-	void *pCodec;
-	void *pFrame;
-	void *pFrameRGB;	
-	void *pPacket;
+	void *pCodecVideoCtx;
+	void *pCodecAudioCtx;
+	void *pCodecVideoParam;
+	void *pCodecAudioParam;
+	void *pCodecVideo;
+	void *pCodecAudio;
+	void *pFrameVideo;
+	void *pFrameAudio;	
+	void *pFrameRGBVideo;
+	void *pPacketVideo;
+	void *pPacketAudio;
 	int16_t videoStream;
+	int16_t audioStream;
 	double fps;
 	double delay;
+	double time_start;
+	double time_end;
+	double total_duration;
+	double duration;
 } struct_ffmpeg;
 
 typedef struct {
@@ -310,5 +322,7 @@ void st_Wait_For_Threads();
 void st_Win_Close_All(void);
 
 void st_Win_Set_Ready(struct_window* this_win, u_int16_t width, u_int16_t height);
+
+bool win_is_playing_media(void);
 
 #endif

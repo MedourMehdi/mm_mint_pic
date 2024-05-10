@@ -6,12 +6,18 @@ BIN_DIR := ./bin
 DEFINES :=
 WITH_WAVLIB := NO
 WITH_FFMPEG := YES
+WITH_FFMPEG_SOUND := YES
+
+
 ifeq ($(WITH_WAVLIB), YES)
 DEFINES += -DWITH_WAVLIB=1
 endif
 
 ifeq ($(WITH_FFMPEG), YES)
 DEFINES += -DWITH_FFMPEG=1
+ifeq ($(WITH_FFMPEG_SOUND), YES)
+DEFINES += -DWITH_FFMPEG_SOUND=1
+endif
 endif
 
 LIB_FFMPEG := -lavformat -lavcodec -lavutil -lswscale -lswresample -lfribidi -llcms2 -lxml2 -liconv -lssl -lcrypto -lfreetype -lbz2 -lpng16 -lm -lz -lpthread -lwebp -lvpx -llzma -lx264 -lx265 -lstdc++ -ltheora -lopus -lwebpdemux -lwebpmux -lwebpdecoder -lvorbisenc -lvorbis -logg -lmp3lame -laacplus -laom -lfdk-aac
