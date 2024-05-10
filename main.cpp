@@ -98,7 +98,11 @@ int main(int argc, char *argv[]){
 
 	if(!st_Ico_PNG_Init_Video()){ goto close_ico_video; }
 
-	st_Open_Thread(&exec_eventloop, NULL); /* Work here if Timer event is used */
+	if(!st_Ico_PNG_Init_Main()){goto close_ico_main;}
+
+	st_Open_Thread(&new_win_start_threaded, NULL);
+
+	// st_Open_Thread(&exec_eventloop, NULL); /* Work here if Timer event is used */
 
 	if (argc > 1){
 		for(int16_t i = 1; i < argc; i++) {
@@ -112,16 +116,26 @@ int main(int argc, char *argv[]){
 			va_file = (char*)mem_alloc(128);
 			memset(va_file, 0, 128);
 			pfile = GetNextVaStartFileName( pfile, va_file ) ;
-			new_win_img(va_file);
+			if(st_FileExistsAccess(va_file)){
+				// printf("Open %s\n", va_file);
+				new_win_img(va_file);
+			}else{
+				sprintf(alert_message, "File not found %s\n", va_file);
+				st_form_alert(FORM_EXCLAM, alert_message);
+			}
 			mem_free(va_file);
 		} while ( pfile ) ;
-	} else {
+	} 
+	/* Uncomment if you don't want the drag and drop main bar */
+	/* Don't forget to comment on the calls above */
+	/*
+	else {
 		if(!st_Ico_PNG_Init_Main()){goto close_ico_main;}
 			st_Open_Thread(&new_win_start_threaded, NULL);
-			// new_win_start_threaded(NULL);
-	}
+	}	
+	*/
 
-	// st_Open_Thread(&exec_eventloop, NULL);
+	st_Open_Thread(&exec_eventloop, NULL);
 
 	while(total_thread > 0){
 		st_Wait_For_Threads();

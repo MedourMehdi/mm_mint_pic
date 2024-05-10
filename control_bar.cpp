@@ -201,7 +201,14 @@ void st_Reload_Control_Bar(struct_window *this_win, struct_st_control_bar* contr
 void* st_Img_Play(void* p_param){
 	struct_window *this_win = (struct_window*)p_param;
 	this_win->wi_data->play_on = this_win->wi_data->play_on == TRUE ? FALSE : TRUE;
-	event_timer_used = this_win->wi_data->play_on == TRUE ? event_timer_video : event_timer_default;
+	if(this_win->wi_data->play_on){
+		event_timer_used = event_timer_video;
+	} else {
+		if( !win_is_playing_media() ){
+			event_timer_used = event_timer_default;
+		}
+	}
+	// event_timer_used = this_win->wi_data->play_on == TRUE ? event_timer_video : event_timer_default;
 	global_progress_bar->progress_bar_enabled = this_win->wi_data->play_on == TRUE ? FALSE : TRUE;
 	if(this_win->wi_snd != NULL){
 		this_win->wi_snd->flip_play_action = TRUE;

@@ -752,6 +752,22 @@ struct_window* get_win_thumb_master_by_file(const char* this_path){
 	return this_win;
 }
 
+bool win_is_playing_media(void){
+    int16_t i = 0;
+	bool ret = false;
+	struct_window* this_win = NULL;
+	while(i < MAX_WINDOWS && number_of_opened_windows > 0){
+        if( (win_struct_array[i].wi_handle > 0) && (win_struct_array[i].wi_data != NULL) ){
+            if ( win_struct_array[i].wi_data->play_on == TRUE ){
+				ret = true;
+				break;
+            }
+        }
+		i++;
+	}
+	return ret;
+}
+
 /* Pth stuff */
 int st_Open_Thread(void* func(void*), void* th_param){
 	long ret = 0;
@@ -759,6 +775,9 @@ int st_Open_Thread(void* func(void*), void* th_param){
 		if (threads[index] == NULL){
 			// printf("Debug - th_param %s", (char*)th_param);
 			ret = pthread_create( &threads[index], NULL, func, th_param );
+			if(ret != 0){
+				printf("pthread_create() - Error\n");
+			}
 			total_thread += 1;
 			return index;
 		}
