@@ -261,6 +261,13 @@ void st_form_alert(int16_t this_form_icon, char* this_form_message){
     form_alert(1, _form_message);
 }
 
+int16_t st_form_alert_choice_2(int16_t this_form_icon, char* this_form_message, char* but0, char* but1, char* but2){
+    char _form_message[96];
+    replace_char(this_form_message, 0XA, '|');
+    sprintf(_form_message, "[%d][%s][%s|%s|%s]", this_form_icon, this_form_message, but0, but1, but2);
+    return form_alert(1, _form_message);
+}
+
 int16_t st_form_alert_choice(int16_t this_form_icon, char* this_form_message, char* but0, char* but1){
     char _form_message[96];
     replace_char(this_form_message, 0XA, '|');
@@ -297,6 +304,21 @@ int16_t mfdb_update_bpp( MFDB* new_mfdb, int8_t* buffer, int16_t width, int16_t 
     new_mfdb->fd_r3 = 0;
 	return width_stride;
 }
+
+// float ReverseFloat( const float inFloat )
+// {
+//    float retVal;
+//    char *floatToConvert = ( char* ) & inFloat;
+//    char *returnFloat = ( char* ) & retVal;
+
+//    // swap the bytes into a temporary buffer
+//    returnFloat[0] = floatToConvert[3];
+//    returnFloat[1] = floatToConvert[2];
+//    returnFloat[2] = floatToConvert[1];
+//    returnFloat[3] = floatToConvert[0];
+
+//    return retVal;
+// }
 
 void mfdb_duplicate(MFDB *src_mfdb, MFDB *dst_mfdb){
     /* We duplicate the original MFDB so we can work on it */

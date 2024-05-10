@@ -21,6 +21,7 @@ void st_Path_to_Linux(const char* st_path);
 void shrink_char_obj(const char* src_string, OBJECT* dst_string);
 void st_form_alert(int16_t this_form_icon, char* form_message);
 int16_t st_form_alert_choice(int16_t this_form_icon, char* this_form_message, char* but0, char* but1);
+int16_t st_form_alert_choice_2(int16_t this_form_icon, char* this_form_message, char* but0, char* but1, char* but2);
 void st_clear_char_array(char* carray);
 char *basename(char const *path);
 
@@ -54,5 +55,7 @@ void dbg_printf(const char *fmt, ...);
 char* GetNextVaStartFileName(char* start_pos, char* filename);
 
 void st_Get_Current_Dir(char* dst_char);
+
+// float ReverseFloat( const float inFloat );
 
 #endif

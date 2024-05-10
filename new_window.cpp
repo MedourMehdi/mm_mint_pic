@@ -60,6 +60,7 @@ bool new_win_img(const char *new_file){
 				st_Init_Default_Win(&win_struct_array[i]);
 				/* Manage if the file is already opened and have more than one picture */
 				struct_window* win_master_thumb = get_win_thumb_master_by_file(new_file);
+/* RETRIEVE INFO FROM THUMB WINDOW - GET WIN HANDLE */				
 				if(win_master_thumb != NULL){
 					win_struct_array[i].wi_data->original_buffer = win_master_thumb->wi_data->original_buffer;
 					win_struct_array[i].wi_data->path = (char*)mem_alloc(strlen(win_master_thumb->wi_data->path) + 1);
@@ -80,6 +81,7 @@ bool new_win_img(const char *new_file){
 
 					open_window(&win_struct_array[i]);
 				} else {
+/* CLASSIC WINDOW - GET WIN HANDLE */
 					open_window(&win_struct_array[i]);
 					if(!open_file(&win_struct_array[i], new_file)){
 						TRACE(("Failed open_file()\n"))
@@ -197,44 +199,57 @@ bool new_win_img(const char *new_file){
 					win_struct_array[i].wi_data->original_buffer = NULL;
 				}
                 st_Set_Clipping(CLIPPING_ON, win_struct_array[i].work_pxy);
+				/* COMPUTE RENDERING TIME IF NEEDED */
+				/*				
                 if(win_struct_array[i].rendering_time == FALSE){
                     start_time = st_Supexec(get200hz);
                 }
-
+				*/
+/* CONTROL BAR SELECTION */
+/* PDF */
 				if(win_struct_array[i].wi_data->doc_media){
 					st_Init_WinDoc_Control_Bar((void*)&win_struct_array[i]);
+/* VIDEO */					
 				} else if(win_struct_array[i].wi_data->video_media){
 					st_Init_WinVideo_Control_Bar((void*)&win_struct_array[i]);
+/* VIDEO FFMPEG */					
 					if(win_struct_array[i].wi_ffmpeg != NULL){
 						win_struct_array[i].wi_data->play_on = FALSE;
 						win_struct_array[i].wi_control_bar->control_bar_h = CONTROLBAR_H;
 					}
 				}
+/* IMAGE */
 				else{
 					st_Init_WinImage_Control_Bar((void*)&win_struct_array[i]);
 				}
-
+/* VIDEO & SOUND THREAD */
 				if(win_struct_array[i].wi_data->video_media){
 					int th_idx = st_Open_Thread(video_function, (void*)&win_struct_array[i].wi_handle);
 					win_struct_array[i].wi_data->wi_pth = &threads[th_idx];
+/* WINDOW CLASSIC FUNCTION */					
 				}else{
-					// st_Check_Thumbs_Chain(win_struct_array[i].wi_thumb->thumbs_list_array);
+					/* DEBUG THUMB PTR LIST FUNCTION */
+					/*
+					st_Check_Thumbs_Chain(win_struct_array[i].wi_thumb->thumbs_list_array);
+					*/
 					win_struct_array[i].refresh_win(win_struct_array[i].wi_handle);
-					// st_Check_Thumbs_Chain(win_struct_array[i].wi_thumb->thumbs_list_array);
 				}
+				/* COMPUTE RENDERING TIME IF NEEDED */
+				/*
                 if(win_struct_array[i].rendering_time == FALSE){
                     end_time = st_Supexec(get200hz);
                     win_struct_array[i].rendering_time = (end_time - start_time) * 5;
                 }
-				TRACE(("Rendering time %lums\n", win_struct_array[i].rendering_time))
+				*/
                 st_Set_Clipping(CLIPPING_OFF, win_struct_array[i].work_pxy);
+/* THUMB SLAVE WINDOW */				
 				if(win_struct_array[i].wi_data->thumbnail_slave){
-					
 					char* file = basename(win_struct_array[i].wi_data->path);
 					char thumbs_title[strlen(file) + 16] = {0};
 					sprintf(thumbs_title, "%s (%d elements)", file, win_struct_array[i].wi_data->img.img_total);
 					new_win_thumbnails(thumbs_title, win_struct_array[i].wi_handle);
 				}
+
 				win_struct_array[i].wi_data->thumbnail_slave = TRUE;
 
 			}

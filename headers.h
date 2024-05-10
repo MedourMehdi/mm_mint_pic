@@ -120,4 +120,5 @@ extern char current_path[256];
 #define TRACE(x)
 #endif
 
+extern void *event_loop( void *result);
 #endif

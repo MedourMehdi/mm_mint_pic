@@ -80,6 +80,7 @@ void st_TTF_Draw_char(FT_Face face, MFDB *fb, int c, int *x, int y){
                 p = 255 - p;
                 // p = 0x7D;
                 st_TTF_Set_Pixel (fb, *x + j + x_off, row_offset, p, p, p);
+                // printf("st_TTF_Set_Pixel x %d y %d\n",*x + j + x_off, row_offset );
             }
         }
     }

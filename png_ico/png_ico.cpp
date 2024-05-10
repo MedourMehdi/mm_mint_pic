@@ -388,26 +388,22 @@ void st_Control_Bar_Refresh_MFDB(struct_st_control_bar *control_bar,  MFDB *back
 	if(win_work_area_width < 1){
 		return;
 	}
-	u_int8_t* dst_buffer = st_ScreenBuffer_Alloc_bpp(win_work_area_width, control_bar_height, nb_components << 3);
-	if(dst_buffer == NULL){
-		sprintf(alert_message,"Error\nOut of memory");
-		st_form_alert(FORM_STOP, alert_message);
-	}
+	int16_t xy[8];
+	/* Source MFDB */
+	xy[0] = MAX(elevator_posx , 0); xy[1] = MAX(elevator_posy , 0) + win_work_area_height - control_bar_height;
+	xy[2] = xy[0] + win_work_area_width; xy[3] = xy[1] + control_bar_height;
+	/* Destination MFDB */
+	xy[4] = 0; xy[5] = 0; 
+	xy[6] = win_work_area_width; xy[7] = control_bar_height;
+	
+
+	mfdb_update_bpp(&control_bar->st_control_bar_mfdb, (int8_t *)control_bar->st_control_bar_mfdb.fd_addr, win_work_area_width, control_bar_height, background_mfdb->fd_nplanes); 
 	if(control_bar->st_control_bar_mfdb.fd_addr != NULL){
 		mem_free(control_bar->st_control_bar_mfdb.fd_addr);
 	}
-	mfdb_update_bpp(&control_bar->st_control_bar_mfdb, (int8_t *)dst_buffer, win_work_area_width, control_bar_height, nb_components << 3); 
-
-	int16_t xy[8];
-	/* Source MFDB */
-	xy[0] = MAX(elevator_posx , 0); xy[1] = MAX(elevator_posy , 0) + win_work_area_height - control_bar->st_control_bar_mfdb.fd_h;
-	xy[2] = xy[0] + win_work_area_width; xy[3] = xy[1] + control_bar->st_control_bar_mfdb.fd_h;
-	/* Destination MFDB */
-	xy[4] = 0; xy[5] = 0; 
-	xy[6] = control_bar->st_control_bar_mfdb.fd_w; xy[7] = control_bar->st_control_bar_mfdb.fd_h;
-	
+	control_bar->st_control_bar_mfdb.fd_addr = mem_alloc(MFDB_STRIDE( control_bar->st_control_bar_mfdb.fd_w ) * control_bar->st_control_bar_mfdb.fd_h * control_bar->st_control_bar_mfdb.fd_nplanes);
 	graf_mouse(M_OFF,0L);
-	vro_cpyfm(st_vdi_handle, S_ONLY, xy, control_bar->background_mfdb, &control_bar->st_control_bar_mfdb);	
+	vro_cpyfm(st_vdi_handle, S_ONLY, xy, control_bar->background_mfdb, &control_bar->st_control_bar_mfdb);
 	graf_mouse(M_ON,0L);
 
 	if(control_bar->transparency == TRUE){

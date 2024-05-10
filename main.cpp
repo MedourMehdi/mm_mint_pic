@@ -58,6 +58,19 @@ COOKIE related section
 #define SND_GSXB	(1<<5)
 u_int16_t mint_version;
 u_int8_t computer_type;
+/*
+High	Low	Type
+0x0000	0x0000	Atari ST (260 ST,520 ST,1040 ST,Mega ST,...)
+0x0000	0x4D34	Medusa T40 without SCSI
+0x0001	0x0000	Atari STE (1040 STE, ST Book, STylus/STPad)
+0x0001	0x0010	Mega STE
+0x0001	0x0100	Sparrow (Falcon pre-production machine)
+0x0002	0x0000	Atari TT or Hades
+0x0002	0x4D34	Medusa T40 with SCSI
+0x0003	0x0000	Atari-Falcon030
+0x0004	0x0000	Milan
+0x0005	0x0000	ARAnyM >=v0.8.5beta
+*/
 u_int8_t cpu_type;
 u_int16_t tos_version;
 bool edDi_present = true;
