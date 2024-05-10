@@ -255,6 +255,10 @@ int16_t close_window( int16_t this_win_handle ){
 		if(this_win->wi_ffmpeg != NULL){
 			mem_free(this_win->wi_ffmpeg);				
 		}
+/* AUDIO */
+		if(this_win->wi_snd != NULL){
+			mem_free(this_win->wi_snd);				
+		}		
 /*WI_DATA*/
 		if( this_win->wi_data != NULL ){
 /*FORM*/
@@ -633,6 +637,7 @@ void st_Init_Default_Win(struct_window *this_win){
 
 /* Default is to set everything to FALSE */
     this_win->x_unit = 10; this_win->y_unit = 10;
+	this_win->wi_data->sound_media = FALSE;	
 	this_win->wi_data->video_media = FALSE;
     this_win->wi_data->image_media = FALSE;
 	this_win->wi_data->doc_media = FALSE;
@@ -662,6 +667,7 @@ void st_Init_Default_Win(struct_window *this_win){
 	this_win->wi_thumb			= NULL;
 	this_win->wi_crop			= NULL;
 	this_win->wi_ffmpeg			= NULL;
+	this_win->wi_snd			= NULL;
 	this_win->win_is_topped		= FALSE;
 	this_win->total_length_w = 0; this_win->total_length_h = 0;
 

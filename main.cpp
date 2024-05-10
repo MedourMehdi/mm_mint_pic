@@ -55,12 +55,14 @@ char alert_message[96];
 /*
 COOKIE related section
 */
+#define SND_GSXB	(1<<5)
 u_int16_t mint_version;
 u_int8_t computer_type;
 u_int8_t cpu_type;
 u_int16_t tos_version;
 bool edDi_present = true;
 bool emutos_rom = false;
+bool gsxb_present = false;
 
 int16_t vdi_palette[256][3]; /* Set as external in header.h */
 int16_t pix_palette[256];
@@ -178,7 +180,7 @@ bool init_app(){
 		st_VDI_SavePalette_RGB(vdi_palette);
 	}
 	
-	long cookie_mch, cookie_mint, cookie_cpu, cookie_eddi = 0;
+	long cookie_mch, cookie_mint, cookie_cpu, cookie_eddi = 0, cookie_snd;
 	if(Getcookie(*(long *) "_MCH",&cookie_mch)){
 		computer_type = 0;
 	} else {
@@ -222,6 +224,11 @@ bool init_app(){
 	if( (*(u_int32_t *)&((OSHEADER *)get_sysvar(_sysbase))->p_rsv2) == 0x45544f53){
 		emutos_rom = true;
 	}
+	if (Getcookie(C__SND, &cookie_snd) == C_FOUND) {
+		if (cookie_snd & SND_GSXB) {
+			gsxb_present = true;
+		}
+	} 
 
 	st_Get_Current_Dir(current_path);
 

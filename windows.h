@@ -51,6 +51,34 @@ typedef struct {
 	int16_t	pxy_crop_array[4];
 } struct_crop;
 
+typedef struct
+{
+    u_int16_t prescale;
+    u_int16_t original_channels;
+    u_int16_t effective_channels;
+    u_int16_t original_samplerate;
+    u_int16_t effective_samplerate;
+	u_int16_t wanted_samplerate;
+    u_int32_t bufferSize;
+	u_int32_t processedSize;
+    u_int16_t original_sampleformat;
+    u_int16_t effective_sampleformat;	
+	u_int16_t effective_bytes_per_samples;
+	float duration_s;
+    int8_t* pBuffer;
+    int8_t* pPhysical;
+    int8_t* pLogical;
+    void* (*sound_feed)(void*);
+    int16_t win_handle;
+	void* user_data;
+	int16_t left_lvl;
+	int16_t right_lvl;
+	bool use_clk_ext;
+	bool play;
+	bool flip_play_action;
+    u_int8_t* surplus_buffer;
+    u_int32_t surplus_buffer_size;	
+} struct_snd;
 
 typedef struct struct_st_thumbs_list{
     u_int32_t thumb_id;
@@ -159,6 +187,7 @@ typedef struct {
 	boolean thumbnail_slave;
 	boolean control_bar_media;
 	boolean video_media;
+	boolean sound_media;	
 	boolean image_media;
 	boolean doc_media;
 	boolean rsc_media;
@@ -219,6 +248,7 @@ typedef struct {
 	MFDB *wi_to_display_mfdb;
 
 	struct_ffmpeg			(*wi_ffmpeg);
+	struct_snd				(*wi_snd);
 	struct_video_metadata	(*wi_video);
 	struct_crop				(*wi_crop);
 	struct_thumbs			(*wi_thumb);
