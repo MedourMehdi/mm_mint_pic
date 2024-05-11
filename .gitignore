@@ -75,3 +75,17 @@ temp/ffmpeg_misc.txt
 build/vid_ffmpeg/vid_ffmpeg.o
 bin/mm_pic_CF_ffmpeg.tar.xz
 bin/mm_pic_020_ffmpeg.tar.xz
+bin/mm_pic_CF_ffmpeg.tar.gz
+bin/mm_pic_020_ffmpeg.tar.gz
+.vscode/settings.json
+build/external/wav_lib/wavreader.o
+build/snd_wav/snd_wav.o
+build/utils_snd/utils_snd.o
+temp/cmyk_to_rgb.cxx
+temp/ffmpeg.cxx
+temp/psdreader.cxx
+temp/vid_ffmpeg copy.bak
+temp/vid_ffmpeg copy.cxx
+temp/vid_ffmpeg copy.cyy
+temp/vid_ffmpeg.cpx
+bin/mm_pic_68000_classic.tar.gz

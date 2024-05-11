@@ -5,6 +5,7 @@ mm_mint_pic is an images viewer/re-scaler and can export them to different file 
 
 ![IMAGE MMPIC ScreenShot][mmpic-image-screenshot]
 ![VIDEO MMPIC ScreenShot][mmpic-video-screenshot]
+![AUDIO MMPIC ScreenShot][mmpic-audio-screenshot]
 <div style="text-align: justify">
 mm_mint_pic is designed to display modern formats images in GEM windows.
 
@@ -50,15 +51,10 @@ No shared library or module is required to run it.
 ### Write
 * MFD (Screen memory RAW format)
 
-### Video with FFMPEG
+### Audio/Video with FFMPEG
 * All formats listed [here](https://github.com/MedourMehdi/mm_mint_pic/blob/main/vid_ffmpeg/vid_ffmpeg.cpp#L29)
 
-Notice that it's actually in testing plus no sound support is actually implemented.
-
-There're two possibilities for the future:
-
-* Use zitaresample library in order to dynamically rescale the sound frequency
-* Use pre existing frequencies available on Atari platforms: then the video will be faster/slower depending the selected frequency
+Notice that it's actually in testing plus A/V Sync support is actually implemented.
 
 ## Getting Started
 
@@ -78,15 +74,17 @@ There're two possibilities for the future:
 * [Xpdf](https://github.com/MedourMehdi/xpdf)
 * [Psd_Sdk](https://github.com/MolecularMatters/psd_sdk)
 
-For video build you'll need ffmpeg package.
+For audio/video build you'll need ffmpeg package.
 
 You should found most of these libraries here: https://tho-otto.de/crossmint.php or you can read https://www.atari-forum.com/viewforum.php?f=70 if you want to rebuild them.
 
 ### Installing
 
-* "make" command will produce bin/mm_pic.prg.
-* If you want enbable the video support you have to set WITH_FFMPEG variable to YES in the makefile.
-* This repository contains sample icons but you should replace them with yours (32bpp / 24px or just adjust your struct_st_ico_png_list array for other sizes).
+* "make" command will produce bin/mm_pic.prg
+* To enbable the video support set WITH_FFMPEG variable to YES in the makefile
+* To enbable the audio support set WITH_FFMPEG + WITH_FFMPEG_SOUND variable to YES in the makefile
+* To enbable the only WAV audio support set WITH_FFMPEG + WITH_FFMPEG_SOUND variable to NO and WITH_WAVLIB to YES in the makefile
+* This repository contains sample icons but you should replace them with yours (32bpp / 24px or just adjust your struct_st_ico_png_list array for other sizes)
 
 ### Executing program
 
@@ -114,6 +112,8 @@ Medour Mehdi
 [@M.Medour](www.linkedin.com/in/mehdi-medour-2968b3b2)
 
 ## Version History
+* 0.9
+    * Audio player support via ffmpeg libraries (LibAV) 
 * 0.8
     * Video player support via ffmpeg libraries (LibAV) 
 * 0.7.5.3
