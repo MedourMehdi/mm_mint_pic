@@ -621,8 +621,13 @@ void* st_Process_FF_Audio(void *_this_win_handle){
     int ret = 0;
     uint32_t data_size = 0;
     int got_samples = 0;
+    int out_samples = 2048;
+    int out_channels = this_win->wi_snd->effective_channels;
+    const int max_buffer_size =
+        av_samples_get_buffer_size(
+            NULL, out_channels, out_samples, AV_SAMPLE_FMT_S16, 1);    
     int sample_size = av_get_bytes_per_sample(pCodecAudioCtx->sample_fmt);
-    uint8_t* buffer = (uint8_t*)av_malloc(this_win->wi_snd->bufferSize ); /* Should be enought for surplus packets */
+    uint8_t* buffer = (uint8_t*)av_malloc( max_buffer_size + AV_INPUT_BUFFER_PADDING_SIZE ); /* Should be enought for packets */
     uint8_t *pData = (uint8_t *)this_win->wi_snd->pLogical;
 
     /* CONSUME SURPLUS PACKETS */
@@ -652,9 +657,9 @@ void* st_Process_FF_Audio(void *_this_win_handle){
                     break;
                 }
 
-                int out_samples = av_rescale_rnd(swr_get_delay(Swr_Ctx, this_win->wi_snd->original_samplerate) +
-                                     pFrameAudio->nb_samples, this_win->wi_snd->effective_samplerate, 
-                                     this_win->wi_snd->original_samplerate, AV_ROUND_UP);
+                // int out_samples = av_rescale_rnd(swr_get_delay(Swr_Ctx, this_win->wi_snd->original_samplerate) +
+                //                      pFrameAudio->nb_samples, this_win->wi_snd->effective_samplerate, 
+                //                      this_win->wi_snd->original_samplerate, AV_ROUND_UP);
 
                 // convert input frame to output buffer
                 got_samples = swr_convert(
