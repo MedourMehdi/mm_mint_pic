@@ -54,7 +54,7 @@ No shared library or module is required to run it.
 ### Audio/Video with FFMPEG
 * All formats listed [here](https://github.com/MedourMehdi/mm_mint_pic/blob/main/vid_ffmpeg/vid_ffmpeg.cpp#L29)
 
-Notice that it's actually in testing plus A/V Sync support is actually implemented.
+Notice that it's actually in testing, i.e. there's no A/V Sync support actually implemented.
 
 ## Getting Started
 
@@ -72,7 +72,7 @@ Notice that it's actually in testing plus A/V Sync support is actually implement
 * LibJpeg
 * GifLib
 * [Xpdf](https://github.com/MedourMehdi/xpdf)
-* [Psd_Sdk](https://github.com/MolecularMatters/psd_sdk) - libraries for 020/CF [here](https://drive.google.com/drive/folders/1HFk1gZFUyKG4WCdP_QBkQCLj-cqzz4EW)
+* [Psd_Sdk](https://github.com/MolecularMatters/psd_sdk)
 
 For audio/video build you'll need ffmpeg package.
 
@@ -81,9 +81,9 @@ You should found most of these libraries here: https://tho-otto.de/crossmint.php
 ### Installing
 
 * "make" command will produce bin/mm_pic.prg
-* To enbable the video support set WITH_FFMPEG variable to YES in the makefile
-* To enbable the audio support set WITH_FFMPEG + WITH_FFMPEG_SOUND variable to YES in the makefile
-* To enbable the only WAV audio support set WITH_FFMPEG + WITH_FFMPEG_SOUND variable to NO and WITH_WAVLIB to YES in the makefile
+* To enable the video support set WITH_FFMPEG variable to YES in the makefile
+* To enable the audio support set WITH_FFMPEG + WITH_FFMPEG_SOUND variable to YES in the makefile
+* To enable the only WAV audio support set WITH_FFMPEG + WITH_FFMPEG_SOUND variable to NO and WITH_WAVLIB to YES in the makefile
 * This repository contains sample icons but you should replace them with yours (32bpp / 24px or just adjust your struct_st_ico_png_list array for other sizes)
 
 ### Executing program
