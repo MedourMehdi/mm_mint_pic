@@ -165,3 +165,4 @@ Inspiration, code snippets, etc.
 
 [mmpic-image-screenshot]: screenshot.png
 [mmpic-video-screenshot]: screenshot_video.png
+[mmpic-audio-screenshot]: screenshot_audio.png
