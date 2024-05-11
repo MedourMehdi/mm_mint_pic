@@ -72,7 +72,7 @@ Notice that it's actually in testing plus A/V Sync support is actually implement
 * LibJpeg
 * GifLib
 * [Xpdf](https://github.com/MedourMehdi/xpdf)
-* [Psd_Sdk](https://github.com/MolecularMatters/psd_sdk)
+* [Psd_Sdk](https://github.com/MolecularMatters/psd_sdk) - libraries for 020/CF [here](https://drive.google.com/drive/folders/1HFk1gZFUyKG4WCdP_QBkQCLj-cqzz4EW)
 
 For audio/video build you'll need ffmpeg package.
 
