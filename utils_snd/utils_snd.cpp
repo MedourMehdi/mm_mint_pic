@@ -56,14 +56,14 @@ void *st_Preset_Snd(void *_sound_struct){
     switch (sound_struct->prescale)
     {
     case 1:
-        sound_struct->effective_samplerate = sound_struct->use_clk_ext ? 44100 : 50667;
+        sound_struct->effective_samplerate = sound_struct->use_clk_ext ? 44100 : 49165;
 
         break;
     case 2:
         sound_struct->effective_samplerate = 32779;
         break;
     case 3:
-        sound_struct->effective_samplerate = sound_struct->use_clk_ext ? 22050 : 25335;
+        sound_struct->effective_samplerate = sound_struct->use_clk_ext ? 22050 : 24594;
         break;
     case 4:
         sound_struct->effective_samplerate = 19667;
@@ -96,12 +96,12 @@ void *st_Preset_Snd(void *_sound_struct){
 void *st_Sound_Buffer_Alloc(void *_sound_struct){
     struct_snd *sound_struct = (struct_snd*)_sound_struct;
     sound_struct->bufferSize = sound_struct->effective_samplerate * sound_struct->effective_channels * sound_struct->effective_bytes_per_samples;	// nb channels * 16 bit * FREQ Hz * 1 second
-    sound_struct->pBuffer = (int8_t*)Mxalloc(sound_struct->bufferSize << 2, 0 ); /* Fois 2 parceque double buffer de son */
+    sound_struct->pBuffer = (int8_t*)Mxalloc(sound_struct->bufferSize << 1, 0); /* Fois 2 parceque double buffer de son */
     memset(sound_struct->pBuffer,0x00, sound_struct->bufferSize << 1);
     sound_struct->pPhysical = sound_struct->pBuffer;
     sound_struct->pLogical = sound_struct->pBuffer + sound_struct->bufferSize;
     /* SURPLUS PKT */
-    sound_struct->surplus_buffer = (u_int8_t*)mem_alloc(sound_struct->bufferSize << 1);
+    sound_struct->surplus_buffer = (u_int8_t*)mem_alloc(sound_struct->bufferSize);
     sound_struct->surplus_buffer_size = 0;
     return NULL;
 }
