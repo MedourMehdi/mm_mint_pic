@@ -147,7 +147,7 @@ void st_TTF_Set_Pixel(MFDB *this_mfdb, int x, int y, BYTE r, BYTE g, BYTE b){
         break;
     case 16:
         if (x > 0 && x < this_mfdb->fd_w && y > 0 && y < this_mfdb->fd_h) {
-            index = (y * MFDB_STRIDE(this_mfdb->fd_w) + x) << 1;
+            index = (y * MFDB_STRIDE(this_mfdb->fd_w) + x) ;
             ptr16[index++] = ARGB_to_RGB565((u_int8_t*)&color);
         }
         break;
