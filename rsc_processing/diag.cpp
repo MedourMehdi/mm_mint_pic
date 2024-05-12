@@ -352,6 +352,7 @@ boolean st_Set_Export(void* (*export_function)(void*), const char* this_extentio
 }
 
 void* st_Image_Export_To_PSD(void* p_param){
+    #ifdef WITH_PSD
     struct_export* my_export = (struct_export*)p_param;
 
     u_int8_t* raw_data = my_export->export_data;
@@ -374,6 +375,9 @@ void* st_Image_Export_To_PSD(void* p_param){
     }
     st_Write_PSD(raw_data, my_export->export_width, my_export->export_height, my_export->export_path);
     form_alert(1, "[1][Export PSD done][Okay]");
+    #else
+    form_alert(1, "[1][Built without PSD support][Okay]");
+    #endif
     return NULL;
 }
 

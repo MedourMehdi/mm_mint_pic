@@ -120,6 +120,9 @@ extern char current_path[256];
 #define TRACE(x)
 #endif
 
+// #define WITH_XPDF 1
+// #define WITH_PSD 1
+
 // #define WITH_FFMPEG 1
 // #define WITH_FFMPEG_SOUND 1
 extern void *event_loop( void *result);

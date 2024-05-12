@@ -1,3 +1,4 @@
+#ifdef WITH_XPDF
 #include "img_pdf.h"
 #include "../img_handler.h"
 
@@ -502,3 +503,5 @@ void _st_Handle_Thumbs_PDF_Generic(int16_t this_win_handle, boolean file_process
     delete doc;
     delete globalParams; 
 }
+
+#endif

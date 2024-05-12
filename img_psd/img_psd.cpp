@@ -1,3 +1,4 @@
+#ifdef WITH_PSD
 #include "img_psd.h"
 #include "../img_handler.h"
 #include "../utils_gfx/pix_convert.h"
@@ -862,3 +863,4 @@ end:
     DestroyDocument(document, &allocator);
     file.Close();    
 }
+#endif

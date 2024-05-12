@@ -94,10 +94,14 @@ bool new_win_img(const char *new_file){
 					st_Init_HEIF(&win_struct_array[i]);
 				} else if (check_ext(file_extension, "PNG")){
 					st_Init_PNG(&win_struct_array[i]);
-				} else if (check_ext(file_extension, "PSD")){
+				}
+				#ifdef WITH_PSD 
+				else if (check_ext(file_extension, "PSD")){
 					st_Init_PSD(&win_struct_array[i]);
 					// st_Check_Thumbs_Chain(win_struct_array[i].wi_thumb->thumbs_list_array);
-				} else if (check_ext(file_extension, "JPG") || check_ext(file_extension, "JPEG") || check_ext(file_extension, "JPE")){
+				}
+				#endif 
+				else if (check_ext(file_extension, "JPG") || check_ext(file_extension, "JPEG") || check_ext(file_extension, "JPE")){
 					st_Init_JPEG(&win_struct_array[i]);
 				} else if (check_ext(file_extension, "TIF") || check_ext(file_extension, "TIFF")){
 					st_Init_TIFF(&win_struct_array[i]);
@@ -109,9 +113,13 @@ bool new_win_img(const char *new_file){
 					st_Init_Degas(&win_struct_array[i]);
 				} else if (check_ext(file_extension, "SVG")){
 					st_Init_SVG(&win_struct_array[i]);
-				} else if (check_ext(file_extension, "PDF")){
+				} 
+				#ifdef WITH_XPDF
+				else if (check_ext(file_extension, "PDF")){
 					st_Init_PDF(&win_struct_array[i]);
-				} else if (check_ext(file_extension, "GIF")){
+				} 
+				#endif
+				else if (check_ext(file_extension, "GIF")){
 					if(win_master_thumb == NULL && screen_workstation_bits_per_pixel > 8 && st_form_alert_choice(FORM_QUESTION, (char*)"How do you want open it?", (char*)"Video", (char*)"Image") == 1){
 						win_struct_array[i].wi_data->video_media = TRUE;
 						video_function = st_Win_Play_GIF_Video;
