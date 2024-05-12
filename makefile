@@ -10,6 +10,15 @@ WITH_FFMPEG_SOUND := YES
 WITH_PSD := YES
 WITH_XPDF := YES
 
+ifeq ($(WITH_XPDF), YES)
+DEFINES += -DWITH_XPDF=1
+endif
+
+ifeq ($(WITH_PSD), YES)
+DEFINES += -DWITH_PSD=1
+endif
+
+
 ifeq ($(WITH_WAVLIB), YES)
 DEFINES += -DWITH_WAVLIB=1
 endif
