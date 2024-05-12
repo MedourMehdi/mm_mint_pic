@@ -80,6 +80,11 @@ void *st_Callback_FF_Audio(void *_this_win_handle);
 void *st_Process_FF_Audio(void *_this_win_handle);
 #endif
 
+ static int string_is_ascii(const uint8_t *str) {
+    while (*str && *str < 128) str++;
+    return !*str;
+}
+
 void st_Init_FF_Media(struct_window *this_win){
     this_win->wi_data->image_media = TRUE;
     this_win->wi_data->window_size_limited = TRUE;
@@ -392,7 +397,14 @@ void *st_Init_FF_Audio(void *_this_win_handle){
 
         if(this_win->wi_ffmpeg->videoStream == -1){
             int16_t win_width = 300;
-            int16_t win_height = 420;
+            int16_t win_height = 400;
+            AVDictionaryEntry *tag = NULL;
+            while ((tag = av_dict_get(pFormatCtx->metadata, "", tag, AV_DICT_IGNORE_SUFFIX))){
+                if(string_is_ascii((const uint8_t*)tag->key) ){
+                    win_height += 15;
+                }
+            }            
+
 /* Destination Buffer */
             u_int32_t destination_buffer_size = MFDB_STRIDE(win_width) * win_height * (screen_workstation_bits_per_pixel >> 3);
             u_int8_t *destination_buffer = (u_int8_t *)mem_alloc( destination_buffer_size );
@@ -786,8 +798,8 @@ void* st_Win_FF_Info(void *_this_win_handle){
     int font_size = 12;
 
     int i = 0, j = 0;
-    int lines = 20;
-    int char_per_line = 64;
+    int lines = 30;
+    int char_per_line = 256;
     char output_txt[lines][char_per_line];
     char temp_buffer[char_per_line] = {'\0'};
 
@@ -833,8 +845,10 @@ void* st_Win_FF_Info(void *_this_win_handle){
         sprintf(output_txt[i],"---------" );
         i++;        
         while ((tag = av_dict_get(pFormatCtx->metadata, "", tag, AV_DICT_IGNORE_SUFFIX))){
-            sprintf(output_txt[i],"%s = %s", tag->key, tag->value);
-            i++;
+            if(string_is_ascii((const uint8_t*)tag->key) ){
+                sprintf(output_txt[i],"%s = %s", tag->key, tag->value);
+                i++;
+            }
         }
 
         for(j = 0; j < i; j++){
@@ -843,7 +857,7 @@ void* st_Win_FF_Info(void *_this_win_handle){
                             font_path, font_size, output_txt[j] );
             pos_y_txt += char_box_y;
         }
-
+    
     return NULL;
 }
 
