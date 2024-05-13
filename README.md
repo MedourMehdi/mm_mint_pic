@@ -81,9 +81,9 @@ You should found most of these libraries here: https://tho-otto.de/crossmint.php
 ### Installing
 
 * "make" command will produce bin/mm_pic.prg
-* To enable the video support set WITH_FFMPEG variable to YES in the makefile
-* To enable the audio support set WITH_FFMPEG + WITH_FFMPEG_SOUND variable to YES in the makefile
-* To enable the only WAV audio support set WITH_FFMPEG + WITH_FFMPEG_SOUND variable to NO and WITH_WAVLIB to YES in the makefile
+* Edit the Makefile if you want to enable/disable features
+    * video : WITH_FFMPEG 
+    * audio : WITH_FFMPEG & WITH_FFMPEG_SOUND
 * This repository contains sample icons but you should replace them with yours (32bpp / 24px or just adjust your struct_st_ico_png_list array for other sizes)
 
 ### Executing program
@@ -112,6 +112,8 @@ Medour Mehdi
 [@M.Medour](www.linkedin.com/in/mehdi-medour-2968b3b2)
 
 ## Version History
+* 0.9.1
+    * MMPic can now read [Recoil's supported formats](https://recoil.sourceforge.net/formats.html)
 * 0.9
     * Audio player support via ffmpeg libraries (LibAV) 
 * 0.8
