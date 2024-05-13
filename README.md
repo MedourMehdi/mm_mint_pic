@@ -128,7 +128,7 @@ Medour Mehdi
     * Respond correctly to AP_TERM & AP_RESCHG messages    
 * 0.6
     * Video engine implemented
-    * Multiple process logic (via pthread functions)
+    * Multiple processes logic implemented (via pseudo pthread functions)
     * New formats supported (read):
         * GIF
         * FLIC
