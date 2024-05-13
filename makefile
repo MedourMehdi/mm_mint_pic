@@ -1,6 +1,8 @@
-_CC = m68k-atari-mint-g++
+_CXX = m68k-atari-mint-g++
+_CC = m68k-atari-mint-gcc
 SRC_DIR := ./
 OBJ_DIR := ./build
+OBJ_DIR_C := ./build
 BIN_DIR := ./bin
 
 DEFINES :=
@@ -9,6 +11,11 @@ WITH_FFMPEG := YES
 WITH_FFMPEG_SOUND := YES
 WITH_PSD := YES
 WITH_XPDF := YES
+WITH_RECOIL := YES
+
+ifeq ($(WITH_RECOIL), YES)
+DEFINES += -DWITH_RECOIL=1
+endif
 
 ifeq ($(WITH_XPDF), YES)
 DEFINES += -DWITH_XPDF=1
@@ -43,15 +50,20 @@ SRC := $(wildcard $(SRC_DIR)/*.cpp) \
   $(wildcard $(SRC_DIR)/*/qdbmp/*.cpp) \
   $(wildcard $(SRC_DIR)/*/rgb2lab/*.cpp) \
   $(wildcard $(SRC_DIR)/*/tgafunc/*.cpp) \
-  $(wildcard $(SRC_DIR)/*/flic/*.cpp)
+  $(wildcard $(SRC_DIR)/*/flic/*.cpp) 
 
 ifeq ($(WITH_WAVLIB), YES)
 SRC += $(wildcard $(SRC_DIR)/*/wav_lib/*.cpp)
 endif
 
+ifeq ($(WITH_RECOIL), YES)
+SRC_C := $(wildcard $(SRC_DIR)/*/recoil/*.c)
+endif
+
 BIN := $(BIN_DIR)/mm_pic.prg
 
 OBJ := $(SRC:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
+OBJ_C := $(SRC_C:$(SRC_DIR)/%.c=$(OBJ_DIR_C)/%.o)
 
 _CPPFLAGS := -I./ -I/opt/cross-mint/m68k-atari-mint/include/freetype2
 
@@ -82,11 +94,15 @@ endif
 
 all: $(BIN)
 
-$(BIN): $(OBJ) | $(BIN_DIR)
-	$(_CC) $(_LDFLAGS) $^ $(_LDLIBS) -o $@
+$(BIN): $(OBJ) $(OBJ_C) | $(BIN_DIR)
+	$(_CXX) $(_LDFLAGS) $^ $(_LDLIBS) -o $@
 	m68k-atari-mint-strip $(BIN)
 	
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | $(OBJ_DIR)
+	@mkdir -p $(@D)
+	$(_CXX) $(_CPPFLAGS) $(_CFLAGS) -c $< -o $@
+
+$(OBJ_DIR_C)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR_C)
 	@mkdir -p $(@D)
 	$(_CC) $(_CPPFLAGS) $(_CFLAGS) -c $< -o $@
 
@@ -100,3 +116,4 @@ clean-objects:
 	@$(RM) -rv $(OBJ_DIR)
 
 -include $(OBJ:.o=.d)
+-include $(OBJ_C:.o=.d)

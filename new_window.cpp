@@ -18,6 +18,7 @@
 #include "img_pdf/img_pdf.h"
 #include "img_gif/img_gif.h"
 #include "img_psd/img_psd.h"
+#include "img_recoil/img_recoil.h"
 
 #include "vid_flic/vid_flic.h"
 #include "vid_ffmpeg/vid_ffmpeg.h"
@@ -100,7 +101,7 @@ bool new_win_img(const char *new_file){
 					st_Init_PSD(&win_struct_array[i]);
 					// st_Check_Thumbs_Chain(win_struct_array[i].wi_thumb->thumbs_list_array);
 				}
-				#endif 
+				#endif  				
 				else if (check_ext(file_extension, "JPG") || check_ext(file_extension, "JPEG") || check_ext(file_extension, "JPE")){
 					st_Init_JPEG(&win_struct_array[i]);
 				} else if (check_ext(file_extension, "TIF") || check_ext(file_extension, "TIFF")){
@@ -140,6 +141,13 @@ bool new_win_img(const char *new_file){
 					}
 					st_Init_Flic(&win_struct_array[i]);
 				} 
+
+				#ifdef WITH_RECOIL 
+				else if (RECOIL_IsOurFile(file)){
+					st_Init_Recoil(&win_struct_array[i]);
+				}
+				#endif
+
 				#ifdef WITH_FFMPEG
 				else if (st_Check_FF_Ext(file_extension)){
 					if(win_master_thumb == NULL && screen_workstation_bits_per_pixel > 8){

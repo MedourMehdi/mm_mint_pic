@@ -89,3 +89,6 @@ temp/vid_ffmpeg copy.cxx
 temp/vid_ffmpeg copy.cyy
 temp/vid_ffmpeg.cpx
 bin/mm_pic_68000_classic.tar.gz
+build/external/recoil/recoil-stdio.o
+build/external/recoil/recoil.o
+build/img_recoil/img_recoil.o
