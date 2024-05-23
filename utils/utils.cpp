@@ -247,10 +247,30 @@ void st_clear_char_array(char* carray){
 char *basename(char const *path)
 {
         char *s = strrchr(path, '\\');
+        if(s == NULL) {
+                s = strrchr(path, '/');
+        }        
         if(s==NULL) {
                 return strdup(path);
         } else {
                 return strdup(s + 1);
+        }
+}
+
+char *dirname(char const *path)
+{
+        char *s = strrchr(path, '\\');
+        if(s == NULL) {
+                s = strrchr(path, '/');
+        }      
+        if(s == NULL) {
+                return strdup(path);
+        } else {
+                int return_len = strlen(path) - (strlen(s));
+                char *return_string = (char*)mem_calloc(return_len + 1, 1);
+                strncpy(return_string, path, (return_len));
+                // printf("return_string %s\n",return_string);
+                return return_string;
         }
 }
 
@@ -580,6 +600,21 @@ void st_Get_Current_Dir(char* dst_char){
     }
 }
 
+void st_Get_App_Dir(char* dst_char, char* src_path){
+    if(strncmp(src_path, ":", 1) == 0){
+        st_Path_to_Linux(src_path);
+    }
+    /* argv[0] not null and start with / or x: */
+    if(strncmp(&src_path[0], "/", 1) == 0){
+        printf("strlen %d %s vs %d", strlen(src_path), src_path, strlen(dst_char));
+        strcpy(dst_char, dirname(src_path));
+    }else{
+        st_Get_Current_Dir(dst_char);
+    }
+    /* Call st_Get_Current_Dir */
+}
+
+
 const wchar_t *st_Char_to_WChar(const char *c) {
     const size_t cSize = strlen(c)+1;
     wchar_t* wc = new wchar_t[cSize];
@@ -602,5 +637,6 @@ void st_Path_to_Linux(const char* st_path){
         replace_char(lnx_path, str_tmp[0], str_tmp[1]);
         // printf("--> New path is %s", lnx_path);
         strcpy((char*)st_path, lnx_path);
+        mem_free(lnx_path);
     }
 }

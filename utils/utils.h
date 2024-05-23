@@ -56,6 +56,8 @@ char* GetNextVaStartFileName(char* start_pos, char* filename);
 
 void st_Get_Current_Dir(char* dst_char);
 
+void st_Get_App_Dir(char* dst_char, char* src_path);
+
 // float ReverseFloat( const float inFloat );
 
 #endif

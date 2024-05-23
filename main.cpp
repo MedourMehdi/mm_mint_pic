@@ -103,6 +103,8 @@ int main(int argc, char *argv[]){
 
     if(!init_app()){ goto quit;	}
 	
+	st_Get_App_Dir(current_path, argv[0]);
+
 	global_progress_bar = st_Progress_Bar_Alloc_Enable();
 
 	if(!st_Ico_PNG_Init_Image()){ goto close_ico_image;	}
@@ -257,7 +259,7 @@ bool init_app(){
 		}
 	} 
 
-	st_Get_Current_Dir(current_path);
+	// st_Get_Current_Dir(current_path);
 
     st_Set_Mouse( FALSE );
 	graf_mouse(ARROW,0L);
