@@ -44,8 +44,8 @@ int16_t events; /* What events are valid ? */
 long event_timer_default = 200L;
 // long event_timer_video = 8L;
 long event_timer_video = 1L;
-// long event_timer_used = event_timer_default;
-long event_timer_used = event_timer_video;
+long event_timer_used = event_timer_default;
+// long event_timer_used = event_timer_video;
 // long event_timer_used = 0L;
 int16_t msg_buffer[8];
 
