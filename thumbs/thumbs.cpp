@@ -55,7 +55,8 @@ struct_thumbs* st_Thumb_Alloc(int16_t thumbs_nb, int16_t slave_win_handle, int16
     struct_thumbs *this_win_thumb = (struct_thumbs*)mem_alloc(sizeof(struct_thumbs));
 
     this_win_thumb->wi_original_thumbs_mfdb = NULL;
-    this_win_thumb->thumb_background_color = 0xFFFFFFFF;
+    /* Outline colors */
+    this_win_thumb->thumb_background_color = 0xFFFFFFFF; 
     this_win_thumb->thumb_selected_color = 0xFF0000FF;
 
     this_win_thumb->padx = padx;
