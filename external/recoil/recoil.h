@@ -1,4 +1,4 @@
-// Generated automatically with "cito". Do not edit.
+// Generated automatically with "fut". Do not edit.
 #pragma once
 #include <stdbool.h>
 #include <stdint.h>
@@ -18,7 +18,7 @@ void RECOIL_Delete(RECOIL *self);
 /**
  * RECOIL version - minor part.
  */
-#define RECOIL_VERSION_MINOR 3
+#define RECOIL_VERSION_MINOR 4
 
 /**
  * RECOIL version - micro part.
@@ -28,17 +28,17 @@ void RECOIL_Delete(RECOIL *self);
 /**
  * RECOIL version as a string.
  */
-#define RECOIL_VERSION "6.3.4"
+#define RECOIL_VERSION "6.4.4"
 
 /**
  * Years RECOIL was created in.
  */
-#define RECOIL_YEARS "2009-2023"
+#define RECOIL_YEARS "2009-2024"
 
 /**
  * Short credits for RECOIL.
  */
-#define RECOIL_CREDITS "Retro Computer Image Library (C) 2009-2023 Piotr Fusik\n"
+#define RECOIL_CREDITS "Retro Computer Image Library (C) 2009-2024 Piotr Fusik\n"
 
 /**
  * Short license notice.
@@ -186,7 +186,7 @@ int RECOIL_GetColors(RECOIL *self);
  * Converts the decoded picture to palette-indexed.
  * Returns palette of 256 0xRRGGBB entries.
  * Call <code>GetColors()</code> for the actual number of colors.
- * Returns <code>null</code> if conversion fails,
+ * Returns <code>NULL</code> if conversion fails,
  * because there are more than 256 colors.
  * @param self This <code>RECOIL</code>.
  */
