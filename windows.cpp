@@ -2,6 +2,7 @@
 #include "utils/utils.h"
 #include <errno.h>
 
+pthread_attr_t *tattr = NULL;
 pthread_t threads[NUM_THREADS] = {NULL};
 int *taskids[NUM_THREADS] = {NULL};
 int16_t total_thread = 0;
@@ -771,9 +772,16 @@ bool win_is_playing_media(void){
 /* Pth stuff */
 int st_Open_Thread(void* func(void*), void* th_param){
 	long ret = 0;
+	if(tattr == NULL){
+		tattr = (pthread_attr_t *)mem_alloc(sizeof(pthread_attr_t));
+		ret = pthread_attr_init(tattr);
+		size_t size = THREAD_STACK_SIZE;
+		ret = pthread_attr_setstacksize(tattr, size);		
+		// printf("\nRET %ld\n", ret);
+	}
 	for(int index = 0; index < NUM_THREADS; ++index){
 		if (threads[index] == NULL){
-			ret = pthread_create( &threads[index], NULL, func, th_param );
+			ret = pthread_create( &threads[index], tattr, func, th_param );
 			if(ret != 0){
 				printf("pthread_create() - Error\n");
 			}
@@ -794,6 +802,10 @@ void st_Wait_For_Threads(){
 			}
 		}   
     }
+	if(!total_thread && tattr != NULL){
+		pthread_attr_destroy(tattr);
+		mem_free(tattr);
+	}
 }
 
 void st_Win_Close_All(void){

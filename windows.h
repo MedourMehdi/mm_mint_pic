@@ -274,6 +274,8 @@ typedef struct {
 
 #endif
 
+#define THREAD_STACK_SIZE 512000
+extern pthread_attr_t *tattr;
 extern pthread_t threads[NUM_THREADS];
 extern int *taskids[NUM_THREADS];
 extern int16_t total_thread;
