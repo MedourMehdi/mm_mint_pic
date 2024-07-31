@@ -574,7 +574,7 @@ MFDB* st_MFDB32_To_MFDB8bpp(MFDB* MFDB32){
     int8_t* dst_buffer_8bits = (int8_t*)st_ScreenBuffer_Alloc_bpp(MFDB24->fd_w, MFDB24->fd_h, 8);
     MFDB* MFDB8C = mfdb_alloc_bpp(dst_buffer_8bits, MFDB24->fd_w, MFDB24->fd_h, 8);
     /* screen_workstation_format == 1 => Whole planes */
-    if(screen_workstation_format > 1 && !force_planar_mode){
+    if(screen_workstation_format == 1 && !force_planar_mode){
         st_Progress_Bar_Signal(global_progress_bar, 20, (int8_t*)"Floyd dithering");
         st_Floyd_Dithering(MFDB24, screen_workstation_bits_per_pixel);
         st_Progress_Bar_Signal(global_progress_bar, 50, (int8_t*)"RGB -> 8bpp");
@@ -589,10 +589,11 @@ MFDB* st_MFDB32_To_MFDB8bpp(MFDB* MFDB32){
                 st_Progress_Bar_Signal(global_progress_bar, 30, (int8_t*)"Floyd dithering");
                 st_Floyd_Dithering(MFDB24, bpp);
             }
-            st_Progress_Bar_Signal(global_progress_bar, 60, (int8_t*)"24bpp -> 8bpp(Palette) / may be long...");
             if(use_rgb2lab) {  
+                st_Progress_Bar_Signal(global_progress_bar, 60, (int8_t*)"rgb2lab -> 8bits_Indexed / may be long...");
                 rgb2lab_RGB_to_8bits_Indexed((uint8_t*)MFDB24->fd_addr, (uint8_t*)MFDB8C->fd_addr, MFDB24->fd_w, MFDB24->fd_h, max_colors);
             } else {
+                st_Progress_Bar_Signal(global_progress_bar, 60, (int8_t*)"classic_RGB -> 8bits_Indexed / may be long...");
                 classic_RGB_to_8bits_Indexed((uint8_t*)MFDB24->fd_addr, (uint8_t*)MFDB8C->fd_addr, MFDB24->fd_w, MFDB24->fd_h, max_colors);
             }        
         }
@@ -600,7 +601,7 @@ MFDB* st_MFDB32_To_MFDB8bpp(MFDB* MFDB32){
 
     mfdb_free(MFDB24);
 
-    if(screen_workstation_format < 2 || force_planar_mode){
+    if(screen_workstation_format != 1 || force_planar_mode){
 
         st_Progress_Bar_Signal(global_progress_bar, 70, (int8_t*)"8bpp / Chunky -> Planar");
         MFDB* MFDB8P = st_Chunky_to_Planar_8bits(MFDB8C);

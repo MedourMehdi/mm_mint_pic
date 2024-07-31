@@ -1,20 +1,34 @@
 _CXX = m68k-atari-mint-g++
 _CC = m68k-atari-mint-gcc
+_AS = vasmm68k_mot
+_ASFLAGS = -m68020 -Faout -quiet
+
 SRC_DIR := ./
 OBJ_DIR := ./build
 OBJ_DIR_C := ./build
+OBJ_DIR_S := ./build
 BIN_DIR := ./bin
 
 DEFINES :=
 WITH_WAVLIB := NO
-WITH_FFMPEG := YES
-WITH_FFMPEG_SOUND := YES
+WITH_FFMPEG := NO
+WITH_FFMPEG_SOUND := NO
 WITH_PSD := YES
 WITH_XPDF := YES
 WITH_RECOIL := YES
+WITH_VASM := NO
+WITH_CURL := NO
 
 ifeq ($(WITH_RECOIL), YES)
 DEFINES += -DWITH_RECOIL=1
+endif
+
+ifeq ($(WITH_CURL), YES)
+DEFINES += -DWITH_CURL=1
+endif
+
+ifeq ($(WITH_VASM), YES)
+DEFINES += -DWITH_VASM=1
 endif
 
 ifeq ($(WITH_XPDF), YES)
@@ -41,6 +55,9 @@ LIB_FFMPEG := -lavformat -lavcodec -lavutil -lswscale -lswresample -lfribidi -ll
 LIB_XPDF := -lxpdf -lfofi -lgoo -lsplash 
 LIB_FREETYPE := -lfreetype -lbz2
 LIB_PSD := -lpsd_malloc 
+# LIB_TIFF :=  -ljpeg -lz -lm -ltiff
+LIB_TIFF := -ltiff -lwebp -lzstd -llzma -ljpeg -lz -lm
+LIB_CURL := -lcurl -lnghttp2 -lidn2 -liconv -lssh2 -lpsl -lssl -lcrypto -lz -lunistring -liconv
 
 SRC := $(wildcard $(SRC_DIR)/*.cpp) \
   $(wildcard $(SRC_DIR)/*/*.cpp) \
@@ -51,6 +68,10 @@ SRC := $(wildcard $(SRC_DIR)/*.cpp) \
   $(wildcard $(SRC_DIR)/*/rgb2lab/*.cpp) \
   $(wildcard $(SRC_DIR)/*/tgafunc/*.cpp) \
   $(wildcard $(SRC_DIR)/*/flic/*.cpp) 
+
+ifeq ($(WITH_VASM), YES)
+SRC_S := $(wildcard $(SRC_DIR)/*/asm/*.s)
+endif
 
 ifeq ($(WITH_WAVLIB), YES)
 SRC += $(wildcard $(SRC_DIR)/*/wav_lib/*.cpp)
@@ -64,6 +85,14 @@ BIN := $(BIN_DIR)/mm_pic.prg
 
 OBJ := $(SRC:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 OBJ_C := $(SRC_C:$(SRC_DIR)/%.c=$(OBJ_DIR_C)/%.o)
+OBJ_S := $(SRC_S:$(SRC_DIR)/%.s=$(OBJ_DIR_S)/%.o)
+
+ALL_OBJ := $(OBJ) $(OBJ_C)
+
+ifeq ($(WITH_VASM), YES)
+ALL_OBJ += $(OBJ_S)
+endif
+
 
 _CPPFLAGS := -I./ -I/opt/cross-mint/m68k-atari-mint/include/freetype2
 
@@ -71,7 +100,7 @@ _CFLAGS   := -m68020-60 -fomit-frame-pointer -fno-strict-aliasing -O2 $(DEFINES)
 
 _LDFLAGS  :=
 
-_LDLIBS   := -lgem -lpng -lz -lyuv -lheif -lwebp -lwebpdemux -ljpeg -ltiff -llzma -lde265 -lx265 -lpthread -lgif
+_LDLIBS   := -lgem -lpng -lz -lyuv -lheif -lwebp -lwebpdemux -ljpeg $(LIB_TIFF) -lde265 -lx265 -lpthread -lgif
 
 ifeq ($(WITH_XPDF), YES)
 _LDLIBS += $(LIB_XPDF)
@@ -87,17 +116,26 @@ ifeq ($(WITH_FFMPEG), YES)
 _LDLIBS += $(LIB_FFMPEG)
 endif
 
-
+ifeq ($(WITH_CURL), YES)
+_LDLIBS += $(LIB_CURL)
+endif
 # _CFLAGS += -Wl,--stack,10485760
 
 .PHONY: all clean
 
 all: $(BIN)
 
-$(BIN): $(OBJ) $(OBJ_C) | $(BIN_DIR)
+$(BIN): $(ALL_OBJ) | $(BIN_DIR)
 	$(_CXX) $(_LDFLAGS) $^ $(_LDLIBS) -o $@
 	m68k-atari-mint-strip $(BIN)
-	
+	m68k-atari-mint-stack --fix=256k $(BIN)
+
+ifeq ($(WITH_VASM), YES)
+$(OBJ_DIR_S)/%.o: $(SRC_DIR)/%.s | $(OBJ_DIR_S)
+	@mkdir -p $(@D)
+	$(_AS) $(_ASFLAGS) -o $@ $<
+endif
+
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | $(OBJ_DIR)
 	@mkdir -p $(@D)
 	$(_CXX) $(_CPPFLAGS) $(_CFLAGS) -c $< -o $@
