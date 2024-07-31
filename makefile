@@ -3,6 +3,8 @@ _CC = m68k-atari-mint-gcc
 _AS = vasmm68k_mot
 _ASFLAGS = -m68020 -Faout -quiet
 
+STACK_SIZE := 256k
+
 SRC_DIR := ./
 OBJ_DIR := ./build
 OBJ_DIR_C := ./build
@@ -128,7 +130,7 @@ all: $(BIN)
 $(BIN): $(ALL_OBJ) | $(BIN_DIR)
 	$(_CXX) $(_LDFLAGS) $^ $(_LDLIBS) -o $@
 	m68k-atari-mint-strip $(BIN)
-	m68k-atari-mint-stack --fix=256k $(BIN)
+	m68k-atari-mint-stack --fix=$(STACK_SIZE) $(BIN)
 
 ifeq ($(WITH_VASM), YES)
 $(OBJ_DIR_S)/%.o: $(SRC_DIR)/%.s | $(OBJ_DIR_S)
