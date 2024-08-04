@@ -337,6 +337,8 @@ int16_t new_win_form_rsc(const char *new_file, const char* win_title, int16_t ob
 
 				st_Init_Form((void*)&win_struct_array[i]);
 
+				win_struct_array[i].wi_data->rsc.winform_padding = 4;
+
                 open_window(&win_struct_array[i]);
 
 				win_struct_array[i].refresh_win(win_struct_array[i].wi_handle);

@@ -137,8 +137,8 @@ void open_window(struct_window *this_win){
 
 
 	if(this_win->wi_data->rsc_media == TRUE){
-		this_win->total_length_w = this_win->wi_data->rsc.tree->ob_width + 10;
-		this_win->total_length_h = this_win->wi_data->rsc.tree->ob_height + 10;		
+		this_win->total_length_w = this_win->wi_data->rsc.tree->ob_width + (this_win->wi_data->rsc.winform_padding << 1);
+		this_win->total_length_h = this_win->wi_data->rsc.tree->ob_height + (this_win->wi_data->rsc.winform_padding << 1);		
 		w_win = this_win->total_length_w;
 		h_win = this_win->total_length_h;
 
@@ -585,13 +585,15 @@ void redraw_window(int16_t my_win_handle){
 		wind_get(my_win_handle, WF_FIRSTXYWH, &rect.g_x, &rect.g_y, &rect.g_w, &rect.g_h);
 		while(rect.g_h  != 0 && rect.g_w != 0){
 			if ( rc_intersect((GRECT *)&msg_buffer[4], &rect) ){
-				grect_to_array(&rect,pxy_dest);
+				// grect_to_array(&rect,pxy_dest);
 				if(this_win->wi_to_display_mfdb != NULL){
 					if(this_win->wi_to_display_mfdb->fd_addr != NULL){
 						buffer_to_screen(this_win->wi_handle, &rect);
 					}
 				}
 				if(this_win->wi_data->rsc_media == TRUE){
+					grect_to_array(&rect,pxy_dest);
+					wipe_pxy_area(pxy_dest);
 					objc_draw(this_win->wi_data->rsc.tree, 0, MAX_DEPTH, 
 						rect.g_x, rect.g_y, rect.g_w, rect.g_h);
 				}

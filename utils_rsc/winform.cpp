@@ -14,6 +14,7 @@ void* st_Init_Form(void* p_param){
     this_win->wi_data->rsc.next_object = *this_win->wi_data->rsc.first_edit;
     this_win->wi_data->rsc.edit_object = 0;
 
+    this_win->wi_data->rsc.winform_padding = 0;
 /* Initial hotspot cndx */
     this_win->wi_data->rsc.hotspot_object = NIL;
     new_objc_xywh(this_win->wi_data->rsc.tree, ROOT, &r1);
@@ -37,11 +38,11 @@ void refresh_form(int16_t this_win_handle){
 
     st_Start_Window_Process(this_win);
 
-    this_win->wi_data->rsc.tree->ob_x = this_win->work_area.g_x + 4;
-    this_win->wi_data->rsc.tree->ob_y = this_win->work_area.g_y + 4;
+    this_win->wi_data->rsc.tree->ob_x = this_win->work_area.g_x + this_win->wi_data->rsc.winform_padding;
+    this_win->wi_data->rsc.tree->ob_y = this_win->work_area.g_y + this_win->wi_data->rsc.winform_padding;
 
     objc_draw(this_win->wi_data->rsc.tree, 0, MAX_DEPTH, 
-        this_win->work_area.g_x + 4, this_win->work_area.g_y + 4, this_win->work_area.g_w, this_win->work_area.g_h);
+        this_win->work_area.g_x + this_win->wi_data->rsc.winform_padding, this_win->work_area.g_y + this_win->wi_data->rsc.winform_padding , this_win->work_area.g_w, this_win->work_area.g_h);
 
 	st_Set_Mouse( FALSE );
     graf_mouse(ARROW,0L);

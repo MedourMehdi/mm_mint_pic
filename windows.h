@@ -135,6 +135,7 @@ typedef struct
     int16_t we_continue;
     int16_t char_pos;
 	int16_t startob;
+	u_int16_t winform_padding;
 	int16_t win_master_handle;
 	void (*process_function)(int16_t);
 } struct_rsc_metadata;
