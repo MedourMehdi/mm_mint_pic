@@ -2,6 +2,9 @@
 #include <libyuv.h>
 #include "../external/zview/zview_color.h"
 #include "../external/dither/dither.h"
+#ifdef WITH_XBRZ
+#include "../external/xbrz/xbrz.h"
+#endif
 #include "../utils/utils.h"
 #include "planar.h"
 
@@ -439,6 +442,27 @@ void st_Color_Transparency_RGB565(u_int16_t* dst_buffered_image, u_int32_t* colo
 		mem_free(pix32);
     }
 }
+
+#ifdef WITH_XBRZ
+void st_Rescale_Xbrz_ARGB(MFDB* wi_original_mfdb, MFDB* wi_rendered_mfdb, int16_t dst_width, int16_t dst_height, int16_t scale){
+    void *old_ptr = wi_rendered_mfdb->fd_addr;
+
+    printf("XBRZ -> src_width %d, src_height %d, dst_width %d, dst_height %d, scale %d\n", 
+    MFDB_STRIDE(wi_original_mfdb->fd_w), wi_original_mfdb->fd_h, dst_width, dst_height, scale);
+    u_int8_t *rescale_buffer = st_ScreenBuffer_Alloc_bpp(dst_width, dst_height, 32);
+    mfdb_update_bpp(wi_rendered_mfdb, (int8_t*)rescale_buffer, dst_width, dst_height, 32);
+
+    /* Xbrz 1.8 */
+    // xbrz::scale(scale, (u_int32_t*)wi_original_mfdb->fd_addr, (u_int32_t*)rescale_buffer, 
+    // wi_original_mfdb->fd_w, wi_original_mfdb->fd_h, (xbrz::ColorFormat)1, xbrz::ScalerCfg());
+
+    xbrz::scale(scale, (u_int32_t*)wi_original_mfdb->fd_addr, (u_int32_t*)rescale_buffer, MFDB_STRIDE(wi_original_mfdb->fd_w), wi_original_mfdb->fd_h);
+    
+    if(old_ptr != NULL){
+        mem_free(old_ptr);
+    }
+}
+#endif
 
 void st_Rescale_ARGB( MFDB* wi_original_mfdb, MFDB* wi_rendered_mfdb, int16_t dst_width, int16_t dst_height){
 

@@ -43,4 +43,9 @@ void* st_Floyd_Dithering(MFDB* MFDB24, int16_t bpp);
 void* st_Sierra_Dithering(MFDB* MFDB24, int16_t bpp);
 
 u_int32_t st_Blend_Pix(u_int32_t background, u_int32_t foreground);
+
+#ifdef WITH_XBRZ
+void st_Rescale_Xbrz_ARGB(MFDB* wi_original_mfdb, MFDB* wi_rendered_mfdb, int16_t dst_width, int16_t dst_height, int16_t scale);
+#endif
+
 #endif

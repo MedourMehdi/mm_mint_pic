@@ -654,6 +654,7 @@ void st_Init_Default_Win(struct_window *this_win){
     this_win->wi_data->rsc_media = FALSE;
 	this_win->wi_data->autoscale = FALSE;
 	this_win->wi_data->resized = FALSE;
+	this_win->wi_data->xbrz_scale = FALSE;
 	this_win->wi_data->window_size_limited = FALSE;
 	this_win->wi_data->wi_buffer_modified = FALSE;
 	this_win->wi_data->stop_original_data_load = FALSE;

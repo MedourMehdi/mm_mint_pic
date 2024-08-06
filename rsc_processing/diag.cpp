@@ -26,10 +26,13 @@ typedef struct {
     void        *(*export_function)(void*);
 } struct_export;
 
+ /*  Resource C-Header-file v1.95 for ResourceMaster v2.06&up by ARDISOFT  */
+
 #define DiagResize 0  /* form/dial */
 #define DiagResize_diagboxresize 0  /* BOX in tree DiagResize */
 #define DiagResize_CancelButton 1  /* BUTTON in tree DiagResize */
 #define DiagResize_OkButton 2  /* BUTTON in tree DiagResize */
+#define DiagResize_DiagResize_Title 3  /* BOXTEXT in tree DiagResize */
 #define DiagResize_TxtW 4  /* BOXTEXT in tree DiagResize */
 #define DiagResize_TxtNewW 5  /* BOXTEXT in tree DiagResize */
 #define DiagResize_TxtCurrH 6  /* BOXTEXT in tree DiagResize */
@@ -38,7 +41,14 @@ typedef struct {
 #define DiagResize_FTEXTNewW 9  /* FBOXTEXT in tree DiagResize */
 #define DiagResize_FTEXTCurrH 10  /* FBOXTEXT in tree DiagResize */
 #define DiagResize_FTEXTNewH 11  /* FBOXTEXT in tree DiagResize */
-#define DiagResize_HiddenText 12  /* TEXT in tree DiagResize */
+#define DiagResize_chk_yuv 14  /* BUTTON in tree DiagResize */
+#define DiagResize_chk_xbrz 15  /* BUTTON in tree DiagResize */
+#define DiagResize_Box_resizexx 16  /* BOX in tree DiagResize */
+#define DiagResize_chk_manual_resize 17  /* BUTTON in tree DiagResize */
+#define DiagResize_chk_resizex2 18  /* BUTTON in tree DiagResize */
+#define DiagResize_chk_resizex3 19  /* BUTTON in tree DiagResize */
+#define DiagResize_chk_resizex4 20  /* BUTTON in tree DiagResize */
+#define DiagResize_chk_resizex5 21  /* BUTTON in tree DiagResize */
 
 #define DiagExport 1  /* form/dial */
 #define DiagExport_diagboxexport 0  /* BOX in tree DiagExport */
@@ -69,8 +79,6 @@ typedef struct {
 #define DiagInfo_AuthorInfo 7  /* TEXT in tree DiagInfo */
 #define DiagInfo_HiddenInfo 8  /* TEXT in tree DiagInfo */
 
-
-
 void* st_Image_Export_To_PNG(void* p_param);
 void* st_Image_Export_To_HEIF(void* p_param);
 void* st_Image_Export_To_TIFF(void* p_param);
@@ -84,6 +92,11 @@ void* st_Image_Export_To_PSD(void* p_param);
 
 boolean st_Set_Export(void* (*export_function)(void*), const char* this_extention, OBJECT* this_ftext_to_uptdate);
 void st_Update_Comments(int16_t this_win_form_handle, void* p_param, OBJECT* this_ftext_to_uptdate, uint16_t bpp, const char* format );
+
+void st_Disable_Editable_Object(OBJECT* this_object, struct_window* this_win_form);
+void st_Enable_Editable_Object(OBJECT* this_object, struct_window* this_win_form);
+void st_Refresh_Object(OBJECT* this_object, struct_window* this_win_form);
+void st_Form_Update_Change_Resolution(uint16_t new_rez_value, OBJECT* this_object, struct_window* this_win_form);
 
 struct_export this_export = {'\0'};
 
@@ -194,8 +207,9 @@ fo_bnxtobj	New current object, or 0 if the next object has the status HIDDEN or 
                 strcat(this_export.export_path, this_export.export_extension);
             }
 
-            shrink_char_obj(this_export.export_path, &obj_gui_ftext_filepath);  
-            objc_draw( tree, 0, MAX_DEPTH, obj_pxy_filepath[0] , obj_pxy_filepath[1], obj_pxy_filepath[2], obj_pxy_filepath[3] );
+            shrink_char_obj(this_export.export_path, &obj_gui_ftext_filepath);
+            st_Refresh_Object(&obj_gui_ftext_filepath, this_win_form);
+            // objc_draw( tree, 0, MAX_DEPTH, obj_pxy_filepath[0] , obj_pxy_filepath[1], obj_pxy_filepath[2], obj_pxy_filepath[3] );
 
             if(strcasecmp(this_export.export_extension, ".png") == 0){
                 form_button(tree, DiagExport_chk_png, 1, 0);
@@ -251,7 +265,8 @@ fo_bnxtobj	New current object, or 0 if the next object has the status HIDDEN or 
             break;
         case DiagExport_chk_png:
             if(st_Set_Export(&st_Image_Export_To_PNG, ".png", &obj_gui_ftext_filepath)){
-                objc_draw( tree, 0, MAX_DEPTH, obj_pxy_filepath[0] , obj_pxy_filepath[1], obj_pxy_filepath[2], obj_pxy_filepath[3] );
+                st_Refresh_Object(&obj_gui_ftext_filepath, this_win_form);
+                // objc_draw( tree, 0, MAX_DEPTH, obj_pxy_filepath[0] , obj_pxy_filepath[1], obj_pxy_filepath[2], obj_pxy_filepath[3] );
             }
 
             st_Update_Comments(this_win_form_handle, (void*)&this_export, &obj_gui_ftext_info, 32, "PNG");
@@ -259,7 +274,8 @@ fo_bnxtobj	New current object, or 0 if the next object has the status HIDDEN or 
             break;
         case DiagExport_chk_jpeg:
             if(st_Set_Export(&st_Image_Export_To_JPEG, ".jpg", &obj_gui_ftext_filepath)){
-                objc_draw( tree, 0, MAX_DEPTH, obj_pxy_filepath[0] , obj_pxy_filepath[1], obj_pxy_filepath[2], obj_pxy_filepath[3] );
+                st_Refresh_Object(&obj_gui_ftext_filepath, this_win_form);
+                // objc_draw( tree, 0, MAX_DEPTH, obj_pxy_filepath[0] , obj_pxy_filepath[1], obj_pxy_filepath[2], obj_pxy_filepath[3] );
             }
 
             st_Update_Comments(this_win_form_handle, (void*)&this_export, &obj_gui_ftext_info, 24, "JPEG");
@@ -267,55 +283,64 @@ fo_bnxtobj	New current object, or 0 if the next object has the status HIDDEN or 
             break;
         case DiagExport_chk_webp:
             if(st_Set_Export(&st_Image_Export_To_WEBP, ".webp", &obj_gui_ftext_filepath)){
-                objc_draw( tree, 0, MAX_DEPTH, obj_pxy_filepath[0] , obj_pxy_filepath[1], obj_pxy_filepath[2], obj_pxy_filepath[3] );
+                st_Refresh_Object(&obj_gui_ftext_filepath, this_win_form);
+                // objc_draw( tree, 0, MAX_DEPTH, obj_pxy_filepath[0] , obj_pxy_filepath[1], obj_pxy_filepath[2], obj_pxy_filepath[3] );
             }
             st_Update_Comments(this_win_form_handle, (void*)&this_export, &obj_gui_ftext_info, 24, "WEBP");
             break;
         case DiagExport_chk_tiff:
             if(st_Set_Export(&st_Image_Export_To_TIFF, ".tiff", &obj_gui_ftext_filepath)){
-                objc_draw( tree, 0, MAX_DEPTH, obj_pxy_filepath[0] , obj_pxy_filepath[1], obj_pxy_filepath[2], obj_pxy_filepath[3] );
+                st_Refresh_Object(&obj_gui_ftext_filepath, this_win_form);
+                // objc_draw( tree, 0, MAX_DEPTH, obj_pxy_filepath[0] , obj_pxy_filepath[1], obj_pxy_filepath[2], obj_pxy_filepath[3] );
             }
             st_Update_Comments(this_win_form_handle, (void*)&this_export, &obj_gui_ftext_info, 24, "TIFF");
             break;
         case DiagExport_chk_bmp:
             if(st_Set_Export(&st_Image_Export_To_BMP, ".bmp", &obj_gui_ftext_filepath)){
-                objc_draw( tree, 0, MAX_DEPTH, obj_pxy_filepath[0] , obj_pxy_filepath[1], obj_pxy_filepath[2], obj_pxy_filepath[3] );
+                st_Refresh_Object(&obj_gui_ftext_filepath, this_win_form);
+                // objc_draw( tree, 0, MAX_DEPTH, obj_pxy_filepath[0] , obj_pxy_filepath[1], obj_pxy_filepath[2], obj_pxy_filepath[3] );
             }
             st_Update_Comments(this_win_form_handle, (void*)&this_export, &obj_gui_ftext_info, 24, "BMP");
             break;
         case DiagExport_chk_tga:
             if(st_Set_Export(&st_Image_Export_To_TGA, ".tga", &obj_gui_ftext_filepath)){
-                objc_draw( tree, 0, MAX_DEPTH, obj_pxy_filepath[0] , obj_pxy_filepath[1], obj_pxy_filepath[2], obj_pxy_filepath[3] );
+                st_Refresh_Object(&obj_gui_ftext_filepath, this_win_form);
+                // objc_draw( tree, 0, MAX_DEPTH, obj_pxy_filepath[0] , obj_pxy_filepath[1], obj_pxy_filepath[2], obj_pxy_filepath[3] );
             }
             st_Update_Comments(this_win_form_handle, (void*)&this_export, &obj_gui_ftext_info, 24, "TGA");
             break;
         case DiagExport_chk_pi1:
             if(st_Set_Export(&st_Image_Export_To_Degas, ".pi1", &obj_gui_ftext_filepath)){
-                objc_draw( tree, 0, MAX_DEPTH, obj_pxy_filepath[0] , obj_pxy_filepath[1], obj_pxy_filepath[2], obj_pxy_filepath[3] );
+                st_Refresh_Object(&obj_gui_ftext_filepath, this_win_form);
+                // objc_draw( tree, 0, MAX_DEPTH, obj_pxy_filepath[0] , obj_pxy_filepath[1], obj_pxy_filepath[2], obj_pxy_filepath[3] );
             }
             st_Update_Comments(this_win_form_handle, (void*)&this_export, &obj_gui_ftext_info, 4, "DEGAS");
             break;
         case DiagExport_chk_pi3:
             if(st_Set_Export(&st_Image_Export_To_Degas, ".pi3", &obj_gui_ftext_filepath)){
-                objc_draw( tree, 0, MAX_DEPTH, obj_pxy_filepath[0] , obj_pxy_filepath[1], obj_pxy_filepath[2], obj_pxy_filepath[3] );
+                st_Refresh_Object(&obj_gui_ftext_filepath, this_win_form);
+                // objc_draw( tree, 0, MAX_DEPTH, obj_pxy_filepath[0] , obj_pxy_filepath[1], obj_pxy_filepath[2], obj_pxy_filepath[3] );
             }
             st_Update_Comments(this_win_form_handle, (void*)&this_export, &obj_gui_ftext_info, 1, "DEGAS");
             break;
         case DiagExport_chk_psd:
             if(st_Set_Export(&st_Image_Export_To_Degas, ".psd", &obj_gui_ftext_filepath)){
-                objc_draw( tree, 0, MAX_DEPTH, obj_pxy_filepath[0] , obj_pxy_filepath[1], obj_pxy_filepath[2], obj_pxy_filepath[3] );
+                st_Refresh_Object(&obj_gui_ftext_filepath, this_win_form);
+                // objc_draw( tree, 0, MAX_DEPTH, obj_pxy_filepath[0] , obj_pxy_filepath[1], obj_pxy_filepath[2], obj_pxy_filepath[3] );
             }
             st_Update_Comments(this_win_form_handle, (void*)&this_export, &obj_gui_ftext_info, 1, "PHOTOSHOP");
             break;                          
         case DiagExport_chk_mfd:
             if(st_Set_Export(&st_Image_Export_To_MFD, ".mfd", &obj_gui_ftext_filepath)){
-                objc_draw( tree, 0, MAX_DEPTH, obj_pxy_filepath[0] , obj_pxy_filepath[1], obj_pxy_filepath[2], obj_pxy_filepath[3] );
+                st_Refresh_Object(&obj_gui_ftext_filepath, this_win_form);
+                // objc_draw( tree, 0, MAX_DEPTH, obj_pxy_filepath[0] , obj_pxy_filepath[1], obj_pxy_filepath[2], obj_pxy_filepath[3] );
             }
             st_Update_Comments(this_win_form_handle, (void*)&this_export, &obj_gui_ftext_info, screen_workstation_bits_per_pixel, "MFD");
             break;
         case DiagExport_chk_heif:
             if(st_Set_Export(&st_Image_Export_To_HEIF, ".heif", &obj_gui_ftext_filepath)){
-                objc_draw( tree, 0, MAX_DEPTH, obj_pxy_filepath[0], obj_pxy_filepath[1], obj_pxy_filepath[2], obj_pxy_filepath[3] );
+                st_Refresh_Object(&obj_gui_ftext_filepath, this_win_form);
+                // objc_draw( tree, 0, MAX_DEPTH, obj_pxy_filepath[0], obj_pxy_filepath[1], obj_pxy_filepath[2], obj_pxy_filepath[3] );
             }
             st_Update_Comments(this_win_form_handle, (void*)&this_export, &obj_gui_ftext_info, 24, "HEIC"); 
             break;
@@ -760,6 +785,93 @@ void st_Form_Events_Change_Resolution(int16_t this_win_handle) {
     OBJECT* tree = this_win_form->wi_data->rsc.tree;
 	const char* str1 = "0_~- ";
 
+    int16_t original_width = this_win_master->wi_original_mfdb.fd_w;
+    int16_t original_height = this_win_master->wi_original_mfdb.fd_h;
+    int16_t focus_object = this_win_form->wi_data->rsc.current_object;
+
+    char* obj_gui_ftext_new_width = tree[DiagResize_FTEXTNewW].ob_spec.tedinfo->te_ptext;
+    char* obj_gui_ftext_new_height = tree[DiagResize_FTEXTNewH].ob_spec.tedinfo->te_ptext;    
+    switch (focus_object)
+    {
+        case DiagResize_chk_yuv:
+
+            tree[DiagResize_chk_manual_resize].ob_flags |= OF_SELECTABLE;
+            tree[DiagResize_chk_manual_resize].ob_state ^= OS_DISABLED;
+            st_Refresh_Object(&tree[DiagResize_chk_manual_resize], this_win_form);
+
+            st_Form_Update_Change_Resolution(wrez, &tree[DiagResize_FTEXTNewW], this_win_form);
+            st_Form_Update_Change_Resolution(hrez, &tree[DiagResize_FTEXTNewH], this_win_form);            
+            st_Enable_Editable_Object(&tree[DiagResize_FTEXTNewW], this_win_form);
+            st_Enable_Editable_Object(&tree[DiagResize_FTEXTNewH], this_win_form);
+
+            form_button(tree, DiagResize_chk_manual_resize, 1, 0);
+
+            this_win_master->wi_data->xbrz_scale = 0;
+
+            break;
+        case DiagResize_chk_xbrz:
+
+            tree[DiagResize_chk_manual_resize].ob_state |= OS_DISABLED;
+            tree[DiagResize_chk_manual_resize].ob_flags ^= OF_SELECTABLE;
+            st_Refresh_Object(&tree[DiagResize_chk_manual_resize], this_win_form);
+
+            st_Form_Update_Change_Resolution(original_width << 1, &tree[DiagResize_FTEXTNewW], this_win_form);
+            st_Form_Update_Change_Resolution(original_height << 1, &tree[DiagResize_FTEXTNewH], this_win_form); 
+            form_button(tree, DiagResize_chk_resizex2, 1, 0);
+            this_win_master->wi_data->xbrz_scale = 2;
+            objc_draw(  tree, 0, MAX_DEPTH, 
+                        this_win_form->work_area.g_x , 
+                        this_win_form->work_area.g_y , 
+                        this_win_form->work_area.g_w, this_win_form->work_area.g_h );                
+        break;          
+        case DiagResize_chk_manual_resize:
+        if(!(tree[DiagResize_chk_manual_resize].ob_state & OS_DISABLED)){
+            st_Form_Update_Change_Resolution(wrez, &tree[DiagResize_FTEXTNewW], this_win_form);
+            st_Form_Update_Change_Resolution(hrez, &tree[DiagResize_FTEXTNewH], this_win_form); 
+            st_Enable_Editable_Object(&tree[DiagResize_FTEXTNewW], this_win_form);
+            st_Enable_Editable_Object(&tree[DiagResize_FTEXTNewH], this_win_form);
+            this_win_master->wi_data->xbrz_scale = 0; 
+        }
+        break;
+        case DiagResize_chk_resizex2:
+            st_Form_Update_Change_Resolution(original_width << 1, &tree[DiagResize_FTEXTNewW], this_win_form);
+            st_Form_Update_Change_Resolution(original_height << 1, &tree[DiagResize_FTEXTNewH], this_win_form); 
+            st_Disable_Editable_Object(&tree[DiagResize_FTEXTNewW], this_win_form);
+            st_Disable_Editable_Object(&tree[DiagResize_FTEXTNewH], this_win_form);
+            if(tree[DiagResize_chk_manual_resize].ob_state & OS_DISABLED){
+                this_win_master->wi_data->xbrz_scale = 2;
+            }            
+            break;
+        case DiagResize_chk_resizex3:
+            st_Form_Update_Change_Resolution(original_width * 3, &tree[DiagResize_FTEXTNewW], this_win_form);
+            st_Form_Update_Change_Resolution(original_height * 3, &tree[DiagResize_FTEXTNewH], this_win_form);
+            st_Disable_Editable_Object(&tree[DiagResize_FTEXTNewW], this_win_form);
+            st_Disable_Editable_Object(&tree[DiagResize_FTEXTNewH], this_win_form);
+            if(tree[DiagResize_chk_manual_resize].ob_state & OS_DISABLED){
+                this_win_master->wi_data->xbrz_scale = 3;
+            }
+        break;
+        case DiagResize_chk_resizex4:
+            st_Form_Update_Change_Resolution(original_width << 2, &tree[DiagResize_FTEXTNewW], this_win_form);
+            st_Form_Update_Change_Resolution(original_height << 2, &tree[DiagResize_FTEXTNewH], this_win_form); 
+            st_Disable_Editable_Object(&tree[DiagResize_FTEXTNewW], this_win_form);
+            st_Disable_Editable_Object(&tree[DiagResize_FTEXTNewH], this_win_form);
+            if(tree[DiagResize_chk_manual_resize].ob_state & OS_DISABLED){
+                this_win_master->wi_data->xbrz_scale = 4;
+            }
+        break;
+        case DiagResize_chk_resizex5:
+            st_Form_Update_Change_Resolution(original_width * 5, &tree[DiagResize_FTEXTNewW], this_win_form);
+            st_Form_Update_Change_Resolution(original_height * 5, &tree[DiagResize_FTEXTNewH], this_win_form); 
+            st_Disable_Editable_Object(&tree[DiagResize_FTEXTNewW], this_win_form);
+            st_Disable_Editable_Object(&tree[DiagResize_FTEXTNewH], this_win_form);
+            if(tree[DiagResize_chk_manual_resize].ob_state & OS_DISABLED){
+                this_win_master->wi_data->xbrz_scale = 5;
+            }
+        break;                
+    default:
+        break;
+    }
     switch (this_win_form->wi_data->rsc.next_object)
     {
     case DiagResize_CancelButton:
@@ -789,6 +901,17 @@ void st_Form_Events_Change_Resolution(int16_t this_win_handle) {
 
 }
 
+void st_Form_Update_Change_Resolution(uint16_t new_rez_value, OBJECT* this_object, struct_window* this_win_form){
+    struct_window* this_win_master = detect_window(this_win_form->wi_data->rsc.win_master_handle);
+    OBJECT* tree = this_win_form->wi_data->rsc.tree;
+    int16_t focus_object = this_win_form->wi_data->rsc.current_object;
+
+    char* obj_gui_ftext_new_ = this_object->ob_spec.tedinfo->te_ptext;
+        sprintf(obj_gui_ftext_new_, "_____");
+        sprintf(&obj_gui_ftext_new_[ strlen(obj_gui_ftext_new_) - ((new_rez_value) < 10000 ? ((new_rez_value) < 1000 ? 3 : 4) : 5) ],"%d", new_rez_value);
+        st_Disable_Editable_Object(this_object, this_win_form);
+}
+
 void st_Form_Init_Change_Resolution(int16_t this_win_form_handle){
 
     struct_window* this_win_form = detect_window(this_win_form_handle);
@@ -796,10 +919,11 @@ void st_Form_Init_Change_Resolution(int16_t this_win_form_handle){
     OBJECT* tree = this_win_form->wi_data->rsc.tree;
 	const char* str1 = "0_~- ";
 
-    tree[DiagResize_HiddenText].ob_flags ^= OF_HIDETREE;
-
-    shrink_char_obj(this_win_master->wi_data->path, &tree[DiagResize_HiddenText]);
-
+#ifndef WITH_XBRZ
+    tree[DiagResize_chk_xbrz].ob_state |= OS_DISABLED;
+    tree[DiagResize_chk_xbrz].ob_flags ^= OF_SELECTABLE;
+    tree[DiagResize_chk_xbrz].ob_flags |= OF_HIDETREE;
+#endif
     char* obj_gui_ftext_curr_width = tree[DiagResize_FTEXTCurrW].ob_spec.tedinfo->te_ptext;
     char* obj_gui_ftext_curr_height = tree[DiagResize_FTEXTCurrH].ob_spec.tedinfo->te_ptext;
     char* obj_gui_ftext_new_width = tree[DiagResize_FTEXTNewW].ob_spec.tedinfo->te_ptext;
@@ -807,19 +931,20 @@ void st_Form_Init_Change_Resolution(int16_t this_win_form_handle){
     
     int16_t window_width = wrez;
     int16_t window_height = hrez;
-    int16_t original_width = this_win_master->total_length_w;
-    int16_t original_height = this_win_master->total_length_h;
 
-	sprintf(&obj_gui_ftext_curr_width[ strlen(obj_gui_ftext_curr_width) - (original_width < 1000 ? 3 : 4) ],"%d", original_width);
+    int16_t original_width = this_win_master->wi_original_mfdb.fd_w;
+    int16_t original_height = this_win_master->wi_original_mfdb.fd_h;    
+
+	sprintf(&obj_gui_ftext_curr_width[ strlen(obj_gui_ftext_curr_width) - (original_width < 10000 ? (original_width < 1000 ? 3 : 4) : 5) ],"%d", original_width);
 	replace_char(obj_gui_ftext_curr_width, str1[3], str1[4]);
 
-	sprintf(&obj_gui_ftext_new_width[ strlen(obj_gui_ftext_new_width) - (window_width < 1000 ? 3 : 4) ],"%d", window_width);
+	sprintf(&obj_gui_ftext_new_width[ strlen(obj_gui_ftext_new_width) - (window_width < 10000 ? (window_width < 1000 ? 3 : 4) : 5) ],"%d", window_width);
 	replace_char(obj_gui_ftext_new_width, str1[3], str1[1]);
 
-	sprintf(&obj_gui_ftext_curr_height[ strlen(obj_gui_ftext_curr_height) - (original_height < 1000 ? 3 : 4) ],"%d", original_height);
+	sprintf(&obj_gui_ftext_curr_height[ strlen(obj_gui_ftext_curr_height) - (original_height < 10000 ? (original_height < 1000 ? 3 : 4) : 5) ],"%d", original_height);
 	replace_char(obj_gui_ftext_curr_height, str1[3], str1[4]);
 
-	sprintf(&obj_gui_ftext_new_height[ strlen(obj_gui_ftext_new_height) - (window_height < 1000 ? 3 : 4) ],"%d", window_height);
+	sprintf(&obj_gui_ftext_new_height[ strlen(obj_gui_ftext_new_height) - (window_height < 10000 ? (window_height < 1000 ? 3 : 4) : 5) ],"%d", window_height);
 	replace_char(obj_gui_ftext_new_height, str1[3], str1[1]);
     
 }
@@ -860,9 +985,26 @@ void st_Update_Comments(int16_t this_win_form_handle, void* p_param, OBJECT* thi
 
     shrink_char_obj(this_export.export_comments, this_ftext_to_uptdate);
     
-    objc_draw( tree, 0, MAX_DEPTH, 
-        this_ftext_to_uptdate->ob_x + this_win_form->work_area.g_x, 
-        this_ftext_to_uptdate->ob_y + this_win_form->work_area.g_y, 
-        this_ftext_to_uptdate->ob_width + 3, 
-        this_ftext_to_uptdate->ob_height + 3 );
+    st_Refresh_Object(this_ftext_to_uptdate, this_win_form);
+}
+
+void st_Disable_Editable_Object(OBJECT* this_object, struct_window* this_win_form){
+    this_object->ob_flags ^= OF_EDITABLE;
+    this_object->ob_state |= OS_DISABLED;
+    st_Refresh_Object(this_object, this_win_form);
+}
+
+void st_Enable_Editable_Object(OBJECT* this_object, struct_window* this_win_form){
+    this_object->ob_flags |= OF_EDITABLE;
+    this_object->ob_state ^= OS_DISABLED;
+    st_Refresh_Object(this_object, this_win_form);
+}
+
+void st_Refresh_Object(OBJECT* this_object, struct_window* this_win_form){
+    uint16_t this_padding_fix = 3;
+    objc_draw(  this_win_form->wi_data->rsc.tree, 0, MAX_DEPTH, 
+                this_win_form->work_area.g_x + this_object->ob_x, 
+                this_win_form->work_area.g_y + this_object->ob_y, 
+                this_object->ob_width + this_padding_fix, this_object->ob_height + this_padding_fix );
+                return;
 }

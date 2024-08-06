@@ -205,6 +205,7 @@ typedef struct {
 	boolean doc_media;
 	boolean rsc_media;
 	boolean autoscale;
+	u_int16_t xbrz_scale;
 	boolean resized;
 	boolean window_size_limited;
 	boolean wi_buffer_modified;

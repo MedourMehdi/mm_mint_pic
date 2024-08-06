@@ -18,8 +18,13 @@ WITH_FFMPEG_SOUND := NO
 WITH_PSD := YES
 WITH_XPDF := YES
 WITH_RECOIL := YES
+WITH_XBRZ := YES
 WITH_VASM := NO
 WITH_CURL := NO
+
+ifeq ($(WITH_XBRZ), YES)
+DEFINES += -DWITH_XBRZ=1
+endif
 
 ifeq ($(WITH_RECOIL), YES)
 DEFINES += -DWITH_RECOIL=1
@@ -40,7 +45,6 @@ endif
 ifeq ($(WITH_PSD), YES)
 DEFINES += -DWITH_PSD=1
 endif
-
 
 ifeq ($(WITH_WAVLIB), YES)
 DEFINES += -DWITH_WAVLIB=1
@@ -81,6 +85,10 @@ endif
 
 ifeq ($(WITH_RECOIL), YES)
 SRC_C := $(wildcard $(SRC_DIR)/*/recoil/*.c)
+endif
+
+ifeq ($(WITH_XBRZ), YES)
+SRC +=   $(wildcard $(SRC_DIR)/*/xbrz/*.cpp)
 endif
 
 BIN := $(BIN_DIR)/mm_pic.prg
