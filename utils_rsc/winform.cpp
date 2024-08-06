@@ -73,7 +73,9 @@ void st_Form_Handle(struct_window* this_win) {
                 // this_win->wi_data->rsc.we_continue = new_form_keybd(this_win->wi_data->rsc.tree, this_win->wi_data->rsc.edit_object, this_win->wi_data->rsc.next_object, kc, &this_win->wi_data->rsc.next_object, &kc);
                 this_win->wi_data->rsc.we_continue = form_keybd(this_win->wi_data->rsc.tree, this_win->wi_data->rsc.edit_object, this_win->wi_data->rsc.next_object, ks, &this_win->wi_data->rsc.next_object, &ks);
                 if (kc && this_win->wi_data->rsc.edit_object) {
-                    objc_edit(this_win->wi_data->rsc.tree, this_win->wi_data->rsc.edit_object, kc, &this_win->wi_data->rsc.char_pos, EDCHAR);
+                    if( !(this_win->wi_data->rsc.tree[this_win->wi_data->rsc.edit_object].ob_state & OS_DISABLED) ){
+                        objc_edit(this_win->wi_data->rsc.tree, this_win->wi_data->rsc.edit_object, kc, &this_win->wi_data->rsc.char_pos, EDCHAR);
+                    }   
                 }
             }
 

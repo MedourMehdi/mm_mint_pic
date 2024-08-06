@@ -459,10 +459,13 @@ void st_Control_Bar_Refresh_Classic(struct_st_control_bar *control_bar, int16_t 
 		}
 
 		void* old_ptr = control_bar->st_control_bar_mfdb.fd_addr;
-
-		MFDB* MFDB32 = mfdb_alloc_bpp((int8_t *)dst_buffer, control_bar_requested_width, CONTROLBAR_H, 32);
-		st_MFDB_Fill(MFDB32, fill_color);
-
+		MFDB* MFDB32;
+		if(bpp != 32){
+			MFDB32 = mfdb_alloc_bpp((int8_t *)dst_buffer, control_bar_requested_width, CONTROLBAR_H, 32);
+			st_MFDB_Fill(MFDB32, fill_color);
+		}else{
+			memset(dst_buffer, 0x80, (control_bar_requested_width * CONTROLBAR_H) << 2);
+		}
 		mfdb_update_bpp(&control_bar->st_control_bar_mfdb, (int8_t *)dst_buffer, control_bar_requested_width, CONTROLBAR_H, 32); 
 		st_Control_Bar_PNG_Handle(0, 0, 0, control_bar, NULL);
 		
@@ -484,7 +487,7 @@ void st_Control_Bar_Refresh_Classic(struct_st_control_bar *control_bar, int16_t 
 			mfdb_free(MFDB32);
 			break;
         case 32: /* 32 bits per pixels */
-			mem_free(MFDB32);
+			// mem_free(MFDB32);
             break;
         case 24: /* 24 bits per pixels */
             dst_mfdb = st_MFDB32_To_MFDB24(MFDB32);
