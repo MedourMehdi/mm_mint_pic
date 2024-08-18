@@ -73,7 +73,7 @@ typedef struct
 	void* user_data;
 	int16_t left_lvl;
 	int16_t right_lvl;
-	bool use_clk_ext;
+	int16_t use_clk_ext;
 	bool play;
 	bool flip_play_action;
     u_int8_t* surplus_buffer;

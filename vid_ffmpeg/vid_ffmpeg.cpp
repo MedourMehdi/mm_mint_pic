@@ -459,7 +459,7 @@ void *st_Win_Play_FF_Media(void *_this_win_handle){
 
 /* > AUDIO */
     #ifdef WITH_FFMPEG_SOUND
-    if(this_win->wi_ffmpeg->audioStream != NIL){    
+    if(this_win->wi_ffmpeg->audioStream != NIL){
         st_Sound_Buffer_Alloc((void*)this_win->wi_snd);
         st_Win_FF_Info(_this_win_handle); 
         this_win->refresh_win(this_win->wi_handle);

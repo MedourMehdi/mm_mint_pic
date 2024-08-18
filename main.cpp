@@ -56,6 +56,7 @@ char alert_message[96];
 COOKIE related section
 */
 #define SND_GSXB	(1<<5)
+#define SND_MILANBLASTER	0x00000024
 u_int16_t mint_version;
 u_int8_t computer_type;
 /*
@@ -75,7 +76,8 @@ u_int8_t cpu_type;
 u_int16_t tos_version;
 bool edDi_present = true;
 bool emutos_rom = false;
-bool gsxb_present = false;
+// bool gsxb_present = false;
+bool milanblaster_present = false;
 
 int16_t vdi_palette[256][3]; /* Set as external in header.h */
 int16_t pix_palette[256];
@@ -254,9 +256,12 @@ bool init_app(){
 		emutos_rom = true;
 	}
 	if (Getcookie(C__SND, &cookie_snd) == C_FOUND) {
-		if (cookie_snd & SND_GSXB) {
-			gsxb_present = true;
-		}
+		// if (cookie_snd & SND_GSXB) {
+		// 	gsxb_present = true;
+		// }
+		if (cookie_snd & SND_MILANBLASTER) {
+			milanblaster_present = true;
+		}		
 	} 
 
 	// st_Get_Current_Dir(current_path);

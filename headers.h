@@ -102,7 +102,8 @@ extern u_int8_t cpu_type;
 extern u_int16_t tos_version;
 extern bool edDi_present;
 extern bool emutos_rom;
-extern bool gsxb_present;
+// extern bool gsxb_present;
+extern bool milanblaster_present;
 /* App path */
 extern char current_path[256];
 

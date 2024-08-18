@@ -37,16 +37,17 @@ void *st_Preset_Snd(void *_sound_struct){
  	   0x1l == 0l
 */
     int clock_value = 25175000;
-
-    if(computer_type == 0x04 && gsxb_present){
-        if(Gpio(1,0) & 0x1l == 1l){
-            printf("DEBUG: GSXB Cookie present - clock_value = 24576000 ");
-            // clock_value = 24576000;
+    sound_struct->use_clk_ext = 0;
+    if(computer_type == 0x04 ){
+        if(Gpio(1,0) & 0x1l == 1L && milanblaster_present){
+            printf("DEBUG: clock_value = 24576000 ");
+            clock_value = 24576000;
+            sound_struct->use_clk_ext = 2;
         }
-        if(Gpio(1,0) & 0x1l == 1l){
-            printf("DEBUG: GSXB Cookie present - clock_value = 22579200 ");
+        if(Gpio(1,0) & 0x1l == 0L && milanblaster_present){
+            printf("DEBUG: clock_value = 22579200 ");
             clock_value = 22579200;
-            sound_struct->use_clk_ext = true;
+            sound_struct->use_clk_ext = 1;
         }
     }
     sound_struct->prescale = (((clock_value >> 8 ) / sound_struct->wanted_samplerate - 1) ) ;
@@ -56,14 +57,35 @@ void *st_Preset_Snd(void *_sound_struct){
     switch (sound_struct->prescale)
     {
     case 1:
-        sound_struct->effective_samplerate = sound_struct->use_clk_ext ? 44100 : 49165;
-
+        switch (sound_struct->use_clk_ext)
+        {
+            case 1:
+                sound_struct->effective_samplerate = 44100;
+                break;
+            case 2:
+                sound_struct->effective_samplerate = 48000;
+                break;
+            default:
+                sound_struct->effective_samplerate = 49165;
+                break;
+        }
         break;
     case 2:
         sound_struct->effective_samplerate = 32779;
         break;
     case 3:
-        sound_struct->effective_samplerate = sound_struct->use_clk_ext ? 22050 : 24594;
+        switch (sound_struct->use_clk_ext)
+        {
+            case 1:
+                sound_struct->effective_samplerate = 22050;
+                break;
+            case 2:
+                sound_struct->effective_samplerate = 24000;
+                break;
+            default:
+                sound_struct->effective_samplerate = 24594;
+                break;
+        }
         break;
     case 4:
         sound_struct->effective_samplerate = 19667;
@@ -72,7 +94,18 @@ void *st_Preset_Snd(void *_sound_struct){
         sound_struct->effective_samplerate = 16389;
         break;       
     case 6:
-        sound_struct->effective_samplerate = sound_struct->use_clk_ext ? 11025 : 12273;
+        switch (sound_struct->use_clk_ext)
+        {
+            case 1:
+                sound_struct->effective_samplerate = 11025;
+                break;
+            case 2:
+                sound_struct->effective_samplerate = 12000;
+                break;
+            default:
+                sound_struct->effective_samplerate = 12273;
+                break;
+        }
         break;
     case 7:
         sound_struct->effective_samplerate = 9833;
@@ -253,7 +286,7 @@ struct_snd *st_Init_Sound_Struct(){
     wi_snd->effective_sampleformat = 0;
     wi_snd->sound_feed = NULL;
     wi_snd->win_handle = 0;
-    wi_snd->use_clk_ext = false;
+    wi_snd->use_clk_ext = 0;
     wi_snd->play = false;
     wi_snd->flip_play_action = false;
     return wi_snd;
