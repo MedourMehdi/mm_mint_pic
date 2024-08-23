@@ -107,11 +107,16 @@ extern bool milanblaster_present;
 /* App path */
 extern char current_path[256];
 
+extern bool path_to_lnx;
+
 #define FORM_EXCLAM     1
 #define FORM_QUESTION   2
 #define FORM_STOP       3
 
 #define THIS_APP_NAME    "MMPIC"
+// #define USE_LNX_PATH
+
+#define MAIN_RSC_PATH    "\\rsc\\mm_pic.rsc"
 
 // #define DEBUG   1
 

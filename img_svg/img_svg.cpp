@@ -9,9 +9,10 @@
 #include "../utils/utils.h"
 #include "../utils_gfx/pix_convert.h"
 
+#include "../rsc_processing/progress_bar.h"
+
 void st_Win_Print_SVG(int16_t this_win_handle);
 void _st_Read_SVG(int16_t this_win_handle, boolean file_process);
-
 
 void st_Init_SVG(struct_window *this_win){
     this_win->wi_data->image_media = TRUE;
@@ -19,7 +20,6 @@ void st_Init_SVG(struct_window *this_win){
     this_win->wi_data->remap_displayed_mfdb = TRUE;
 	this_win->refresh_win = st_Win_Print_SVG;
 
-    this_win->wi_progress_bar = global_progress_bar;
     if(!st_Set_Renderer(this_win)){
         sprintf(alert_message, "screen_format: %d\nscreen_bits_per_pixel: %d", screen_workstation_format, screen_workstation_bits_per_pixel);
         st_form_alert(FORM_STOP, alert_message);
@@ -56,11 +56,7 @@ void _st_Read_SVG(int16_t this_win_handle, boolean file_process){
         u_int8_t* destination_buffer;
         u_int32_t *dst_ptr;
 
-        st_Progress_Bar_Add_Step(this_win->wi_progress_bar);
-
-        st_Progress_Bar_Init(this_win->wi_progress_bar, (int8_t*)"SVG processing");
-
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 20, (int8_t*)"Parsing...");
+        this_win->wi_win_progress_bar = (struct_win_progress_bar*)st_Win_Progress_Init(this_win->wi_handle, "SVG READING", 15,  "SVG: processing...");
 
         image = nsvgParseFromFile(this_win->wi_data->path, "px", 96.0f);
         if (image == NULL) {
@@ -84,7 +80,9 @@ void _st_Read_SVG(int16_t this_win_handle, boolean file_process){
             st_form_alert(FORM_EXCLAM, alert_message);
             goto error;
         }
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 60, (int8_t*)"SVG -> RGBA");
+
+        st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, 55, "SVG -> RGBA");
+
         rast = nsvgCreateRasterizer();
 
         if (rast == NULL) {
@@ -94,7 +92,8 @@ void _st_Read_SVG(int16_t this_win_handle, boolean file_process){
         }
         nsvgRasterize(rast, image, 0, 0, 1, destination_buffer, width, height, MFDB_STRIDE(width) << 2);
 
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 80, (int8_t*)"RGBA -> ARGB");
+        st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, 75, "RGBA -> ARGB");
+
         dst_ptr = (u_int32_t*)destination_buffer;
         for(int16_t y = 0; y < height; y++ ){
             for(int16_t x = 0; x < width; x++){
@@ -111,12 +110,13 @@ void _st_Read_SVG(int16_t this_win_handle, boolean file_process){
 
         st_Win_Set_Ready(this_win, width, height);
         this_win->wi_data->stop_original_data_load = TRUE;
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 100, (int8_t*)"Finished");
+
     error:
         nsvgDeleteRasterizer(rast);
         nsvgDelete(image);
-        st_Progress_Bar_Step_Done(this_win->wi_progress_bar);
-        st_Progress_Bar_Finish(this_win->wi_progress_bar);	
+
+        st_Win_Progress_Bar_Finish(this_win->wi_handle);
+
 	}
 
 }

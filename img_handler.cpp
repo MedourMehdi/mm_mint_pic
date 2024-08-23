@@ -3,6 +3,8 @@
 #include "utils_gfx/pix_convert.h"
 #include "utils/utils.h"
 
+#include "rsc_processing/progress_bar.h"
+
 void st_Handle_FX(struct_window *this_win);
 
 boolean st_Img32b_To_Window(struct_window *this_win){
@@ -112,9 +114,8 @@ boolean st_Set_Renderer(struct_window *this_win){
 
 void st_Handle_FX(struct_window *this_win){
     if(this_win->wi_data->fx_requested == TRUE){
-
-        st_Progress_Bar_Add_Step(this_win->wi_progress_bar);
-        st_Progress_Bar_Init(this_win->wi_progress_bar, (int8_t*)"Applying modifications");
+        struct_win_progress_bar* this_progress_bar;
+        this_progress_bar = (struct_win_progress_bar*)st_Win_Progress_Init(this_win->wi_handle, "Applying modifications", 1,  "Checking for FX");
 
         /**/
         MFDB *dst_mfdb = &this_win->wi_buffer_mfdb;
@@ -131,14 +132,15 @@ void st_Handle_FX(struct_window *this_win){
         if(this_win->wi_data->resized && !this_win->wi_data->autoscale){
             if(this_win->wi_data->xbrz_scale){
                 #ifdef WITH_XBRZ
-                st_Progress_Bar_Signal(this_win->wi_progress_bar, 50, (int8_t*)"Xbrz Resizing");
+                st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, 30, "Xbrz Resizing");
                 st_Rescale_Xbrz_ARGB(fx_mfdb, dst_mfdb, 
-                    this_win->wi_data->img.export_width, this_win->wi_data->img.export_height, 
-                    this_win->wi_data->xbrz_scale);
+                                        this_win->wi_data->img.export_width, 
+                                        this_win->wi_data->img.export_height, 
+                                        this_win->wi_data->xbrz_scale);
                 #endif
                 this_win->wi_data->xbrz_scale = FALSE;
             }else{
-                st_Progress_Bar_Signal(this_win->wi_progress_bar, 50, (int8_t*)"LibYuv Resizing");
+                st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, 30, "LibYuv Resizing");
                 st_Rescale_ARGB(fx_mfdb, dst_mfdb, 
                     this_win->wi_data->img.export_width, this_win->wi_data->img.export_height);
             }
@@ -149,13 +151,13 @@ void st_Handle_FX(struct_window *this_win){
         /**/
 
         if(this_win->wi_data->img.scaled_pourcentage){
-            st_Progress_Bar_Signal(this_win->wi_progress_bar, 50, (int8_t*)"Image Rescale");
+            st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, 70, "Image Rescale");
             st_Rescale_ARGB(fx_mfdb, dst_mfdb, this_win->wi_data->img.scaled_width, this_win->wi_data->img.scaled_height);
             mfdb_duplicate(dst_mfdb, fx_mfdb);
         }          
 
         if(this_win->wi_data->img.rotate_degree){
-            st_Progress_Bar_Signal(this_win->wi_progress_bar, 50, (int8_t*)"Image Rotation");
+            st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, 70, "Image Rotation");
             st_Rotate_ARGB(fx_mfdb, dst_mfdb, this_win->wi_data->img.rotate_degree);
             mfdb_duplicate(dst_mfdb, fx_mfdb);
         }
@@ -167,8 +169,7 @@ void st_Handle_FX(struct_window *this_win){
         this_win->wi_data->fx_requested = FALSE;
         this_win->wi_data->fx_on = TRUE;
 
-        st_Progress_Bar_Step_Done(this_win->wi_progress_bar);
-        st_Progress_Bar_Finish(this_win->wi_progress_bar);
+        st_Win_Progress_Bar_Finish(this_win->wi_handle);
 
     }
 }

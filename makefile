@@ -3,7 +3,8 @@ _CC = m68k-atari-mint-gcc
 _AS = vasmm68k_mot
 _ASFLAGS = -m68020 -Faout -quiet
 
-STACK_SIZE := 256k
+# STACK_SIZE := 524288
+STACK_SIZE := 262144
 
 SRC_DIR := ./
 OBJ_DIR := ./build
@@ -15,6 +16,8 @@ DEFINES :=
 WITH_WAVLIB := NO
 WITH_FFMPEG := NO
 WITH_FFMPEG_SOUND := NO
+# WITH_FFMPEG := YES
+# WITH_FFMPEG_SOUND := YES
 WITH_PSD := YES
 WITH_XPDF := YES
 WITH_RECOIL := YES
@@ -57,13 +60,16 @@ DEFINES += -DWITH_FFMPEG_SOUND=1
 endif
 endif
 
+DEFINES += -DSTACK_SIZE=$(STACK_SIZE)
+
+LIB_SSL := -lssl -lcrypto -lz
 LIB_FFMPEG := -lavformat -lavcodec -lavutil -lswscale -lswresample -lfribidi -llcms2 -lxml2 -liconv -lssl -lcrypto -lfreetype -lbz2 -lpng16 -lm -lz -lpthread -lwebp -lvpx -llzma -lx264 -lx265 -lstdc++ -ltheora -lopus -lwebpdemux -lwebpmux -lwebpdecoder -lvorbisenc -lvorbis -logg -lmp3lame -laacplus -laom -lfdk-aac
 LIB_XPDF := -lxpdf -lfofi -lgoo -lsplash 
 LIB_FREETYPE := -lfreetype -lbz2
 LIB_PSD := -lpsd_malloc 
 # LIB_TIFF :=  -ljpeg -lz -lm -ltiff
 LIB_TIFF := -ltiff -lwebp -lzstd -llzma -ljpeg -lz -lm
-LIB_CURL := -lcurl -lnghttp2 -lidn2 -liconv -lssh2 -lpsl -lssl -lcrypto -lz -lunistring -liconv
+LIB_CURL := -lcurl -lnghttp2 -lidn2 -liconv -lssh2 -lpsl -lunistring -liconv $(LIB_SSL)
 
 SRC := $(wildcard $(SRC_DIR)/*.cpp) \
   $(wildcard $(SRC_DIR)/*/*.cpp) \

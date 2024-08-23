@@ -1,7 +1,9 @@
 #include "control_bar.h"
 #include "new_window.h"
 #include "utils/utils.h"
-#include "rsc_processing/diag.h"
+#include "rsc_processing/rsc_def.h"
+#include "rsc_processing/change_rez.h"
+#include "rsc_processing/export_img.h"
 #include "file.h"
 
 /* Functions executed when you click an icon from the control bar */
@@ -209,7 +211,11 @@ void* st_Img_Play(void* p_param){
 		}
 	}
 	// event_timer_used = this_win->wi_data->play_on == TRUE ? event_timer_video : event_timer_default;
-	global_progress_bar->progress_bar_enabled = this_win->wi_data->play_on == TRUE ? FALSE : TRUE;
+	// global_progress_bar->progress_bar_enabled = this_win->wi_data->play_on == TRUE ? FALSE : TRUE;
+
+	if(this_win->wi_win_progress_bar != NULL){
+		this_win->wi_win_progress_bar->done = this_win->wi_data->play_on == TRUE ? TRUE : FALSE;
+	}
 	if(this_win->wi_snd != NULL){
 		this_win->wi_snd->flip_play_action = TRUE;
 		this_win->wi_snd->play = this_win->wi_snd->play == TRUE ? FALSE : TRUE;
@@ -381,7 +387,7 @@ void* st_Img_Crop(void* p_param){
 void* st_Img_Resize(void* p_param){
 
 	struct_window*	this_win_master = (struct_window*)p_param; 
-	const char*		this_rsc_file_to_load = "\\rsc\\diag.rsc";
+	const char*		this_rsc_file_to_load = MAIN_RSC_PATH;
 	char rsc_file_to_load[strlen(current_path) + strlen(this_rsc_file_to_load) + 1] = {'\0'};
 	strcpy(rsc_file_to_load, current_path);
 	strcat(rsc_file_to_load, this_rsc_file_to_load);
@@ -390,7 +396,7 @@ void* st_Img_Resize(void* p_param){
 
 
 	if(this_win_master->wi_form == NULL){
-		int16_t this_win_form_handle = new_win_form_rsc(rsc_file_to_load, window_form_title , rsc_object_index);
+		int16_t this_win_form_handle = new_win_form_rsc(rsc_file_to_load, window_form_title , rsc_object_index, NULL);
 		if(this_win_form_handle == NIL){
 			form_alert(1, "[1][Error opening this form|Please get the source code and debug it!][Okay]");
 		} else {
@@ -410,7 +416,7 @@ void* st_Img_Resize(void* p_param){
 void* st_Img_Export(void* p_param){
 
 	struct_window*	this_win_master = (struct_window*)p_param;
-	const char*		this_rsc_file_to_load = "\\rsc\\diag.rsc";
+	const char*		this_rsc_file_to_load = MAIN_RSC_PATH;
 	char rsc_file_to_load[strlen(current_path) + strlen(this_rsc_file_to_load) + 1] = {'\0'};
 	strcpy(rsc_file_to_load, current_path);
 	strcat(rsc_file_to_load, this_rsc_file_to_load);	
@@ -418,7 +424,7 @@ void* st_Img_Export(void* p_param){
 	int16_t			rsc_object_index = 1;
 
 	if(this_win_master->wi_form == NULL){
-		int16_t this_win_form_handle = new_win_form_rsc(rsc_file_to_load, window_form_title , rsc_object_index);
+		int16_t this_win_form_handle = new_win_form_rsc(rsc_file_to_load, window_form_title , rsc_object_index, NULL);
 		if(this_win_form_handle == NIL){
 			form_alert(1, "[1][Error opening this form|Please get the source code and debug it!][Okay]");
 		} else {

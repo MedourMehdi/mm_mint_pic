@@ -8,6 +8,8 @@
 #include "../utils_gfx/pix_convert.h"
 #include "../utils_gfx/ttf.h"
 
+#include "../rsc_processing/progress_bar.h"
+
 #define PRIMARY_IMAGE_ID    -1
 
 /* XPDF */
@@ -70,7 +72,7 @@ void st_Init_PDF(struct_window *this_win){
     this_win->wi_data->window_size_limited = TRUE;
     this_win->wi_data->remap_displayed_mfdb = TRUE;
 	this_win->refresh_win = st_Win_Print_PDF;
-    this_win->wi_progress_bar = global_progress_bar;
+
     this_win->prefers_file_instead_mem = TRUE;
 
     if(!st_Set_Renderer(this_win)){
@@ -105,8 +107,8 @@ void _st_Read_PDF(int16_t this_win_handle, boolean file_process, int16_t img_id)
 
     if(this_win->wi_data->stop_original_data_load == FALSE){
 
-        st_Progress_Bar_Add_Step(this_win->wi_progress_bar);
-        st_Progress_Bar_Init(this_win->wi_progress_bar, (int8_t*)"PDF READING");
+        this_win->wi_win_progress_bar = (struct_win_progress_bar*)st_Win_Progress_Init(this_win->wi_handle, "PDF READING", 10,  "Starting...");
+        
 /* XPDF */
         GString *ownerPW = NULL;
         GString *userPW = NULL;
@@ -121,12 +123,16 @@ void _st_Read_PDF(int16_t this_win_handle, boolean file_process, int16_t img_id)
         
         SplashColor paperColor;
         SplashOutputDev *splashOut;
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 15, (int8_t*)"Opening file");
+
+        st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, 20, "PDF: Opening file");
+
         if(!(st_FileExistsAccess(fileName))){
             sprintf(alert_message, "File not found %s\n", fileName);
             st_form_alert(FORM_EXCLAM, alert_message);
         }
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 35, (int8_t*)"Check for fonts");
+
+        st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, 30, "PDF: Checking for fonts");
+
         /* Global Parameters */
         char conf_file[256] = {0};
         strcpy(conf_file,current_path);
@@ -139,7 +145,9 @@ void _st_Read_PDF(int16_t this_win_handle, boolean file_process, int16_t img_id)
                 return;
             }
         }
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 45, (int8_t*)"Setting global parameters");
+
+        st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, 40, "PDF: Setting global parameters");
+
         globalParams->setupBaseFonts(current_path);
 
         globalParams->setEnableFreeType((char*)"yes");
@@ -157,7 +165,9 @@ void _st_Read_PDF(int16_t this_win_handle, boolean file_process, int16_t img_id)
         // if (userPassword[0]) {
         //     userPW = new GString(userPassword);
         // }
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 65, (int8_t*)"Parsing document");
+
+        st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, 60, "PDF: Parsing data");
+
         doc = new PDFDoc((char*)fileName, ownerPW, userPW);
         // if(doc->isEncrypted()){
         //     sprintf(alert_message, "User/Password doc not supported yet!");
@@ -196,7 +206,9 @@ void _st_Read_PDF(int16_t this_win_handle, boolean file_process, int16_t img_id)
         vDPI = MAX( (double)((72 * this_win_height) / page_height ) - 0.5, resolution_w);
        
 /* Splash */
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 85, (int8_t*)"Rendering document");
+
+        st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, 80, "PDF: Rendering document");
+
         paperColor[0] = paperColor[1] = paperColor[2] = 0xff;
         splashOut = new SplashOutputDev(splashModeRGB8, 1, gFalse, paperColor);
         splashOut->setNoComposite(gTrue);
@@ -209,7 +221,9 @@ void _st_Read_PDF(int16_t this_win_handle, boolean file_process, int16_t img_id)
 
 		u_int16_t width = bitmap->getWidth();
 		u_int16_t height = bitmap->getHeight();
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 95, (int8_t*)"Convert document to ARGB");
+
+        st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, 90, "PDF: Building ARGB pixels");
+
         void* old_ptr = this_win->wi_original_mfdb.fd_addr;
         u_int8_t* destination_buffer = st_ScreenBuffer_Alloc_bpp(width, height, 32);
         if(destination_buffer == NULL){
@@ -235,9 +249,7 @@ void _st_Read_PDF(int16_t this_win_handle, boolean file_process, int16_t img_id)
         st_Win_Set_Ready(this_win, width, height);
         this_win->wi_data->stop_original_data_load = TRUE;
 
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 100, (int8_t*)"Finished");
-        st_Progress_Bar_Step_Done(this_win->wi_progress_bar);
-        st_Progress_Bar_Finish(this_win->wi_progress_bar);
+        st_Win_Progress_Bar_Finish(this_win->wi_handle);
 
     	delete splashOut;
         delete doc;
@@ -313,9 +325,8 @@ void _st_Handle_Thumbs_PDF(int16_t this_win_handle, boolean file_process){
         st_Thumb_List_Generic(this_win, "PDF Building pages index", "Page", 80, 20, 4, 4, FALSE);
     }else{
         if(this_win->wi_data->img.img_total > 1){
-            st_Progress_Bar_Add_Step(this_win->wi_progress_bar);
-            st_Progress_Bar_Init(this_win->wi_progress_bar, (int8_t*)"PDF Building pages index");
-            st_Progress_Bar_Signal(this_win->wi_progress_bar, 1, (int8_t*)"Init");
+
+            this_win->wi_win_progress_bar = (struct_win_progress_bar*)st_Win_Progress_Init(this_win->wi_handle, "PDF Thumbs processing", 1,  "Starting...");
 
             paperColor[0] = paperColor[1] = paperColor[2] = 0xff;
             splashOut = new SplashOutputDev(splashModeRGB8, 1, gFalse, paperColor);
@@ -364,7 +375,8 @@ void _st_Handle_Thumbs_PDF(int16_t this_win_handle, boolean file_process){
 
                 char progess_bar_indication[96];
                 sprintf(progess_bar_indication, "Thumbnail rendering for page %d/%d", i+1, this_win->wi_thumb->thumbs_nb, thumb_ptr->thumb_id);
-                st_Progress_Bar_Signal(this_win->wi_progress_bar, (mul_100_fast(i) / this_win->wi_thumb->thumbs_nb), (int8_t*)progess_bar_indication);
+
+                st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, (mul_100_fast(i) / this_win->wi_thumb->thumbs_nb), progess_bar_indication);
 
                 page_width = doc->getPageMediaWidth(thumb_ptr->thumb_index);
                 page_height = doc->getPageMediaHeight(thumb_ptr->thumb_index);
@@ -450,8 +462,9 @@ void _st_Handle_Thumbs_PDF(int16_t this_win_handle, boolean file_process){
                 prev_thumb_ptr = thumb_ptr;
                 thumb_ptr = NULL;
             }
-            st_Progress_Bar_Step_Done(this_win->wi_progress_bar);
-            st_Progress_Bar_Finish(this_win->wi_progress_bar);
+
+            st_Win_Progress_Bar_Finish(this_win->wi_handle);
+
             this_win->wi_thumb->thumbs_area_h += this_win->wi_thumb->pady;
             this_win->wi_thumb->thumbs_list_array->thumb_selected = TRUE;
             delete splashOut;

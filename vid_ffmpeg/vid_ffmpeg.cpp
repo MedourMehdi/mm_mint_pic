@@ -137,7 +137,8 @@ void *st_Init_FF_Ctx(void *_this_win_handle){
             st_form_alert(FORM_EXCLAM, alert_message);
         }
      
-        st_Path_to_Linux(this_win->wi_data->path);
+        // st_Path_to_Linux(this_win->wi_data->path);
+        st_Path_Parser(this_win->wi_data->path, path_to_lnx );
 
         if(avformat_open_input(&pFormatCtx, this_win->wi_data->path, NULL, NULL)!=0){
             sprintf(alert_message, "Can not open input file\n");

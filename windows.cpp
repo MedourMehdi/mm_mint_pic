@@ -12,6 +12,8 @@ struct_window win_struct_array[MAX_WINDOWS] = {0};
 int16_t number_of_opened_windows = 0;
 boolean mouse_status = TRUE;
 
+u_int16_t win_progress_bar_counter = 0;
+
 void do_arrow_y(int16_t my_win_handle, int16_t arrow_msg);
 void do_arrow_x(int16_t my_win_handle, int16_t arrow_msg);
 
@@ -69,10 +71,10 @@ struct_window *detect_window(int16_t my_win_handle){
 	return this_win;
 }
 
-boolean rsc_already_loaded(const char* rsc_file_name){
+boolean rsc_already_loaded(const char* rsc_file_name, int16_t win_handle_to_exclude){
 	int16_t i = 0;
 	while(i < MAX_WINDOWS && number_of_opened_windows > 0){
-		if(win_struct_array[i].wi_handle != 0){
+		if(win_struct_array[i].wi_handle != 0 && win_struct_array[i].wi_handle != win_handle_to_exclude){
 			if(win_struct_array[i].wi_form != NULL){
 				if ( strcmp(win_struct_array[i].wi_form->rsc_file, rsc_file_name) == 0 ){
 					return true;
@@ -114,7 +116,7 @@ void update_struct_window(struct_window *this_win){
 	grect_to_array( &this_win->ext_area, this_win->ext_pxy);
 }
 
-void open_window(struct_window *this_win){
+void open_window(struct_window *this_win, int16_t *this_win_position){
 
 	int16_t x_win, y_win, w_win, h_win;
 
@@ -131,10 +133,13 @@ void open_window(struct_window *this_win){
 
 	st_Set_Mouse( FALSE );
 
-	x_win = (number_of_opened_windows << 4) + (wdesk >> 2);
-	y_win = (number_of_opened_windows << 4) + (hdesk >> 2); /* height of desk divided by 4 */
-
-
+	if(this_win_position){
+		x_win = this_win_position[0];
+		y_win = this_win_position[1];
+	}else{
+		x_win = (number_of_opened_windows << 4) + (wdesk >> 2);
+		y_win = (number_of_opened_windows << 4) + (hdesk >> 2); /* height of desk divided by 4 */
+	}
 
 	if(this_win->wi_data->rsc_media == TRUE){
 		this_win->total_length_w = this_win->wi_data->rsc.tree->ob_width + (this_win->wi_data->rsc.winform_padding << 1);
@@ -244,8 +249,12 @@ int16_t close_window( int16_t this_win_handle ){
 		if(this_win->wi_form == NULL){
 			wind_close(this_win_handle);
 		} else {
-			form_alert(1, "[1][Error closing this window|A form is in progress|Please close it to continue][Okay]");
-			return 0;
+			if( this_win->wi_form->win_form_handle != this_win->wi_form->win_master_handle ){
+				form_alert(1, "[1][Error closing this window|A form is in progress|Please close it to continue][Okay]");
+				return 0;
+			} else {
+				wind_close(this_win_handle);
+			}
 		}
 /*CONTROl BAR*/
 		if(this_win->wi_control_bar != NULL){
@@ -266,8 +275,10 @@ int16_t close_window( int16_t this_win_handle ){
 			if(this_win->wi_data->rsc_media == TRUE){
 				/* It's a form window - We have an RSC file loaded by AES */
 				struct_window* this_win_master = detect_window(this_win->wi_data->rsc.win_master_handle);
+				if(!rsc_already_loaded(this_win_master->wi_form->rsc_file, this_win_master->wi_handle)){
+					rsrc_free();
+				}
 				this_win_master->wi_form = NULL;
-				rsrc_free();
 			}
 
 /*THUMB*/
@@ -665,7 +676,8 @@ void st_Init_Default_Win(struct_window *this_win){
    
 	this_win->current_pos_x = 0; this_win->current_pos_y = 0;
 	this_win->wi_control_bar	= NULL;
-	this_win->wi_progress_bar	= NULL;
+
+	this_win->wi_win_progress_bar	= NULL;
 	this_win->wi_video			= NULL;
 	this_win->wi_form			= NULL;
 	this_win->wi_thumb			= NULL;
@@ -797,7 +809,7 @@ int st_Open_Thread(void* func(void*), void* th_param){
 
 /* Wait for execution of each thread */
 void st_Wait_For_Threads(){
-    for(int index = 0; index < NUM_THREADS; ++index){
+    for(int16_t index = 0; index < NUM_THREADS; ++index){
 		if (threads[index] != NULL){
 			if(pthread_join(threads[index],NULL) == 0) {
 				total_thread -= 1;

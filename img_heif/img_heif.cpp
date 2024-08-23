@@ -4,9 +4,9 @@
 // #include "../utils_gfx/pix_convert.h"
 #include "../img_handler.h"
 
-#include "../utils_rsc/progress.h"
-
 #include "../thumbs/thumbs.h"
+
+#include "../rsc_processing/progress_bar.h"
 
 #define PRIMARY_IMAGE_ID    -1
 
@@ -23,8 +23,7 @@ void st_Init_HEIF(struct_window *this_win){
     this_win->wi_data->window_size_limited = TRUE;
     this_win->wi_data->remap_displayed_mfdb = TRUE;
 	this_win->refresh_win = st_Win_Print_HEIF;
-    /* Progress Bar Stuff */
-    this_win->wi_progress_bar = global_progress_bar;
+
     if(!st_Set_Renderer(this_win)){
         sprintf(alert_message, "screen_format: %d\nscreen_bits_per_pixel: %d", screen_workstation_format, screen_workstation_bits_per_pixel);
         st_form_alert(FORM_STOP, alert_message);
@@ -67,15 +66,13 @@ void _st_Read_HEIF(int16_t this_win_handle, boolean file_process, long img_id) {
 
     if(this_win->wi_data->stop_original_data_load != TRUE){
 
-        st_Progress_Bar_Add_Step(this_win->wi_progress_bar);
-        st_Progress_Bar_Init(this_win->wi_progress_bar, (int8_t*)"HEIF READING");
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 15, (int8_t*)"Init");
+        this_win->wi_win_progress_bar = (struct_win_progress_bar*)st_Win_Progress_Init(this_win->wi_handle, "HEIF READING", 10,  "HEIF: Starting...");
 
         #if LIBHEIF_HAVE_VERSION(1,13,0)
         heif_init(NULL);
         #endif
 
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 25, (int8_t*)"Context read");
+        st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, 30, "HEIF: Getting context");        
 
         struct heif_context *ctx = heif_context_alloc();
         struct heif_image_handle *handle;
@@ -87,7 +84,7 @@ void _st_Read_HEIF(int16_t this_win_handle, boolean file_process, long img_id) {
             heif_context_read_from_memory_without_copy(ctx, data_original, data_size, NULL);
         }
 
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 35, (int8_t*)"Getting image handle");
+        st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, 30, "HEIF: Getting image handle");
 
         if(img_id == PRIMARY_IMAGE_ID){
             // Get a handle to the primary image
@@ -96,29 +93,29 @@ void _st_Read_HEIF(int16_t this_win_handle, boolean file_process, long img_id) {
             heif_context_get_image_handle (ctx, img_id, &handle);
         } 
 
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 45, (int8_t*)"Getting originals width & height");
+        st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, 40, "HEIF: Getting originals w & h");
 
         int16_t width = heif_image_handle_get_width(handle);
         int16_t height = heif_image_handle_get_height(handle);
         int16_t nb_components_32bits = 4;
 
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 55, (int8_t*)"HEIF Decode Image");
+        st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, 50, "HEIF: Decode Image");
 
         // Decode the image and convert colorspace to RGB, saved as 32bit interleaved
         struct heif_image* img;
 
         heif_decode_image(handle, &img, heif_colorspace_RGB, heif_chroma_interleaved_RGBA, NULL);
 
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 65, (int8_t*)"Getting bits per pixel");
+        st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, 60, "HEIF: Getting bits per pixel");
 
         this_win->wi_data->img.bit_per_pixel = heif_image_get_bits_per_pixel( img, heif_channel_interleaved);
 
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 75, (int8_t*)"Accessing raw data");
+        st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, 70, "HEIF: Computing raw data");
 
         int stride;
         const u_int8_t* data = heif_image_get_plane_readonly(img, heif_channel_interleaved, &stride);
 
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 85, (int8_t*)"Computing RGBA to ARGB");
+        st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, 80, "HEIF: Computing RGBA to ARGB");
 
         if(this_win->wi_original_mfdb.fd_addr != NULL){
             mem_free(this_win->wi_original_mfdb.fd_addr);
@@ -135,9 +132,7 @@ void _st_Read_HEIF(int16_t this_win_handle, boolean file_process, long img_id) {
         st_Win_Set_Ready(this_win, width, height);
         this_win->wi_data->stop_original_data_load = TRUE;
 
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 100, (int8_t*)"Finished");
-        st_Progress_Bar_Step_Done(this_win->wi_progress_bar);
-        st_Progress_Bar_Finish(this_win->wi_progress_bar);
+        st_Win_Progress_Bar_Finish(this_win->wi_handle);
 
         heif_image_release(img);
         heif_context_free(ctx);
@@ -182,8 +177,7 @@ void _st_Handle_Thumbs_Heif(int16_t this_win_handle, boolean file_process){
 
     if(this_win->wi_data->img.img_total > 1){
 
-        st_Progress_Bar_Add_Step(this_win->wi_progress_bar);
-        st_Progress_Bar_Init(this_win->wi_progress_bar, (int8_t*)"THUMBS PROCESSING");
+        this_win->wi_win_progress_bar = (struct_win_progress_bar*)st_Win_Progress_Init(this_win->wi_handle, "HEIF THUMBS", 1,  "Starting...");
 
         int16_t nb_components_32bits = 4;
 
@@ -234,7 +228,8 @@ void _st_Handle_Thumbs_Heif(int16_t this_win_handle, boolean file_process){
 
             char progess_bar_indication[96];
             sprintf(progess_bar_indication, "Thumbnail #%d/%d - Image id.%d", i+1, this_win->wi_thumb->thumbs_nb, thumb_ptr->thumb_id);
-            st_Progress_Bar_Signal(this_win->wi_progress_bar, (mul_100_fast(i) / this_win->wi_thumb->thumbs_nb), (int8_t*)progess_bar_indication);
+
+            st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, (mul_100_fast(i) / this_win->wi_thumb->thumbs_nb), progess_bar_indication);
 
             heif_decode_image(thumbnail_handle, &img, heif_colorspace_RGB, heif_chroma_interleaved_RGBA, NULL);
 
@@ -286,8 +281,9 @@ void _st_Handle_Thumbs_Heif(int16_t this_win_handle, boolean file_process){
             heif_image_release(img);
             heif_image_handle_release(thumbnail_handle);
         }
-        st_Progress_Bar_Step_Done(this_win->wi_progress_bar);
-        st_Progress_Bar_Finish(this_win->wi_progress_bar);
+
+        st_Win_Progress_Bar_Finish(this_win->wi_handle);
+
         this_win->wi_thumb->thumbs_area_h += this_win->wi_thumb->pady;
         heif_image_handle_release(handle);
     } else {
@@ -329,14 +325,8 @@ void st_Write_HEIF(uint8_t* src_buffer, int width, int height, const char* filen
 
     uint8_t* data;
     int stride;
-    /* Progress Bar Stuff */
-    struct_progress_bar* wi_progress_bar = (struct_progress_bar*)mem_alloc(sizeof(struct_progress_bar));
-    wi_progress_bar->progress_bar_enabled = TRUE;
-    wi_progress_bar->progress_bar_in_use = FALSE;
-    wi_progress_bar->progress_bar_locked = FALSE;
-    st_Progress_Bar_Add_Step(wi_progress_bar);
-    st_Progress_Bar_Init(wi_progress_bar, (int8_t*)"HEIF WRITING");
-    st_Progress_Bar_Signal(wi_progress_bar, 15, (int8_t*)"Heif image create");
+
+    struct_win_progress_bar* this_progress_bar = (struct_win_progress_bar*)st_Win_Progress_Init(NIL, "HEIF WRITING", 10,  "HEIF image encoding");
 
     // heif_encoder_set_lossy_quality(encoder, 50);
 
@@ -349,14 +339,13 @@ void st_Write_HEIF(uint8_t* src_buffer, int width, int height, const char* filen
         sprintf(alert_message, "heif_image_create\n%d - %s", err.code, err.message);
         goto clean;
     }
-    st_Progress_Bar_Signal(wi_progress_bar, 35, (int8_t*)"Image: adding plane");
+    st_Win_Progress_Bar_Update_Info_Line(this_progress_bar, 30, "HEIF: Adding image plane");    
     err = heif_image_add_plane(image, heif_channel_interleaved, width, height, 8);
     if(err.code != 0){
         sprintf(alert_message, "heif_image_add_plane\n%d - %s", err.code, err.message);
         goto clean;
     }
-    st_Progress_Bar_Signal(wi_progress_bar, 55, (int8_t*)"Image: filling plane");
-    
+    st_Win_Progress_Bar_Update_Info_Line(this_progress_bar, 50, "HEIF: Filling image plane");
     data = heif_image_get_plane(image, heif_channel_interleaved, &stride);
     for ( int y = 0; y < height; y++ ){
         int k = y * stride;
@@ -376,7 +365,7 @@ void st_Write_HEIF(uint8_t* src_buffer, int width, int height, const char* filen
         sprintf(alert_message, "heif_context_get_encoder_for_format\n%d - %s", err.code, err.message);
         goto clean;
     }
-    st_Progress_Bar_Signal(wi_progress_bar, 75, (int8_t*)"Image encoding");    
+    st_Win_Progress_Bar_Update_Info_Line(this_progress_bar, 70, "HEIF: Image encoding");
     err = heif_context_encode_image(ctx, image, encoder, NULL, &handle);
     if(err.code != 0){
         sprintf(alert_message, "heif_context_encode_image\n%d - %s", err.code, err.message);
@@ -387,7 +376,7 @@ void st_Write_HEIF(uint8_t* src_buffer, int width, int height, const char* filen
 
     if (thumbnail_bbox_size > 0 && thumbnail_bbox_size < width && thumbnail_bbox_size < height) {
         struct heif_image_handle* thumbnail_handle;
-        st_Progress_Bar_Signal(wi_progress_bar, 75, (int8_t*)"Thumbnail encoding");   
+        st_Win_Progress_Bar_Update_Info_Line(this_progress_bar, 80, "HEIF: Thumbnail encoding");
         err = heif_context_encode_thumbnail(ctx, image, handle, encoder, NULL, thumbnail_bbox_size, &thumbnail_handle);
         if(err.code != 0){
             sprintf(alert_message, "heif_context_encode_thumbnail\n%d - %s", err.code, err.message);
@@ -406,10 +395,7 @@ clean:
 #if LIBHEIF_HAVE_VERSION(1,13,0)    
     heif_deinit();
 #endif
-    st_Progress_Bar_Signal(wi_progress_bar, 100, (int8_t*)"Finished");
-    st_Progress_Bar_Step_Done(wi_progress_bar);
-    st_Progress_Bar_Finish(wi_progress_bar);
-    mem_free(wi_progress_bar);
+    st_Win_Progress_Bar_Finish(this_progress_bar->win_form_handle);
     if(err.code != 0){
         st_form_alert(FORM_STOP, alert_message);
     }

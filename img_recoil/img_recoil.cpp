@@ -17,7 +17,7 @@ void st_Init_Recoil(struct_window *this_win){
     this_win->wi_data->window_size_limited = TRUE;
     this_win->wi_data->remap_displayed_mfdb = TRUE;
 	this_win->refresh_win = st_Win_Print_Recoil;
-    // this_win->wi_progress_bar = global_progress_bar;
+
     if(!st_Set_Renderer(this_win)){
         sprintf(alert_message, "screen_format: %d\nscreen_bits_per_pixel: %d", screen_workstation_format, screen_workstation_bits_per_pixel);
         st_form_alert(FORM_STOP, alert_message);

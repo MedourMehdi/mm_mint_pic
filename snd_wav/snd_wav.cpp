@@ -79,7 +79,8 @@ void* st_Init_Audio_WAV(void* _this_win_handle){
     void* pWav;
     int bits_per_sample, format, sample_rate, channels;
     u_int32_t data_length;
-    st_Path_to_Linux(this_win->wi_data->path);
+    // st_Path_to_Linux(this_win->wi_data->path);
+    st_Path_Parser(this_win->wi_data->path, path_to_lnx );
     this_win->wi_snd->user_data = (void*)wav_read_open(this_win->wi_data->path);
     pWav = this_win->wi_snd->user_data;
     wav_get_header(pWav, 

@@ -80,10 +80,10 @@ bool new_win_img(const char *new_file){
 					char this_thumb_id[4];
 					sprintf(win_struct_array[i].wi_name, "%s #%d",win_struct_array[i].wi_name,  win_struct_array[i].wi_data->img.img_index);
 
-					open_window(&win_struct_array[i]);
+					open_window(&win_struct_array[i], NULL);
 				} else {
 /* CLASSIC WINDOW - GET WIN HANDLE */
-					open_window(&win_struct_array[i]);
+					open_window(&win_struct_array[i], NULL);
 					if(!open_file(&win_struct_array[i], new_file)){
 						return false;
 					}
@@ -110,7 +110,7 @@ bool new_win_img(const char *new_file){
 					st_Init_BMP(&win_struct_array[i]);
 				} else if (check_ext(file_extension, "TGA")){
 					st_Init_TGA(&win_struct_array[i]);
-				} else if (check_ext(file_extension, "PI1") || check_ext(file_extension, "PI3") ){
+				} else if (check_ext(file_extension, "PI1") || check_ext(file_extension, "PI3") || check_ext(file_extension, "PI5") ){
 					st_Init_Degas(&win_struct_array[i]);
 				} else if (check_ext(file_extension, "SVG")){
 					st_Init_SVG(&win_struct_array[i]);
@@ -293,7 +293,7 @@ bool new_win_start(){
 				win_struct_array[i].wi_name = (char *)mem_alloc(WINDOW_TITLE_MAXLEN);
 				strcpy(win_struct_array[i].wi_name, THIS_APP_NAME);
 				win_struct_array[i].wi_data->control_bar_media = TRUE;
-                open_window(&win_struct_array[i]);
+                open_window(&win_struct_array[i], NULL);
 
 				st_Init_Dummy(&win_struct_array[i]);
 
@@ -309,7 +309,7 @@ bool new_win_start(){
 	return false;
 }
 
-int16_t new_win_form_rsc(const char *new_file, const char* win_title, int16_t object_index){
+int16_t new_win_form_rsc(const char *new_file, const char* win_title, int16_t object_index, int16_t* win_initial_position){
 	int16_t i = 0;
 	
 	while(i < MAX_WINDOWS){
@@ -322,8 +322,7 @@ int16_t new_win_form_rsc(const char *new_file, const char* win_title, int16_t ob
 				st_Init_Default_Win(&win_struct_array[i]);
 
 				win_struct_array[i].wi_data->rsc.rsc_file = new_file;
-
-				if( !rsc_already_loaded(new_file) ){
+				if( !rsc_already_loaded(new_file, 0) ){
 					if( !rsrc_load(win_struct_array[i].wi_data->rsc.rsc_file) ){
 						form_alert(1, "[1][new_win_form_rsc -> RSC Error][Okay]");
 						return NIL;
@@ -339,8 +338,11 @@ int16_t new_win_form_rsc(const char *new_file, const char* win_title, int16_t ob
 
 				win_struct_array[i].wi_data->rsc.winform_padding = 4;
 
-                open_window(&win_struct_array[i]);
+                open_window(&win_struct_array[i], win_initial_position);
 
+				/* Permits non linked rsc window */
+				win_struct_array[i].wi_data->rsc.win_form_handle = win_struct_array[i].wi_handle;
+				/* Refresh function */
 				win_struct_array[i].refresh_win(win_struct_array[i].wi_handle);
 			}
 			return win_struct_array[i].wi_handle;
@@ -396,7 +398,7 @@ int16_t new_win_thumbnails(const char* win_title, int16_t slave_win_handle){
 				win_struct_array[i].total_length_w = dest_win->wi_thumb->thumbs_area_w;
 				win_struct_array[i].total_length_h = dest_win->wi_thumb->thumbs_area_h;
 
-                open_window(&win_struct_array[i]);
+                open_window(&win_struct_array[i], NULL);
 
 				win_struct_array[i].wi_thumb->master_win_handle = win_struct_array[i].wi_handle;
 				win_struct_array[i].wi_thumb->open_win_func = &new_win_img;
@@ -436,7 +438,7 @@ int16_t new_win_crop(struct_crop* this_crop, const char* win_title){
 				win_struct_array[i].wi_data->path = (char *)mem_alloc(strlen(win_title) + 15);
 				strcpy((char*)win_struct_array[i].wi_data->path, win_title);
 
-                open_window(&win_struct_array[i]);
+                open_window(&win_struct_array[i], NULL);
 
 				st_Init_WinImage_Control_Bar((void*)&win_struct_array[i]);
 

@@ -5,5 +5,5 @@
 #define IMG_DEGAS
 
 void st_Init_Degas(struct_window *);
-void st_Write_Degas(u_int8_t* src_buffer, int width, int height, const char* filename);
+void st_Write_Degas(u_int8_t* src_buffer, int width, int height, const char* filename, int16_t* palette, int16_t nb_colors);
 #endif

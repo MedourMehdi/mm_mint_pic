@@ -1,7 +1,6 @@
 #include "headers.h"
 
 #include "png_ico/png_ico.h"
-#include "utils_rsc/progress.h"
 
 #include <pthread.h>
 
@@ -137,6 +136,7 @@ typedef struct
 	int16_t startob;
 	u_int16_t winform_padding;
 	int16_t win_master_handle;
+	int16_t win_form_handle;	
 	void (*process_function)(int16_t);
 } struct_rsc_metadata;
 
@@ -218,6 +218,18 @@ typedef struct {
 	struct stat STAT_FILE;
 } struct_metadata;
 
+typedef struct {
+	int16_t win_form_handle;
+	int16_t current_value;
+	bool update_resquested;
+	bool update_title;
+	bool update_info_line;
+	bool locked;
+	bool done;
+	char* title;
+	char* info_line;
+} struct_win_progress_bar;
+
 #ifndef WINDOWSTRUCT
 #define WINDOWSTRUCT
 typedef struct {
@@ -269,14 +281,18 @@ typedef struct {
 	struct_rsc_metadata		(*wi_form);
     struct_metadata 		(*wi_data);
 	struct_st_control_bar	(*wi_control_bar);
-	struct_progress_bar		(*wi_progress_bar);
+	struct_win_progress_bar	(*wi_win_progress_bar);
 	void (*refresh_win)(int16_t);
 	MFDB* (*render_win)(MFDB*);
 } struct_window;
 
 #endif
-
+#ifdef STACK_SIZE
+#define THREAD_STACK_SIZE STACK_SIZE
+#else
 #define THREAD_STACK_SIZE 256000
+#endif
+
 extern pthread_attr_t *tattr;
 extern pthread_t threads[NUM_THREADS];
 extern int *taskids[NUM_THREADS];
@@ -292,8 +308,8 @@ void st_Set_Mouse(boolean status);
 void send_message(int16_t my_win_handle, int16_t my_message);
 void update_struct_window(struct_window *this_win);
 struct_window *detect_window(int16_t my_win_handle);
-boolean rsc_already_loaded(const char* rsc_file_name);
-void open_window(struct_window *this_win);
+boolean rsc_already_loaded(const char* rsc_file_name, int16_t win_handle_to_exclude);
+void open_window(struct_window *this_win, int16_t *this_win_position);
 void wipe_pxy_area(int16_t *pxy);
 void st_Set_Clipping(int16_t flag, int16_t *pxy_array);
 void reorder_struct_window(void);

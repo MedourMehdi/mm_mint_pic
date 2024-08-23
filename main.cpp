@@ -6,7 +6,6 @@
 
 #include <pthread.h>
 
-
 #include "utils/utils.h" /* mem_alloc */
 #include "windows.h"
 
@@ -18,6 +17,8 @@
 #include "control_bar.h" /* Init control bar icons MFDB*/
 
 #include "utils/dragdrop.h"
+
+#include "rsc_processing/progress_bar.h"
 
 boolean exit_call = FALSE;
 int16_t st_vdi_handle;
@@ -87,7 +88,11 @@ char current_path[256] = {'\0'};
 
 char *pfile, *va_file;
 
-struct_progress_bar *global_progress_bar;
+#ifdef USE_LNX_PATH
+bool path_to_lnx = TRUE;
+#else
+bool path_to_lnx = FALSE;
+#endif
 
 void *event_loop( void *result);
 void* exec_eventloop(void* p_param);
@@ -106,8 +111,6 @@ int main(int argc, char *argv[]){
     if(!init_app()){ goto quit;	}
 	
 	st_Get_App_Dir(current_path, argv[0]);
-
-	global_progress_bar = st_Progress_Bar_Alloc_Enable();
 
 	if(!st_Ico_PNG_Init_Image()){ goto close_ico_image;	}
 
@@ -166,8 +169,6 @@ close_ico_document:
 	st_Ico_PNG_Release_Document();
 close_ico_image:
 	st_Ico_PNG_Release_Image();
-
-	st_Progress_Bar_Destroy(global_progress_bar);
 
 quit:
 	mem_free(this_file);

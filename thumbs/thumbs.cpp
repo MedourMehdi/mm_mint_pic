@@ -4,6 +4,8 @@
 
 #include "../utils_gfx/ttf.h"
 
+#include "../rsc_processing/progress_bar.h"
+
 #ifndef PRIMARY_IMAGE_ID
 #define PRIMARY_IMAGE_ID    -1
 #endif
@@ -420,9 +422,8 @@ void st_Thumb_List_Generic(struct_window *this_win,
                             bool open_new_win){
 
     if(this_win->wi_data->img.img_total > 1){
-        st_Progress_Bar_Add_Step(this_win->wi_progress_bar);
-        st_Progress_Bar_Init(this_win->wi_progress_bar, (int8_t*)title);
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 1, (int8_t*)"Init");
+
+        this_win->wi_win_progress_bar = (struct_win_progress_bar*)st_Win_Progress_Init(this_win->wi_handle, title, 1,  "Init");
 
         this_win->wi_data->thumbnail_slave = true;
         this_win->wi_thumb = st_Thumb_Alloc(this_win->wi_data->img.img_total, this_win->wi_handle, wanted_padx, wanted_pady, wanted_width, wanted_height);
@@ -441,7 +442,8 @@ void st_Thumb_List_Generic(struct_window *this_win,
 
             char progess_bar_indication[96];
             sprintf(progess_bar_indication, "Indexing media list: %s %d/%d", media_type, i+1, this_win->wi_thumb->thumbs_nb);
-            st_Progress_Bar_Signal(this_win->wi_progress_bar, (mul_100_fast(i) / this_win->wi_thumb->thumbs_nb), (int8_t*)progess_bar_indication);
+
+            st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, (mul_100_fast(i) / this_win->wi_thumb->thumbs_nb), progess_bar_indication);
 
             MFDB* thumb_original_mfdb;
             /* Comment to not render MFDB */
@@ -492,8 +494,9 @@ void st_Thumb_List_Generic(struct_window *this_win,
             thumb_ptr = NULL;
 
         }
-        st_Progress_Bar_Step_Done(this_win->wi_progress_bar);
-        st_Progress_Bar_Finish(this_win->wi_progress_bar);
+
+        st_Win_Progress_Bar_Finish(this_win->wi_handle);
+
         this_win->wi_thumb->thumbs_area_h += this_win->wi_thumb->pady;
         this_win->wi_thumb->thumbs_list_array->thumb_selected = TRUE;
     } else {

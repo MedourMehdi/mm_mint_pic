@@ -3,11 +3,12 @@
 #include "../utils_gfx/pix_convert.h"
 #include "../utils/utils.h"
 
+#include "../rsc_processing/progress_bar.h"
+
 #include <webp/encode.h>
 #include <webp/decode.h>
 #include <webp/demux.h>
 
-void st_Win_Print_WEBP(int16_t this_win_handle);
 void _st_Read_WEBP(int16_t this_win_handle, boolean file_process);
 void st_Win_Video_WEBP(int16_t this_win_handle);
 
@@ -19,9 +20,6 @@ void st_Init_Vid_WEBP(struct_window *this_win){
     if(this_win->wi_data->video_media){
         this_win->wi_data->img.img_id = 0;
         this_win->wi_data->img.img_index = 1; 
-    } else {
-        /* Progress Bar Stuff */
-        this_win->wi_progress_bar = global_progress_bar;
     }
     if(!st_Set_Renderer(this_win)){
         sprintf(alert_message, "screen_format: %d\nscreen_bits_per_pixel: %d", screen_workstation_format, screen_workstation_bits_per_pixel);
@@ -158,9 +156,8 @@ void _st_Read_WEBP(int16_t this_win_handle, boolean file_process)
         return;
     }
     if(this_win->wi_data->stop_original_data_load == FALSE){
-        st_Progress_Bar_Add_Step(this_win->wi_progress_bar);
-        st_Progress_Bar_Init(this_win->wi_progress_bar, (int8_t*)"WEBP DECODING");
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 15, (int8_t*)"Init");
+
+        this_win->wi_win_progress_bar = (struct_win_progress_bar*)st_Win_Progress_Init(this_win->wi_handle, "WEBP READING", 15,  "Webp: Sarting...");
 
         int8_t *data;
         uint32_t data_size;
@@ -172,6 +169,9 @@ void _st_Read_WEBP(int16_t this_win_handle, boolean file_process)
         WebPDecoderConfig config;
         WebPBitstreamFeatures* const input = &config.input;
         WebPDecBuffer* const output = &config.output;
+
+
+        st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, 25, "Webp: initializes webp decoding");
 
         // The second step initializes webp decoding configuration information 
         if (!WebPInitDecoderConfig(&config)) {
@@ -203,6 +203,8 @@ void _st_Read_WEBP(int16_t this_win_handle, boolean file_process)
             data_size = this_win->wi_data->STAT_FILE.st_size;            
         }
 
+        st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, 45, "Webp: Reading image data");
+
         // The third step is to get webp image data 
         status = WebPGetFeatures((uint8_t*)data, (size_t)data_size, &config.input);
         if (status != VP8_STATUS_OK) {
@@ -221,6 +223,9 @@ void _st_Read_WEBP(int16_t this_win_handle, boolean file_process)
             sprintf(alert_message, "Out Of Mem Error\nAsked for %doctets", width * height * nb_components_32bits);
             st_form_alert(FORM_EXCLAM, alert_message);
         } else {
+
+            st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, 45, "Webp: Building ARGB pixels");
+
             mfdb_update_bpp(&this_win->wi_original_mfdb, (int8_t*)destination_buffer, width, height, nb_components_32bits << 3);
             WebPDecodeARGBInto((u_int8_t*)data, data_size, temp_buffer, (MFDB_STRIDE(width) * height) << 2, MFDB_STRIDE(width) << 2);
             u_int32_t *dest_ptr = (u_int32_t*)destination_buffer;
@@ -237,9 +242,9 @@ void _st_Read_WEBP(int16_t this_win_handle, boolean file_process)
         if(file_process == TRUE){
             mem_free(data);
         }
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 100, (int8_t*)"Finished");
-        st_Progress_Bar_Step_Done(this_win->wi_progress_bar);
-        st_Progress_Bar_Finish(this_win->wi_progress_bar);
+
+        st_Win_Progress_Bar_Finish(this_win->wi_handle);
+
     }
 }
 
@@ -250,13 +255,12 @@ void st_Write_WEBP(u_int8_t* src_buffer, int width, int height, const char* file
 
     int16_t ret_value = 0;
 
-    st_Progress_Bar_Add_Step(global_progress_bar);
-    st_Progress_Bar_Init(global_progress_bar, (int8_t*)"WEBP EXPORT START");
-    st_Progress_Bar_Signal(global_progress_bar, 35, (int8_t*)"WebP image encoding");
+    struct_win_progress_bar* this_progress_bar = (struct_win_progress_bar*)st_Win_Progress_Init(NIL, "WEBP EXPORT START", 25,  "WebP image encoding");
 
     size_t output_size = WebPEncodeRGB(src_buffer, width, height, MFDB_STRIDE(width) * nb_components24b, quality, &destination_buffer);
 
-    st_Progress_Bar_Signal(global_progress_bar, 75, (int8_t*)"Saving image file");
+    st_Win_Progress_Bar_Update_Info_Line(this_progress_bar, 75, "Webp: Writing pixels to file");    
+
     FILE *fp;
 	if((fp = fopen(filename,"wb")) == NULL){
 		sprintf(alert_message, "Unable to open %s for writing", filename);
@@ -273,9 +277,9 @@ void st_Write_WEBP(u_int8_t* src_buffer, int width, int height, const char* file
 		fclose(fp);
 	}
 clean:        
-    st_Progress_Bar_Signal(global_progress_bar, 100, (int8_t*)"Finished");
-    st_Progress_Bar_Step_Done(global_progress_bar);
-    st_Progress_Bar_Finish(global_progress_bar);        
+
+    st_Win_Progress_Bar_Finish(this_progress_bar->win_form_handle);
+
     return ;
 }
 

@@ -201,7 +201,7 @@ int16_t st_Dgetdrv(){
  * It returns 1 if given path is directory and  exists 
  * otherwise returns 0.
  */
-int16_t st_DirectoryExists(const char *path){
+boolean st_DirectoryExists(const char *path){
     struct stat stats;
 
     stat(path, &stats);
@@ -218,7 +218,7 @@ int16_t st_DirectoryExists(const char *path){
  * access() function. It returns 1 if file exists at 
  * given path otherwise returns 0.
  */
-int16_t st_FileExistsAccess(const char *path)
+boolean st_FileExistsAccess(const char *path)
 {
     // Check for file existence
     if (access(path, F_OK) == -1)
@@ -266,11 +266,11 @@ char *dirname(char const *path)
         if(s == NULL) {
                 return strdup(path);
         } else {
-                int return_len = strlen(path) - (strlen(s));
-                char *return_string = (char*)mem_calloc(return_len + 1, 1);
-                strncpy(return_string, path, (return_len));
-                // printf("return_string %s\n",return_string);
-                return return_string;
+            int return_len = strlen(path) - (strlen(s));
+            char *return_string = (char*)mem_calloc(return_len + 1, 1);
+            strncpy(return_string, path, (return_len));
+            // printf("return_string %s\n",return_string);
+            return return_string;
         }
 }
 
@@ -324,21 +324,6 @@ int16_t mfdb_update_bpp( MFDB* new_mfdb, int8_t* buffer, int16_t width, int16_t 
     new_mfdb->fd_r3 = 0;
 	return width_stride;
 }
-
-// float ReverseFloat( const float inFloat )
-// {
-//    float retVal;
-//    char *floatToConvert = ( char* ) & inFloat;
-//    char *returnFloat = ( char* ) & retVal;
-
-//    // swap the bytes into a temporary buffer
-//    returnFloat[0] = floatToConvert[3];
-//    returnFloat[1] = floatToConvert[2];
-//    returnFloat[2] = floatToConvert[1];
-//    returnFloat[3] = floatToConvert[0];
-
-//    return retVal;
-// }
 
 void mfdb_duplicate(MFDB *src_mfdb, MFDB *dst_mfdb){
     /* We duplicate the original MFDB so we can work on it */
@@ -496,7 +481,6 @@ void st_Load_Pal(int16_t* paletteBuffer)
     Setpalette(paletteBuffer);
 }
 
-
 void st_VDI_SavePalette_RGB(int16_t (*_vdi_palette)[3])
 {
 	int16_t rgb[3];
@@ -522,7 +506,6 @@ void st_VDI_LoadPalette_RGB(int16_t (*_vdi_palette)[3])
 
 	u_int16_t i;  
 	for(i = 0; i < (1 << screen_workstation_bits_per_pixel); i++) {
-
 		vs_color(st_vdi_handle, i, _vdi_palette[i]);
 	}
 }
@@ -601,25 +584,66 @@ void st_Get_Current_Dir(char* dst_char){
 }
 
 void st_Get_App_Dir(char* dst_char, char* src_path){
-    if(strncmp(src_path, ":", 1) == 0){
-        st_Path_to_Linux(src_path);
-    }
-    /* argv[0] not null and start with / or x: */
-    if(strncmp(&src_path[0], "/", 1) == 0){
-        printf("strlen %d %s vs %d", strlen(src_path), src_path, strlen(dst_char));
-        strcpy(dst_char, dirname(src_path));
-    }else{
+    if(path_to_lnx){
+        if(strncmp(src_path, ":", 1) == 0){
+            st_Path_to_Linux(src_path);
+        }
+        /* argv[0] not null and start with / or x: */
+        if(strncmp(&src_path[0], "/", 1) == 0){
+            // printf("strlen %d %s vs %d", strlen(src_path), src_path, strlen(dst_char));
+            strcpy(dst_char, dirname(src_path));
+        }else{
+            st_Get_Current_Dir(dst_char);
+        }
+        /* Call st_Get_Current_Dir */
+    }else {
         st_Get_Current_Dir(dst_char);
+        // printf("dst_char %s\n", dst_char);
     }
-    /* Call st_Get_Current_Dir */
 }
-
 
 const wchar_t *st_Char_to_WChar(const char *c) {
     const size_t cSize = strlen(c)+1;
     wchar_t* wc = new wchar_t[cSize];
     mbstowcs (wc, c, cSize);
     return wc;
+}
+
+bool st_is_lnx_path(const char* this_path){
+    char *s = strstr(this_path, "/");
+    if (s != NULL){
+        return TRUE;
+    }
+    return FALSE;
+}
+
+void st_lnx_path_st(const char* lnx_path){
+    char* st_path = (char*)mem_calloc(1, strlen(lnx_path));
+    char str_tmp[] = "/\\";
+    if( !strncmp(&lnx_path[0], "/", 0) ){
+        if( !strncmp(&lnx_path[2], "/", 0) ){
+            strncpy(&st_path[0], &lnx_path[1], 1);
+        } else {
+            strncpy(&st_path[0], "u", 1);
+        }
+        strcpy(&st_path[1], ":\\");
+        strcat(&st_path[3], &lnx_path[0]);
+        replace_char(st_path, str_tmp[0], str_tmp[1]);        
+    }
+}
+
+void st_Path_Parser(const char* this_path, bool lnx){
+    /*
+    lnx == 0 -> use st formatting
+    lnx == 1 -> use linux formatting
+    */
+    if(lnx){
+        st_Path_to_Linux(this_path);
+        // printf("this_path %s\n", this_path);
+    } else {
+        st_lnx_path_st(this_path);
+        // printf("this_path %s\n", this_path);
+    }
 }
 
 void st_Path_to_Linux(const char* st_path){
@@ -640,3 +664,19 @@ void st_Path_to_Linux(const char* st_path){
         mem_free(lnx_path);
     }
 }
+
+// float ReverseFloat( const float inFloat )
+// {
+//    float retVal;
+//    char *floatToConvert = ( char* ) & inFloat;
+//    char *returnFloat = ( char* ) & retVal;
+
+//    // swap the bytes into a temporary buffer
+//    returnFloat[0] = floatToConvert[3];
+//    returnFloat[1] = floatToConvert[2];
+//    returnFloat[2] = floatToConvert[1];
+//    returnFloat[3] = floatToConvert[0];
+
+//    return retVal;
+// }
+

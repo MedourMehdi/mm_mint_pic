@@ -6,8 +6,9 @@
 #include "../utils_gfx/pix_convert.h"
 #include "../utils_gfx/ttf.h"
 
-#include "../utils_rsc/progress.h"
 #include "../thumbs/thumbs.h"
+
+#include "../rsc_processing/progress_bar.h"
 
 #ifndef PRIMARY_IMAGE_ID
 #define PRIMARY_IMAGE_ID    -1
@@ -27,10 +28,6 @@ void st_Init_GIF(struct_window *this_win){
     if(this_win->wi_data->video_media){
         this_win->wi_data->img.img_id = 0;
         this_win->wi_data->img.img_index = 1; 
-    } else {
-        
-        /* Progress Bar Stuff */
-        this_win->wi_progress_bar = global_progress_bar;
     }
     this_win->refresh_win = st_Win_Print_GIF;
 
@@ -76,15 +73,13 @@ void _st_Read_GIF(int16_t this_win_handle, boolean file_processing, long img_id)
     struct_window *this_win;
     this_win = detect_window(this_win_handle);
     if(this_win->wi_data->stop_original_data_load == FALSE){
-        st_Progress_Bar_Add_Step(this_win->wi_progress_bar);
-        st_Progress_Bar_Init(this_win->wi_progress_bar, (int8_t*)"GIF READING");
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 15, (int8_t*)"Init");
+
+        this_win->wi_win_progress_bar = (struct_win_progress_bar*)st_Win_Progress_Init(this_win->wi_handle, "GIF READING", 15,  "Starting...");
 
         const char *file_name = this_win->wi_data->path;
         long this_img = 0;
         int error;
 
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 35, (int8_t*)"Opening file");
         GifFileType* gifFile = DGifOpenFileName(file_name, &error);
         if (!gifFile) {
             sprintf(alert_message, "DGifOpenFileName() failed - %d", error);
@@ -105,7 +100,8 @@ void _st_Read_GIF(int16_t this_win_handle, boolean file_processing, long img_id)
             this_img = img_id;
         }
 
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 55, (int8_t*)"Reading headers");
+        st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, 30, "GIF: Parsing header");
+
         ColorMapObject* commonMap = gifFile->SColorMap;
 
         u_int16_t width = gifFile->SWidth;
@@ -122,7 +118,7 @@ void _st_Read_GIF(int16_t this_win_handle, boolean file_processing, long img_id)
         mfdb_update_bpp(&this_win->wi_original_mfdb, (int8_t*)temp_buffer, width, height, 32);
         st_MFDB_Fill(&this_win->wi_original_mfdb, 0XFFFFFFFF);
 
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 85, (int8_t*)"Building ARGB image");
+        st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, 79, "GIF: Building ARGB pixels");
 
         long ii, jj, x, y;
         u_int32_t* ptr_argb = (u_int32_t*)temp_buffer;        
@@ -175,9 +171,7 @@ void _st_Read_GIF(int16_t this_win_handle, boolean file_processing, long img_id)
         this_win->wi_data->stop_original_data_load = TRUE;
 
         DGifCloseFile(gifFile, &error);
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 100, (int8_t*)"Finished");
-        st_Progress_Bar_Step_Done(this_win->wi_progress_bar);
-        st_Progress_Bar_Finish(this_win->wi_progress_bar);
+        st_Win_Progress_Bar_Finish(this_win->wi_handle);
     }
 }
 
@@ -217,9 +211,7 @@ void _st_Handle_Thumbs_GIF(int16_t this_win_handle, boolean file_process){
 
     if(this_win->wi_data->img.img_total > 1){
 
-        st_Progress_Bar_Add_Step(this_win->wi_progress_bar);
-        st_Progress_Bar_Init(this_win->wi_progress_bar, (int8_t*)"Thumbs processing");
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 1, (int8_t*)"Init");
+        this_win->wi_win_progress_bar = (struct_win_progress_bar*)st_Win_Progress_Init(this_win->wi_handle, "GIF Thumbs processing", 1,  "Starting...");
 
         ColorMapObject* commonMap = gifFile->SColorMap;
 
@@ -267,9 +259,9 @@ void _st_Handle_Thumbs_GIF(int16_t this_win_handle, boolean file_process){
             }
 
             char progess_bar_indication[96];
-            int16_t bar_pos = mul_100_fast(i) / this_win->wi_thumb->thumbs_nb;
-            sprintf(progess_bar_indication, "Thumbnail id.%d/%d - Image id.%d", i, this_win->wi_thumb->thumbs_nb, thumb_ptr->thumb_id);
-            st_Progress_Bar_Signal(this_win->wi_progress_bar, bar_pos, (int8_t*)progess_bar_indication);
+            sprintf(progess_bar_indication, "GIF Thumb id.%d/%d - Image id.%d", i, this_win->wi_thumb->thumbs_nb, thumb_ptr->thumb_id);
+
+            st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, (mul_100_fast(i) / this_win->wi_thumb->thumbs_nb), progess_bar_indication);
 
             const SavedImage& saved = gifFile->SavedImages[i];
             const GifImageDesc& desc = saved.ImageDesc;
@@ -355,8 +347,7 @@ void _st_Handle_Thumbs_GIF(int16_t this_win_handle, boolean file_process){
             thumb_ptr = NULL;
         }
         this_win->wi_thumb->thumbs_area_h += this_win->wi_thumb->pady;
-        st_Progress_Bar_Step_Done(this_win->wi_progress_bar);
-        st_Progress_Bar_Finish(this_win->wi_progress_bar);
+        st_Win_Progress_Bar_Finish(this_win->wi_handle);
         mfdb_free(temp_mfdb);
     } else {
         this_win->wi_data->thumbnail_slave = false;

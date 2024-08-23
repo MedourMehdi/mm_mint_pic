@@ -8,6 +8,8 @@
 #include "../utils_gfx/pix_convert.h"
 #include "../thumbs/thumbs.h"
 
+#include "../rsc_processing/progress_bar.h"
+
 #define USE_LZW_COMPRESSION 1
 #define PRIMARY_IMAGE_ID    -1
 
@@ -21,8 +23,7 @@ void st_Init_TIFF(struct_window *this_win){
     this_win->wi_data->window_size_limited = TRUE;
     this_win->wi_data->remap_displayed_mfdb = TRUE;
 	this_win->refresh_win = st_Win_Print_TIFF;
-    /* Progress Bar Stuff */
-    this_win->wi_progress_bar = global_progress_bar;
+
     this_win->prefers_file_instead_mem = TRUE; /* If FALSE the original file will be copied to memory and available in this_win->wi_data->original_buffer */
     if(!st_Set_Renderer(this_win)){
         sprintf(alert_message, "screen_format: %d\nscreen_bits_per_pixel: %d", screen_workstation_format, screen_workstation_bits_per_pixel);
@@ -51,14 +52,12 @@ void st_Win_Print_TIFF(int16_t this_win_handle){
 
 void st_Write_TIFF(u_int8_t* src_buffer, int width, int height, const char* filename){
 
-    st_Progress_Bar_Add_Step(global_progress_bar);
-    st_Progress_Bar_Init(global_progress_bar, (int8_t*)"TIFF WRITING");
-    st_Progress_Bar_Signal(global_progress_bar, 10, (int8_t*)"TIFF image encoding");
+    struct_win_progress_bar* this_progress_bar = (struct_win_progress_bar*)st_Win_Progress_Init(NIL, "TIFF WRITING", 10,  "TIFF image encoding");
 
     u_int32_t* buffer = (u_int32_t*)src_buffer;
     TIFF *image = TIFFOpen(filename, "wb");
 
-    st_Progress_Bar_Signal(global_progress_bar, 20, (int8_t*)"Setting TAG");
+    st_Win_Progress_Bar_Update_Info_Line(this_progress_bar, 20, "TIFF: Setting TAGs");
 
     TIFFSetField(image, TIFFTAG_IMAGEWIDTH, width); 
     TIFFSetField(image, TIFFTAG_IMAGELENGTH, height); 
@@ -77,7 +76,8 @@ void st_Write_TIFF(u_int8_t* src_buffer, int width, int height, const char* file
     TIFFSetField(image, TIFFTAG_COMPRESSION, COMPRESSION_NONE);
     #endif
 
-    st_Progress_Bar_Signal(global_progress_bar, 60, (int8_t*)"Writing scanlines");
+    st_Win_Progress_Bar_Update_Info_Line(this_progress_bar, 60, "TIFF: Writing scanlines");
+
     //Now writing image to the file one strip at a time
     u_int32_t i;
     for(i = 0; i < height; i++)
@@ -87,9 +87,7 @@ void st_Write_TIFF(u_int8_t* src_buffer, int width, int height, const char* file
 
     // TIFFWriteEncodedStrip(image, 0, buffer, width * height * 3);
 
-    st_Progress_Bar_Signal(global_progress_bar, 100, (int8_t*)"Finished");
-    st_Progress_Bar_Step_Done(global_progress_bar);
-    st_Progress_Bar_Finish(global_progress_bar); 
+    st_Win_Progress_Bar_Finish(this_progress_bar->win_form_handle);
 
     TIFFWriteDirectory(image);
     TIFFClose(image);
@@ -100,9 +98,7 @@ void _st_Read_TIFF(int16_t this_win_handle,  boolean file_process, int16_t img_i
     this_win = detect_window(this_win_handle);
     if(this_win->wi_data->stop_original_data_load == FALSE){
 
-        st_Progress_Bar_Add_Step(this_win->wi_progress_bar);
-        st_Progress_Bar_Init(this_win->wi_progress_bar, (int8_t*)"TIFF READING");
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 15, (int8_t*)"Init");
+        this_win->wi_win_progress_bar = (struct_win_progress_bar*)st_Win_Progress_Init(this_win->wi_handle, "TIFF READING", 15,  "Starting...");
 
         TIFF *tiff_handler;
         u_int32_t width, height;
@@ -113,7 +109,9 @@ void _st_Read_TIFF(int16_t this_win_handle,  boolean file_process, int16_t img_i
         const char *file_name;
 
         file_name = this_win->wi_data->path;
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 35, (int8_t*)"Opening file");
+
+        st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, 35, "TIFF: Reading file");
+
         if( file_process == TRUE && ( tiff_handler = TIFFOpen( file_name, "r")) == NULL){
             form_alert(1, "[1][File could not be opened for reading][Okay]"); 
             return;
@@ -122,14 +120,16 @@ void _st_Read_TIFF(int16_t this_win_handle,  boolean file_process, int16_t img_i
             TIFFSetDirectory(tiff_handler, img_id);
         }
         
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 55, (int8_t*)"Reading headers");
+        st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, 55, "TIFF: Parsing header data");
+
         TIFFGetField( tiff_handler, TIFFTAG_IMAGEWIDTH, &width);
         TIFFGetField( tiff_handler, TIFFTAG_IMAGELENGTH, &height);
         TIFFGetField( tiff_handler, TIFFTAG_COMPRESSION, &compression);
         TIFFGetField( tiff_handler, TIFFTAG_BITSPERSAMPLE, &bitpersample);
         TIFFGetField( tiff_handler, TIFFTAG_SAMPLESPERPIXEL, &samplesperpixel);
 
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 65, (int8_t*)"Reading data");
+        st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, 65, "TIFF: Parsing pixels data");
+
         u_int32_t* raster = ( u_int32_t* )mem_alloc( ( width * height ) << 2);
         if(raster == NULL){
             TIFFClose(tiff_handler);
@@ -145,7 +145,8 @@ void _st_Read_TIFF(int16_t this_win_handle,  boolean file_process, int16_t img_i
             return;	
         } 
 
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 85, (int8_t*)"Building ARGB image");
+        st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, 85, "TIFF: Building ARGB pixels");
+
         mfdb_update_bpp(&this_win->wi_original_mfdb, (int8_t*)destination_buffer, width, height, 32);
         st_MFDB_Fill(&this_win->wi_original_mfdb, 0X00FFFFFF);
         long i, j;
@@ -169,9 +170,8 @@ void _st_Read_TIFF(int16_t this_win_handle,  boolean file_process, int16_t img_i
 
         mem_free(raster);
         TIFFClose(tiff_handler);
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 100, (int8_t*)"Finished");
-        st_Progress_Bar_Step_Done(this_win->wi_progress_bar);
-        st_Progress_Bar_Finish(this_win->wi_progress_bar);
+
+        st_Win_Progress_Bar_Finish(this_win->wi_handle);
     }
 }
 
@@ -207,9 +207,7 @@ void _st_Handle_Thumbs_TIFF(int16_t this_win_handle, boolean file_process){
     this_win->wi_data->img.img_index = idx + 1;
     if(this_win->wi_data->img.img_total > 1){
 
-        st_Progress_Bar_Add_Step(this_win->wi_progress_bar);
-        st_Progress_Bar_Init(this_win->wi_progress_bar, (int8_t*)"Thumbs processing");
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 1, (int8_t*)"Init");
+        this_win->wi_win_progress_bar = (struct_win_progress_bar*)st_Win_Progress_Init(this_win->wi_handle, "TIFF Thumbs processing", 1,  "Starting...");
 
         this_win->wi_data->thumbnail_slave = true;
         this_win->wi_thumb = st_Thumb_Alloc(this_win->wi_data->img.img_total, this_win_handle, 4, 8, 120, 80);
@@ -240,9 +238,9 @@ void _st_Handle_Thumbs_TIFF(int16_t this_win_handle, boolean file_process){
             TIFFSetDirectory(tiff_handler, i);
 
             char progess_bar_indication[96];
-            int16_t bar_pos = mul_100_fast(i) / this_win->wi_thumb->thumbs_nb;
-            sprintf(progess_bar_indication, "Thumbnail id.%d/%d - Image id.%d", i, this_win->wi_thumb->thumbs_nb, thumb_ptr->thumb_id);
-            st_Progress_Bar_Signal(this_win->wi_progress_bar, bar_pos, (int8_t*)progess_bar_indication);
+            sprintf(progess_bar_indication, "TIFF Thumb id.%d/%d - Image id.%d", i, this_win->wi_thumb->thumbs_nb, thumb_ptr->thumb_id);
+
+            st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, (mul_100_fast(i) / this_win->wi_thumb->thumbs_nb), progess_bar_indication);
 
             TIFFGetField( tiff_handler, TIFFTAG_IMAGEWIDTH, &original_width);
             TIFFGetField( tiff_handler, TIFFTAG_IMAGELENGTH, &original_height);
@@ -309,8 +307,9 @@ void _st_Handle_Thumbs_TIFF(int16_t this_win_handle, boolean file_process){
             thumb_ptr = NULL;
         }
         this_win->wi_thumb->thumbs_area_h += this_win->wi_thumb->pady;
-        st_Progress_Bar_Step_Done(this_win->wi_progress_bar);
-        st_Progress_Bar_Finish(this_win->wi_progress_bar);
+
+        st_Win_Progress_Bar_Finish(this_win->wi_handle);
+
     } else {
         this_win->wi_data->thumbnail_slave = false;
         this_win->wi_data->img.img_id = PRIMARY_IMAGE_ID;

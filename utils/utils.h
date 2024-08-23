@@ -12,12 +12,15 @@ long st_Supexec(long atari_hardware_addr());
 
 int16_t st_Dgetpath(char* current_path, int16_t drive_num);
 int16_t st_Dgetdrv();
-int16_t st_DirectoryExists(const char *path);
-int16_t st_FileExistsAccess(const char *path);
+boolean st_DirectoryExists(const char *path);
+boolean st_FileExistsAccess(const char *path);
 
 boolean check_ext(const char *ext1, const char *ext2);
 char* replace_char(char* str, char find, char replace);
 void st_Path_to_Linux(const char* st_path);
+bool st_is_lnx_path(const char* this_path);
+void st_lnx_path_st(const char* lnx_path);
+void st_Path_Parser(const char* this_path, bool lnx);
 void shrink_char_obj(const char* src_string, OBJECT* dst_string);
 void st_form_alert(int16_t this_form_icon, char* form_message);
 int16_t st_form_alert_choice(int16_t this_form_icon, char* this_form_message, char* but0, char* but1);

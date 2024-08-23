@@ -3,6 +3,8 @@
 #include "../utils/utils.h"
 #include "../img_handler.h"
 
+#include "../rsc_processing/progress_bar.h"
+
 void st_Win_Print_BMP(int16_t this_win_handle);
 void _st_Read_BMP(int16_t this_win_handle, boolean file_process);
 
@@ -11,8 +13,7 @@ void st_Init_BMP(struct_window *this_win){
     this_win->wi_data->window_size_limited = TRUE;
     this_win->wi_data->remap_displayed_mfdb = TRUE;
 	this_win->refresh_win = st_Win_Print_BMP;
-    /* Progress Bar Stuff */
-    this_win->wi_progress_bar = global_progress_bar;
+
     this_win->prefers_file_instead_mem = TRUE; /* If FALSE the original file will be copied to memory and available in this_win->wi_data->original_buffer */
     if(!st_Set_Renderer(this_win)){
         sprintf(alert_message, "screen_format: %d\nscreen_bits_per_pixel: %d", screen_workstation_format, screen_workstation_bits_per_pixel);
@@ -43,9 +44,8 @@ void _st_Read_BMP(int16_t this_win_handle, boolean file_process)
         return;
     }
     if(this_win->wi_data->stop_original_data_load == FALSE){
-        st_Progress_Bar_Add_Step(this_win->wi_progress_bar);
-        st_Progress_Bar_Init(this_win->wi_progress_bar, (int8_t*)"BMP READING");
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 15, (int8_t*)"Init");
+
+        this_win->wi_win_progress_bar = (struct_win_progress_bar*)st_Win_Progress_Init(this_win->wi_handle, "BMP READING", 15,  "Starting...");
 
         BMP *img;
         if(file_process == TRUE){
@@ -74,6 +74,8 @@ void _st_Read_BMP(int16_t this_win_handle, boolean file_process)
             st_form_alert(FORM_STOP, alert_message);
             return;
         }
+
+        st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, 40, "BMP: Building ARGB pixels");
 
         for (y = 0; y < height; y++)
         {
@@ -104,9 +106,7 @@ void _st_Read_BMP(int16_t this_win_handle, boolean file_process)
         st_Win_Set_Ready(this_win, width, height);
         this_win->wi_data->stop_original_data_load = TRUE;
 
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 100, (int8_t*)"Finished");
-        st_Progress_Bar_Step_Done(this_win->wi_progress_bar);
-        st_Progress_Bar_Finish(this_win->wi_progress_bar);
+        st_Win_Progress_Bar_Finish(this_win->wi_handle);
     }
 }
 
@@ -115,10 +115,8 @@ void st_Write_BMP(u_int8_t* src_buffer, int width, int height, const char* filen
     int16_t nb_components24b = 3;
     u_int8_t *destination_buffer = NULL;
 
-    st_Progress_Bar_Add_Step(global_progress_bar);
-    st_Progress_Bar_Init(global_progress_bar, (int8_t*)"BMP EXPORT START");
-    st_Progress_Bar_Signal(global_progress_bar, 35, (int8_t*)"BMP image encoding");
-    
+    struct_win_progress_bar* this_progress_bar = (struct_win_progress_bar*)st_Win_Progress_Init(NIL, "BMP WRITING", 10,  "BMP image encoding");
+
     BMP* img = BMP_Create(width, height, nb_components24b << 3);
     u_int32_t  i;
     int16_t x, y;
@@ -131,13 +129,12 @@ void st_Write_BMP(u_int8_t* src_buffer, int width, int height, const char* filen
         }
     }
 
-    st_Progress_Bar_Signal(global_progress_bar, 75, (int8_t*)"Saving image file");
+    st_Win_Progress_Bar_Update_Info_Line(this_progress_bar, 60, "BMP: Writing pixels to file");
+
 
     BMP_WriteFile(img, filename);
     BMP_Free( img );
       
-    st_Progress_Bar_Signal(global_progress_bar, 100, (int8_t*)"Finished");
-    st_Progress_Bar_Step_Done(global_progress_bar);
-    st_Progress_Bar_Finish(global_progress_bar);        
+    st_Win_Progress_Bar_Finish(this_progress_bar->win_form_handle);      
 
 }

@@ -3,6 +3,8 @@
 #include "../utils/utils.h"
 #include "../img_handler.h"
 
+#include "../rsc_processing/progress_bar.h"
+
 void st_Win_Print_TGA(int16_t this_win_handle);
 void _st_Read_TGA(int16_t this_win_handle, boolean file_process);
 
@@ -12,8 +14,7 @@ void st_Init_TGA(struct_window *this_win){
     this_win->wi_data->remap_displayed_mfdb = TRUE;
 	this_win->refresh_win = st_Win_Print_TGA;
     this_win->wi_to_work_in_mfdb = &this_win->wi_original_mfdb;
-    /* Progress Bar Stuff */
-    this_win->wi_progress_bar = global_progress_bar;
+
     this_win->prefers_file_instead_mem = TRUE; /* If FALSE the original file will be copied to memory and available in this_win->wi_data->original_buffer */
     if(!st_Set_Renderer(this_win)){
         sprintf(alert_message, "screen_format: %d\nscreen_bits_per_pixel: %d", screen_workstation_format, screen_workstation_bits_per_pixel);
@@ -46,14 +47,16 @@ void _st_Read_TGA(int16_t this_win_handle, boolean file_process)
         return;
     }
     if(this_win->wi_data->stop_original_data_load == FALSE){
-        st_Progress_Bar_Add_Step(this_win->wi_progress_bar);
-        st_Progress_Bar_Init(this_win->wi_progress_bar, (int8_t*)"TGA READING");
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 15, (int8_t*)"Init");
+
+        this_win->wi_win_progress_bar = (struct_win_progress_bar*)st_Win_Progress_Init(this_win->wi_handle, "TGA READING", 15,  "TGA: Starting...");
 
         const char *image_name = this_win->wi_data->path;
         uint8_t *data;
         tga_info *info;
         enum tga_error error_code;
+
+        st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, 45, "TGA: Reading/Parsing file's data");
+
         if(file_process == TRUE){
             error_code = tga_load(&data, &info, image_name);
             if(error_code != TGA_NO_ERROR){
@@ -79,6 +82,8 @@ void _st_Read_TGA(int16_t this_win_handle, boolean file_process)
         }
         uint8_t* pixel;
         uint16_t pix16;
+
+        st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, 75, "TGA: Building pixels");
 
         for (y = 0; y < height; y++)
         {
@@ -147,9 +152,7 @@ void _st_Read_TGA(int16_t this_win_handle, boolean file_process)
         tga_free_info(info);
         this_win->wi_data->stop_original_data_load = TRUE;
 
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 100, (int8_t*)"Finished");
-        st_Progress_Bar_Step_Done(this_win->wi_progress_bar);
-        st_Progress_Bar_Finish(this_win->wi_progress_bar);
+        st_Win_Progress_Bar_Finish(this_win->wi_handle);
     }
 }
 
@@ -158,13 +161,13 @@ void st_Write_TGA(u_int8_t* src_buffer, int width, int height, const char* filen
     int16_t nb_components24b = 3;
     u_int8_t *destination_buffer = NULL;
 
-    st_Progress_Bar_Add_Step(global_progress_bar);
-    st_Progress_Bar_Init(global_progress_bar, (int8_t*)"TGA EXPORT START");
-    st_Progress_Bar_Signal(global_progress_bar, 35, (int8_t*)"TGA image encoding");
+    struct_win_progress_bar* this_progress_bar = (struct_win_progress_bar*)st_Win_Progress_Init(NIL, "TGA EXPORT START", 15,  "TGA image encoding");
 
     uint8_t *data;
     tga_info *info;
     enum tga_error error_code;
+
+    st_Win_Progress_Bar_Update_Info_Line(this_progress_bar, 45, "TGA: Building TGA_PIXEL_RGB24 pixels");
 
     error_code = tga_create(&data, &info, width, height, TGA_PIXEL_RGB24);
 
@@ -183,7 +186,10 @@ void st_Write_TGA(u_int8_t* src_buffer, int width, int height, const char* filen
                 pixel[1] = src_buffer[i++]; // Green channel.
                 pixel[0] = src_buffer[i++]; // Red channel.
             }
-        }        
+        }
+
+        st_Win_Progress_Bar_Update_Info_Line(this_progress_bar, 75, "TGA: Writing pixels to file");
+
         error_code = tga_save_from_info(data, info, filename);
         if (error_code != TGA_NO_ERROR) {
             form_alert(1, "[1][Image save failed][Okay]"); 
@@ -192,11 +198,7 @@ void st_Write_TGA(u_int8_t* src_buffer, int width, int height, const char* filen
         tga_free_data(data);
         tga_free_info(info);
     }
-
-    st_Progress_Bar_Signal(global_progress_bar, 75, (int8_t*)"Saving image file");
   
-    st_Progress_Bar_Signal(global_progress_bar, 100, (int8_t*)"Finished");
-    st_Progress_Bar_Step_Done(global_progress_bar);
-    st_Progress_Bar_Finish(global_progress_bar);        
+    st_Win_Progress_Bar_Finish(this_progress_bar->win_form_handle);   
 
 }

@@ -5,6 +5,8 @@
 #include "../utils/utils.h"
 #include "../img_handler.h"
 
+#include "../rsc_processing/progress_bar.h"
+
 void st_Win_Print_JPEG(int16_t this_win_handle);
 void _st_Read_JPEG(int16_t this_win_handle, boolean file_process);
 
@@ -13,8 +15,7 @@ void st_Init_JPEG(struct_window *this_win){
     this_win->wi_data->window_size_limited = TRUE;
     this_win->wi_data->remap_displayed_mfdb = TRUE;
 	this_win->refresh_win = st_Win_Print_JPEG;
-    /* Progress Bar Stuff */
-    this_win->wi_progress_bar = global_progress_bar;
+
     if(!st_Set_Renderer(this_win)){
         sprintf(alert_message, "screen_format: %d\nscreen_bits_per_pixel: %d", screen_workstation_format, screen_workstation_bits_per_pixel);
         st_form_alert(FORM_STOP, alert_message);
@@ -44,8 +45,7 @@ void _st_Read_JPEG (int16_t this_win_handle,  boolean file_process){
     if(this_win->wi_data->stop_original_data_load == FALSE){
         int16_t nb_components_24bits = 3, nb_components_32bits = 4, nb_components_original;
 
-        st_Progress_Bar_Add_Step(this_win->wi_progress_bar);
-        st_Progress_Bar_Init(this_win->wi_progress_bar, (int8_t*)"JPEG READING");
+        this_win->wi_win_progress_bar = (struct_win_progress_bar*)st_Win_Progress_Init(this_win->wi_handle, "JPEG READING", 10,  "JPEG: Starting...");
 
         // Variables for the source jpg
         u_int32_t jpg_size;
@@ -60,8 +60,6 @@ void _st_Read_JPEG (int16_t this_win_handle,  boolean file_process){
 
         // Variables for the output buffer, and how long each row is
         int16_t row_stride, width, height;
-
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 15, (int8_t*)"Opening file");
 
         cinfo.err = jpeg_std_error(&jerr);
 
@@ -81,7 +79,8 @@ void _st_Read_JPEG (int16_t this_win_handle,  boolean file_process){
             jpeg_mem_src(&cinfo, jpg_buffer, jpg_size);
         }
 
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 30, (int8_t*)"Reading header");
+        st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, 20, "parsing header");
+
         if (jpeg_read_header(&cinfo, TRUE) != 1) {
             form_alert(1, "[1][Data does not seem to be a normal JPEG][Okay]");
             exit(EXIT_FAILURE);
@@ -90,7 +89,8 @@ void _st_Read_JPEG (int16_t this_win_handle,  boolean file_process){
         cinfo.dct_method = JDCT_IFAST;
         cinfo.do_fancy_upsampling = FALSE;
 
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 45, (int8_t*)"Decompress");
+        st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, 40, "Decompressing data");
+
         jpeg_start_decompress(&cinfo);
         
         width = cinfo.output_width;
@@ -110,7 +110,8 @@ void _st_Read_JPEG (int16_t this_win_handle,  boolean file_process){
             return;
         }
 
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 60, (int8_t*)"Processing scanlines");
+        st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, 60, "Processing scanline");
+
         row_stride = width * nb_components_original;
 
         while (cinfo.output_scanline < cinfo.output_height) {
@@ -124,7 +125,7 @@ void _st_Read_JPEG (int16_t this_win_handle,  boolean file_process){
         jpeg_finish_decompress(&cinfo);
         jpeg_destroy_decompress(&cinfo);
 
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 90, (int8_t*)"Building ARGB buffer");
+        st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, 80, "Building ARGB pixels");
 
         u_int8_t* ARGB_Buffer = st_ScreenBuffer_Alloc_bpp(width, height, nb_components_32bits << 3);
         if(ARGB_Buffer == NULL){
@@ -166,17 +167,13 @@ void _st_Read_JPEG (int16_t this_win_handle,  boolean file_process){
         st_Win_Set_Ready(this_win, width, height);
         this_win->wi_data->stop_original_data_load = TRUE;
 
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 100, (int8_t*)"Finished");
-        st_Progress_Bar_Step_Done(this_win->wi_progress_bar);
-        st_Progress_Bar_Finish(this_win->wi_progress_bar);
+        st_Win_Progress_Bar_Finish(this_win->wi_handle);
     }    
 }
 
 void st_Write_JPEG(u_int8_t* src_buffer, int width, int height, const char* filename) {
 
-    st_Progress_Bar_Add_Step(global_progress_bar);
-    st_Progress_Bar_Init(global_progress_bar, (int8_t*)"JPEG WRITING");
-    st_Progress_Bar_Signal(global_progress_bar, 10, (int8_t*)"JPEG image encoding");
+    struct_win_progress_bar* this_progress_bar = (struct_win_progress_bar*)st_Win_Progress_Init(NIL, "JPEG WRITING", 10,  "JPEG image encoding");
 
     J_COLOR_SPACE color_space = JCS_RGB;
     struct jpeg_compress_struct cinfo;
@@ -192,7 +189,8 @@ void st_Write_JPEG(u_int8_t* src_buffer, int width, int height, const char* file
         return;
     }
 
-    st_Progress_Bar_Signal(global_progress_bar, 40, (int8_t*)"JPEG compression");
+    st_Win_Progress_Bar_Update_Info_Line(this_progress_bar, 30, "JPEG compression");
+
     cinfo.err = jpeg_std_error( &jerr );
     jpeg_create_compress(&cinfo);
     jpeg_stdio_dest(&cinfo, outfile);
@@ -207,7 +205,7 @@ void st_Write_JPEG(u_int8_t* src_buffer, int width, int height, const char* file
     /* Now do the compression .. */
     jpeg_start_compress( &cinfo, TRUE );
     /* like reading a file, this time write one row at a time */
-    st_Progress_Bar_Signal(global_progress_bar, 70, (int8_t*)"Writing scanlines");
+    st_Win_Progress_Bar_Update_Info_Line(this_progress_bar, 70, "JPEG: Writing scanlines");
     while( cinfo.next_scanline < cinfo.image_height )
     {
         row_pointer[0] = &src_buffer[ cinfo.next_scanline * MFDB_STRIDE(cinfo.image_width) *  cinfo.input_components];
@@ -219,9 +217,7 @@ void st_Write_JPEG(u_int8_t* src_buffer, int width, int height, const char* file
     jpeg_destroy_compress( &cinfo );
     fclose( outfile );
     
-    st_Progress_Bar_Signal(global_progress_bar, 100, (int8_t*)"Finished");
-    st_Progress_Bar_Step_Done(global_progress_bar);
-    st_Progress_Bar_Finish(global_progress_bar); 
+    st_Win_Progress_Bar_Finish(this_progress_bar->win_form_handle);
 
     /* success code is 1! */
     return;

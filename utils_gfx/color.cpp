@@ -3,6 +3,20 @@
 #include "../external/rgb2lab/rgb2lab.h"
 #include <math.h>
 
+// const int distinctRGB[22][3] = {{255, 255, 255},{0,0,0},{128,0,0},{255,0,0},{255, 200, 220},{170, 110, 40},{255, 150, 0},{255, 215, 180},{128, 128, 0},{255, 235, 0},{255, 250, 200},{190, 255, 0},{0, 190, 0},{170, 255, 195},{0, 0, 128},{100, 255, 255},{0, 0, 128},{67, 133, 255},{130, 0, 150},{230, 190, 255},{255, 0, 255},{128, 128, 128}};
+// const String distinctColors[22] = {"white","black","maroon","red","pink","brown","orange","coral","olive","yellow","beige","lime","green","mint","teal","cyan","navy","blue","purple","lavender","magenta","grey"};
+// String closestColor(int r,int g,int b) {
+//   String colorReturn = "NA";
+//   int biggestDifference = 1000;
+//   for (int i = 0; i < 22; i++) {
+//     if (sqrt(pow(r - distinctRGB[i][0],2) + pow(g - distinctRGB[i][1],2) + pow(b - distinctRGB[i][2],2)) < biggestDifference) {
+//       colorReturn = distinctColors[i];
+//       biggestDifference = sqrt(pow(r - distinctRGB[i][0],2) + pow(g - distinctRGB[i][1],2) + pow(b - distinctRGB[i][2],2));
+//     }
+//   }
+//   return colorReturn;
+// }   
+
 /* Classic color distance declaration */
 inline u_int32_t distance_rgb( u_int16_t* RGB1, u_int16_t* RGB2 );
 inline u_int16_t get_closest_value(u_int8_t* RGB_ptr, int16_t max_colors);
@@ -13,6 +27,23 @@ double deltaE(double* labA, double* labB);
 u_int16_t get_closest_value_rgb2lab(u_int8_t* RGB_ptr, int16_t max_colors);
 
 /* Classic color distance routines */
+
+/* static will allow inlining */
+static inline u_int32_t usqrt4(u_int32_t val) {
+    u_int32_t a, b;
+
+    if (val < 2) return val; /* avoid div/0 */
+    a = 1255;       /* starting point is relatively unimportant */
+    b = val / a; a = (a + b)>>1;
+    b = val / a; a = (a + b)>>1;
+    b = val / a; a = (a + b)>>1;
+    b = val / a; a = (a + b)>>1;
+    if (val < 20000) {  
+        b = val / a; a = (a + b)>>1;    // < 17% error Max
+        b = val / a; a = (a + b)>>1;    // < 5%  error Max
+    }
+    return a;
+}
 
 inline u_int32_t distance_rgb( u_int16_t* RGB1, u_int16_t* RGB2 ) {
     u_int32_t rez = 0;
@@ -27,7 +58,8 @@ inline u_int32_t distance_rgb( u_int16_t* RGB1, u_int16_t* RGB2 ) {
 
     u_int32_t t = (RGB1[0] + RGB2[0]) >> 1;
 
-    rez = sqrt((drp2 << 1) + (dgp2 << 2) + mul_3_fast(dbp2) + t * (drp2 - dbp2) >> 8);
+    // rez = sqrt((drp2 << 1) + (dgp2 << 2) + mul_3_fast(dbp2) + t * (drp2 - dbp2) >> 8);
+    rez = usqrt4((drp2 << 1) + (dgp2 << 2) + mul_3_fast(dbp2) + t * (drp2 - dbp2) >> 8);
 
     return rez;
 }

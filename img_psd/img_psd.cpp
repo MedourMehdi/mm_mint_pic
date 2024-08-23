@@ -5,6 +5,9 @@
 #include "../thumbs/thumbs.h"
 #include "../utils_gfx/ttf.h"
 #include "../utils/utils.h"
+
+#include "../rsc_processing/progress_bar.h"
+
 // #include <libpsd/libpsd.h>
 
 // the main include that always needs to be included in every translation unit that uses the PSD library
@@ -71,7 +74,7 @@ void st_Init_PSD(struct_window *this_win){
     this_win->wi_data->remap_displayed_mfdb = TRUE;
     this_win->prefers_file_instead_mem = TRUE;
 	this_win->refresh_win = st_Win_Print_PSD;
-    this_win->wi_progress_bar = global_progress_bar;
+
     if(!st_Set_Renderer(this_win)){
         sprintf(alert_message, "screen_format: %d\nscreen_bits_per_pixel: %d", screen_workstation_format, screen_workstation_bits_per_pixel);
         st_form_alert(FORM_STOP, alert_message);
@@ -567,17 +570,11 @@ bool st_Extract_PSD_Image(Document* document, ImageDataSection* imageData, Mallo
 /* PSD Writes */
 
 void st_Write_PSD(u_int8_t* src_buffer, int width, int height, const char* filename) {
+
 		MallocAllocator allocator;
 		NativeFile file(&allocator);
 
-        /* Progress Bar Stuff */
-        struct_progress_bar* wi_progress_bar = (struct_progress_bar*)mem_alloc(sizeof(struct_progress_bar));
-        wi_progress_bar->progress_bar_enabled = TRUE;
-        wi_progress_bar->progress_bar_in_use = FALSE;
-        wi_progress_bar->progress_bar_locked = FALSE;
-        st_Progress_Bar_Add_Step(wi_progress_bar);
-        st_Progress_Bar_Init(wi_progress_bar, (int8_t*)"PSD WRITING");
-        st_Progress_Bar_Signal(wi_progress_bar, 10, (int8_t*)"Psd export init");
+        struct_win_progress_bar* this_progress_bar = (struct_win_progress_bar*)st_Win_Progress_Init(NIL, "PSD WRITING", 10,  "PSD export");
 
 		// try opening the file. if it fails, bail out.
 		if (!file.OpenWrite(st_Char_to_WChar(filename))) {
@@ -594,7 +591,9 @@ void st_Write_PSD(u_int8_t* src_buffer, int width, int height, const char* filen
             u_int32_t size = width * height;
             u_int8_t *src_red = (u_int8_t*)mem_alloc(size), *src_green = (u_int8_t*)mem_alloc(size), *src_blue = (u_int8_t*)mem_alloc(size);
             u_int8_t *src_alpha = (u_int8_t*)mem_alloc(size);
-            st_Progress_Bar_Signal(wi_progress_bar, 35, (int8_t*)"RGB planar computing");
+
+            st_Win_Progress_Bar_Update_Info_Line(this_progress_bar, 35, "PSD: Getting RGB data");
+
             for(int y = 0; y < height; y++){
                 for(int x = 0; x < width; x++){
                     int i = (width * y) + x;
@@ -605,7 +604,9 @@ void st_Write_PSD(u_int8_t* src_buffer, int width, int height, const char* filen
                     src_blue[i] = src_buffer[j++];
                 }                
             }
-            st_Progress_Bar_Signal(wi_progress_bar, 65, (int8_t*)"Updating RGB layer");
+
+            st_Win_Progress_Bar_Update_Info_Line(this_progress_bar, 65, "PSD: Building RGB Layer");
+            
 			UpdateLayer(document, &allocator, layer1, exportChannel::RED, 0, 0, width, height, &src_red[0], compressionType::RLE);
 			UpdateLayer(document, &allocator, layer1, exportChannel::GREEN, 0, 0, width, height, &src_green[0], compressionType::RLE);
 			UpdateLayer(document, &allocator, layer1, exportChannel::BLUE, 0, 0, width, height, &src_blue[0], compressionType::RLE);
@@ -617,9 +618,9 @@ void st_Write_PSD(u_int8_t* src_buffer, int width, int height, const char* filen
 
 		DestroyExportDocument(document, &allocator);
 		file.Close();
-        st_Progress_Bar_Signal(wi_progress_bar, 100, (int8_t*)"Finished");
-        st_Progress_Bar_Step_Done(wi_progress_bar);
-        st_Progress_Bar_Finish(wi_progress_bar);        
+
+        st_Win_Progress_Bar_Finish(this_progress_bar->win_form_handle);
+
 }
 
 /* THUMBS */
@@ -666,9 +667,7 @@ void _st_Handle_Thumbs_PSD(int16_t this_win_handle, boolean file_process){
     }
     if(this_win->wi_data->img.img_total > 1){
 
-        st_Progress_Bar_Add_Step(this_win->wi_progress_bar);
-        st_Progress_Bar_Init(this_win->wi_progress_bar, (int8_t*)"Thumbs processing");
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 1, (int8_t*)"Init");
+        this_win->wi_win_progress_bar = (struct_win_progress_bar*)st_Win_Progress_Init(this_win->wi_handle, "PSD Layers processing", 1,  "Starting...");
 
         u_int16_t final_width = document->width;
         u_int16_t final_height = document->height;
@@ -706,10 +705,11 @@ void _st_Handle_Thumbs_PSD(int16_t this_win_handle, boolean file_process){
             u_int8_t* temp_buffer;
             MFDB* temp_mfdb;
             Layer* layer;
-            int16_t bar_pos = mul_100_fast(i) / this_win->wi_thumb->thumbs_nb;
 
             sprintf(progess_bar_indication, "Thumbnail %d/%d", i, this_win->wi_thumb->thumbs_nb);
-            st_Progress_Bar_Signal(this_win->wi_progress_bar, bar_pos, (int8_t*)progess_bar_indication);
+
+            st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, (mul_100_fast(i) / this_win->wi_thumb->thumbs_nb), progess_bar_indication);
+
             if(layerMaskSection) {
                 layer = &layerMaskSection->layers[i];
                 ExtractLayer(document, &file, &allocator, layer);
@@ -802,8 +802,8 @@ void _st_Handle_Thumbs_PSD(int16_t this_win_handle, boolean file_process){
             mfdb_free(temp_mfdb);
         }
         this_win->wi_thumb->thumbs_area_h += this_win->wi_thumb->pady;
-        st_Progress_Bar_Step_Done(this_win->wi_progress_bar);
-        st_Progress_Bar_Finish(this_win->wi_progress_bar);
+
+        st_Win_Progress_Bar_Finish(this_win->wi_handle);
         
     } else {
         this_win->wi_data->thumbnail_slave = false;

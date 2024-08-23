@@ -3,6 +3,8 @@
 
 #include "../utils/utils.h"
 
+#include "../rsc_processing/progress_bar.h"
+
 #define PNG_BACKGROUND_COLOR	0xFFFFFF
 #ifndef ALPHA_COMPOSITE
 #define ALPHA_COMPOSITE( composite, fg, alpha, bg) {									\
@@ -22,8 +24,6 @@ void st_Init_PNG(struct_window *this_win){
     this_win->wi_data->remap_displayed_mfdb = TRUE;
 	this_win->refresh_win = st_Win_Print_PNG;
 
-    /* Progress Bar Stuff */
-    this_win->wi_progress_bar = global_progress_bar;
     if(!st_Set_Renderer(this_win)){
         sprintf(alert_message, "screen_format: %d\nscreen_bits_per_pixel: %d", screen_workstation_format, screen_workstation_bits_per_pixel);
         st_form_alert(FORM_STOP, alert_message);
@@ -51,12 +51,10 @@ void _st_Read_PNG(int16_t my_win_handle, boolean file_process) {
 	this_win = detect_window(my_win_handle);
 
     if(this_win->wi_data->stop_original_data_load == FALSE){
-        st_Progress_Bar_Add_Step(this_win->wi_progress_bar);
-        st_Progress_Bar_Init(this_win->wi_progress_bar, (int8_t*)"PNG READING");
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 15, (int8_t*)"Init");
+
+        this_win->wi_win_progress_bar = (struct_win_progress_bar*)st_Win_Progress_Init(this_win->wi_handle, "PNG READING", 15,  "PNG: Starting...");
 
         int x, y;
-
         int width, height, channels;
         png_byte color_type;
         png_byte bit_depth;
@@ -69,14 +67,14 @@ void _st_Read_PNG(int16_t my_win_handle, boolean file_process) {
         const char *file_name;
         FILE *fp;
 
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 25, (int8_t*)"Init PNG parameters");
+        st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, 25, "Init PNG parameters");
+
         if( file_process == TRUE ){
             file_name = this_win->wi_data->path;
             fp = fopen(file_name, "rb");
             if (!fp){ 
                 form_alert(1, "[1][File could not be opened for reading][Okay]"); 
-                st_Progress_Bar_Step_Done(this_win->wi_progress_bar);
-                st_Progress_Bar_Finish(this_win->wi_progress_bar);
+                st_Win_Progress_Bar_Finish(this_win->wi_handle);
                 return;
             }
             fread(header, 1, 8, fp);
@@ -87,33 +85,30 @@ void _st_Read_PNG(int16_t my_win_handle, boolean file_process) {
         if (png_sig_cmp((png_const_bytep)header, 0, BYTES_TO_CHECK)){
         // if (png_sig_cmp((png_const_charp)header, 0, BYTES_TO_CHECK)){            
             form_alert(1, "[1][This file is not recognized as a PNG file][Okay]");
-            st_Progress_Bar_Step_Done(this_win->wi_progress_bar);
-            st_Progress_Bar_Finish(this_win->wi_progress_bar);
+            st_Win_Progress_Bar_Finish(this_win->wi_handle);
             return;
         }
 
         png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
         if (!png_ptr){
             form_alert(1, "[1][png_create_read_struct failed][Okay]");
-            st_Progress_Bar_Step_Done(this_win->wi_progress_bar);
-            st_Progress_Bar_Finish(this_win->wi_progress_bar);
+            st_Win_Progress_Bar_Finish(this_win->wi_handle);
             return;
         }
         info_ptr = png_create_info_struct(png_ptr);
         if (!info_ptr){
             form_alert(1, "[1][png_create_info_struct failed][Okay]");
-            st_Progress_Bar_Step_Done(this_win->wi_progress_bar);
-            st_Progress_Bar_Finish(this_win->wi_progress_bar);
+            st_Win_Progress_Bar_Finish(this_win->wi_handle);
             return;
         }
 
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 35, (int8_t*)"Getting data");
+        st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, 35, "Getting data");
         if( file_process == TRUE ){
             png_init_io(png_ptr, fp);
         } else {
             png_set_read_fn(png_ptr, &this_win->wi_data->original_buffer[BYTES_TO_CHECK], _st_Read_PNG_Callback);
         }
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 45, (int8_t*)"Parsing data parameters");
+        st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, 45, "Parsing data parameters");
         png_set_sig_bytes(png_ptr, BYTES_TO_CHECK);
         png_read_info(png_ptr, info_ptr);
 
@@ -141,8 +136,9 @@ void _st_Read_PNG(int16_t my_win_handle, boolean file_process) {
         if (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8) {
             png_set_expand_gray_1_2_4_to_8(png_ptr);
         }
-        if(png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS))
+        if(png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS)){
                 png_set_tRNS_to_alpha(png_ptr);
+        }
         // These color_type don't have an alpha channel then fill it with 0xff.
         if(color_type == PNG_COLOR_TYPE_RGB ||
         color_type == PNG_COLOR_TYPE_GRAY ||
@@ -170,7 +166,8 @@ void _st_Read_PNG(int16_t my_win_handle, boolean file_process) {
         for (y=0; y<height; y++)
                     row_pointers[y] = (png_byte *)mem_alloc(png_get_rowbytes(png_ptr,info_ptr));
 
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 65, (int8_t*)"Unpack PNG data");
+        st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, 65, "Unpack PNG data");  
+
         png_read_image(png_ptr, row_pointers);
 
         u_int32_t i, j, k;
@@ -188,8 +185,9 @@ void _st_Read_PNG(int16_t my_win_handle, boolean file_process) {
 
         int16_t width_stride = mfdb_update_bpp(&this_win->wi_original_mfdb, (int8_t *)destination_buffer, width, height, nb_components_32bits << 3);
         st_MFDB_Fill_bpp(&this_win->wi_original_mfdb, 0x00FFFFFF, 32);
-   
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 75, (int8_t*)"Building ARGB bitmap");
+
+        st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, 75, "Building ARGB pixels");
+
         for (y = (height - 1); y != -1; y--) {
             for (x = 0; x < width; x++) {
                 i = (x + y * MFDB_STRIDE(width)) * nb_components_32bits;
@@ -240,9 +238,7 @@ void _st_Read_PNG(int16_t my_win_handle, boolean file_process) {
         st_Win_Set_Ready(this_win, width, height);
         this_win->wi_data->stop_original_data_load = TRUE;
 
-        st_Progress_Bar_Signal(this_win->wi_progress_bar, 100, (int8_t*)"Finished");
-        st_Progress_Bar_Step_Done(this_win->wi_progress_bar);
-        st_Progress_Bar_Finish(this_win->wi_progress_bar);
+        st_Win_Progress_Bar_Finish(this_win->wi_handle);
     }
 }
 
@@ -254,9 +250,9 @@ int16_t st_Save_PNG(const char* filename, int width, int height, int bitdepth, i
     png_structp png_ptr = NULL;
     png_infop info_ptr = NULL;
     png_bytep* row_pointers = NULL;
-    st_Progress_Bar_Add_Step(global_progress_bar);
-    st_Progress_Bar_Init(global_progress_bar, (int8_t*)"PNG WRITING");
-    st_Progress_Bar_Signal(global_progress_bar, 10, (int8_t*)"PNG image encoding");
+
+    struct_win_progress_bar* this_progress_bar = (struct_win_progress_bar*)st_Win_Progress_Init(NIL, "PNG WRITING", 10,  "PNG image encoding");
+    
     if (NULL == data) {
         sprintf(alert_message, "Error: failed to save the png because the given data is NULL.");
         r = -1;
@@ -280,14 +276,18 @@ int16_t st_Save_PNG(const char* filename, int width, int height, int bitdepth, i
         r = -4;
         goto error;
     }
-    st_Progress_Bar_Signal(global_progress_bar, 30, (int8_t*)"PNG: Create Write Structure");
+
+    st_Win_Progress_Bar_Update_Info_Line(this_progress_bar, 30, "PNG: Create Write Structure");
+
     png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     if (NULL == png_ptr) {
         sprintf(alert_message, "Error: failed to create the png write struct.");
         r = -5;
         goto error;
     }
-    st_Progress_Bar_Signal(global_progress_bar, 40, (int8_t*)"PNG: Create Info Structure");
+
+    st_Win_Progress_Bar_Update_Info_Line(this_progress_bar, 40, "PNG: Create Info Structure");
+
     info_ptr = png_create_info_struct(png_ptr);
     if (NULL == info_ptr) {
         sprintf(alert_message, "Error: failed to create the png info struct.");
@@ -303,7 +303,9 @@ int16_t st_Save_PNG(const char* filename, int width, int height, int bitdepth, i
   * PNG_INTERLACE_ADAM7, and the compression_type and filter_type MUST
   * currently be PNG_COMPRESSION_TYPE_BASE and PNG_FILTER_TYPE_BASE. REQUIRED
   */
-    st_Progress_Bar_Signal(global_progress_bar, 50, (int8_t*)"PNG: Set IHDR");
+
+    st_Win_Progress_Bar_Update_Info_Line(this_progress_bar, 50, "PNG: Set IHDR");
+
     png_set_IHDR(png_ptr,
                 info_ptr,
                 width,
@@ -317,11 +319,14 @@ int16_t st_Save_PNG(const char* filename, int width, int height, int bitdepth, i
     for (i = 0; i < height; ++i) {
         row_pointers[i] = data + i * pitch;
     }
-    st_Progress_Bar_Signal(global_progress_bar, 60, (int8_t*)"PNG: Init I/O");
+
+    st_Win_Progress_Bar_Update_Info_Line(this_progress_bar, 60, "PNG: Init I/O");
     png_init_io(png_ptr, fp);
-    st_Progress_Bar_Signal(global_progress_bar, 70, (int8_t*)"PNG: Set Rows");
+
+    st_Win_Progress_Bar_Update_Info_Line(this_progress_bar, 70, "PNG: Set Rows");
     png_set_rows(png_ptr, info_ptr, row_pointers);
-    st_Progress_Bar_Signal(global_progress_bar, 90, (int8_t*)"PNG: Write Data");
+
+    st_Win_Progress_Bar_Update_Info_Line(this_progress_bar, 90, "PNG: Write Data");
     png_write_png(png_ptr, info_ptr, transform, NULL);
 
 
@@ -352,9 +357,7 @@ error:
         st_form_alert(FORM_STOP, alert_message);
     }
 
-    st_Progress_Bar_Signal(global_progress_bar, 100, (int8_t*)"Finished");
-    st_Progress_Bar_Step_Done(global_progress_bar);
-    st_Progress_Bar_Finish(global_progress_bar); 
+    st_Win_Progress_Bar_Finish(this_progress_bar->win_form_handle);
 
     return r;
  }
