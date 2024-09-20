@@ -196,6 +196,37 @@ int16_t st_Dgetdrv(){
 	return rez;
 }
 
+void st_Gen_Random_Char(char* dst_char, u_int16_t char_len){
+    for (size_t i = 0; i < char_len - 1; i++) {
+        dst_char[i] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[rand() %26];
+    }
+    dst_char[char_len] = '\0';    
+}
+
+bool st_Get_Tmp_Dir(char *tmp_dir){
+    tmp_dir = getenv("TMPDIR");
+    if(tmp_dir == NULL){
+        tmp_dir = getenv("TMP");
+        if(tmp_dir == NULL){
+            tmp_dir = getenv("TEMP");
+        }else{
+            return TRUE;
+        }
+        if(tmp_dir == NULL){
+            if(st_DirectoryExists("/tmp")){
+                tmp_dir = (char*)"/tmp";
+                return TRUE;
+            }else{
+                return FALSE;
+            }
+        } else {
+            return TRUE;
+        }
+    } else {
+        return TRUE;
+    }
+}
+
 /**
  * Function to check whether a directory exists or not.
  * It returns 1 if given path is directory and  exists 
@@ -537,6 +568,15 @@ unsigned char reverse(unsigned char b) {
    return b;
 }
 
+bool st_Is_URL(char* path){
+    char protocol[4] = {'\0'};
+    strncpy(protocol, path, 3);
+    if( check_ext(protocol, "htt") || check_ext(protocol,"ftp")){
+        return TRUE;
+    }else{
+        return FALSE;
+    }
+}
 
 char* GetNextVaStartFileName(char* start_pos, char* filename) {
 /*
@@ -618,17 +658,19 @@ bool st_is_lnx_path(const char* this_path){
 }
 
 void st_lnx_path_st(const char* lnx_path){
-    char* st_path = (char*)mem_calloc(1, strlen(lnx_path));
+    // char* st_path = (char*)mem_calloc(1, strlen(lnx_path));
+    char st_path[strlen(lnx_path)] = {'\0'};
     char str_tmp[] = "/\\";
-    if( !strncmp(&lnx_path[0], "/", 0) ){
-        if( !strncmp(&lnx_path[2], "/", 0) ){
+    if( !strncmp(&lnx_path[0], "/", 1) ){
+        if( !strncmp(&lnx_path[2], "/", 1) ){
             strncpy(&st_path[0], &lnx_path[1], 1);
         } else {
             strncpy(&st_path[0], "u", 1);
         }
         strcpy(&st_path[1], ":\\");
         strcat(&st_path[3], &lnx_path[0]);
-        replace_char(st_path, str_tmp[0], str_tmp[1]);        
+        replace_char(st_path, str_tmp[0], str_tmp[1]);
+        strcpy((char*)lnx_path, st_path);     
     }
 }
 
@@ -680,3 +722,13 @@ void st_Path_to_Linux(const char* st_path){
 //    return retVal;
 // }
 
+bool st_Build_SquareTable(u_int32_t *s_SquareTable){
+    if(s_SquareTable == NULL){
+        return false;
+    }
+    /* build square table */
+	for (int16_t i = 0; i < 256; i++){
+		s_SquareTable[i] = (u_int32_t)(i * i);	
+	}
+    return true;
+}
