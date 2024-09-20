@@ -35,12 +35,6 @@ boolean get_stat_file(struct_metadata *my_wi_data){
 	return (fstat(fileno(my_wi_data->file_lock), &my_wi_data->STAT_FILE) == 0 && S_ISREG(my_wi_data->STAT_FILE.st_mode)) ? TRUE : FALSE;
 }
 
-const char *get_filename_ext(const char *filename){
-    const char *dot = strrchr(filename, '.');
-    if(!dot || dot == filename) return "";
-    return dot + 1;
-}
-
 boolean file_to_memory(struct_window *this_win){
 	this_win->wi_data->file_lock = fopen(this_win->wi_data->path,READ_ONLY_BINARY);
 	if(!this_win->wi_data->file_lock){		

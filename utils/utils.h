@@ -15,6 +15,7 @@ int16_t st_Dgetdrv();
 boolean st_DirectoryExists(const char *path);
 boolean st_FileExistsAccess(const char *path);
 
+const char *get_filename_ext(const char *filename);
 boolean check_ext(const char *ext1, const char *ext2);
 char* replace_char(char* str, char find, char replace);
 void st_Path_to_Linux(const char* st_path);

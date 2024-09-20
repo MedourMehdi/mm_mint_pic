@@ -26,8 +26,6 @@ void* st_Img_up(void* p_param);
 
 void* st_Img_Play(void* p_param);
 
-#define GREY_COLOR 0x7AC0C0C0
-
 /* 
 *	mm_png_lib
 */

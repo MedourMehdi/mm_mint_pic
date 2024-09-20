@@ -109,6 +109,8 @@ extern char current_path[256];
 
 extern bool path_to_lnx;
 
+#define GREY_COLOR 0x7AC0C0C0
+
 #define FORM_EXCLAM     1
 #define FORM_QUESTION   2
 #define FORM_STOP       3
