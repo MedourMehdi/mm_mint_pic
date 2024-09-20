@@ -23,7 +23,7 @@
 #include "vid_flic/vid_flic.h"
 #include "vid_ffmpeg/vid_ffmpeg.h"
 
-#include "snd_wav/snd_wav.hpp"
+#include "snd_wav/snd_wav.h"
 
 #include "img_dummy/img_dummy.h"
 
@@ -146,7 +146,22 @@ bool new_win_img(const char *new_file){
 					}
 					st_Init_Flic(&win_struct_array[i]);
 				} 
-
+				else if (check_ext(file_extension, "WEB") || check_ext(file_extension, "WEBP")){
+					if(st_Detect_Webp_Animated(win_struct_array[i].wi_handle)){
+						if(win_master_thumb == NULL && screen_workstation_bits_per_pixel > 8){
+							win_struct_array[i].wi_data->video_media = TRUE;
+							video_function = st_Win_Play_WEBP_Video;
+						}else{
+							if(st_form_alert_choice(FORM_QUESTION, (char*)"Video support only for >=16bpp", (char*)"Cancel", (char*)"Continue") == 1){
+								win_struct_array[i].wi_data->video_media = FALSE;
+							}else{
+								win_struct_array[i].wi_data->video_media = TRUE;
+								video_function = st_Win_Play_WEBP_Video;							
+							}
+						}
+					}
+					st_Init_Vid_WEBP(&win_struct_array[i]);
+				}
 				#ifdef WITH_RECOIL 
 				else if (RECOIL_IsOurFile(file)){
 					st_Init_Recoil(&win_struct_array[i]);
@@ -170,22 +185,6 @@ bool new_win_img(const char *new_file){
 					st_Init_FF_Media(&win_struct_array[i]);
 				} 
 				#endif
-				else if (check_ext(file_extension, "WEB") || check_ext(file_extension, "WEBP")){
-					if(st_Detect_Webp_Animated(win_struct_array[i].wi_handle)){
-						if(win_master_thumb == NULL && screen_workstation_bits_per_pixel > 8){
-							win_struct_array[i].wi_data->video_media = TRUE;
-							video_function = st_Win_Play_WEBP_Video;
-						}else{
-							if(st_form_alert_choice(FORM_QUESTION, (char*)"Video support only for >=16bpp", (char*)"Cancel", (char*)"Continue") == 1){
-								win_struct_array[i].wi_data->video_media = FALSE;
-							}else{
-								win_struct_array[i].wi_data->video_media = TRUE;
-								video_function = st_Win_Play_WEBP_Video;							
-							}
-						}
-					}
-					st_Init_Vid_WEBP(&win_struct_array[i]);
-				}
 				#ifdef WITH_WAVLIB
 				else if (check_ext(file_extension, "WAV")){
 					if(win_master_thumb == NULL && screen_workstation_bits_per_pixel > 8){

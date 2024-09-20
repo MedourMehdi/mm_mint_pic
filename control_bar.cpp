@@ -219,6 +219,8 @@ void* st_Img_Play(void* p_param){
 		this_win->wi_snd->play = this_win->wi_snd->play == TRUE ? FALSE : TRUE;
 	}
 	// printf("Timer %ld\n", event_timer_used);
+	// printf("this_win->wi_snd->flip_play_action %d\n", this_win->wi_snd->flip_play_action);
+	// printf("this_win->wi_snd->play %d\n",this_win->wi_snd->play);
 	return NULL;
 }
 

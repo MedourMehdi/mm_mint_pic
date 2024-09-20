@@ -380,12 +380,17 @@ void st_Control_Bar_PXY_Update(struct_st_control_bar *this_control_bar, GRECT *w
 }
 
 void st_Control_Bar_Refresh_MFDB(struct_st_control_bar *control_bar,  MFDB *background_mfdb, int16_t elevator_posx, int16_t elevator_posy, int16_t win_work_area_width, int16_t win_work_area_height){
+	if(background_mfdb == NULL){
+		printf("Error: Control Bar background_mfdb is null!\n");
+		return;
+	}
 
 	control_bar->background_mfdb = background_mfdb;
 
 	int16_t nb_components = background_mfdb->fd_nplanes >> 3;
 	u_int16_t control_bar_height = CONTROLBAR_H;
 	if(win_work_area_width < 1){
+		printf("Error: win_work_area_width < 1\n");
 		return;
 	}
 	int16_t xy[8];
@@ -395,7 +400,6 @@ void st_Control_Bar_Refresh_MFDB(struct_st_control_bar *control_bar,  MFDB *back
 	/* Destination MFDB */
 	xy[4] = 0; xy[5] = 0; 
 	xy[6] = win_work_area_width; xy[7] = control_bar_height;
-	
 
 	mfdb_update_bpp(&control_bar->st_control_bar_mfdb, (int8_t *)control_bar->st_control_bar_mfdb.fd_addr, win_work_area_width, control_bar_height, background_mfdb->fd_nplanes); 
 	if(control_bar->st_control_bar_mfdb.fd_addr != NULL){
@@ -422,6 +426,7 @@ void st_Control_Bar_Refresh_MFDB(struct_st_control_bar *control_bar,  MFDB *back
 			break;
 		}
 	}
+
 	st_Control_Bar_PNG_Handle(0, 0, 0, control_bar, NULL);
 }
 

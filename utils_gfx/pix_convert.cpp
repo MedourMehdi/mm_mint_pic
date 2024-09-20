@@ -143,11 +143,12 @@ void st_Convert_RGB565_to_RGB888(MFDB* src_mfdb, MFDB* dst_mfdb){
 
 u_int16_t ARGB_to_RGB565(u_int8_t *ARGBPixel)
 {
-    u_int16_t b = (ARGBPixel[3] >> 3) & 0x1f;
-    u_int16_t g = ((ARGBPixel[2] >> 2) & 0x3f) << 5;
-    u_int16_t r = ((ARGBPixel[1] >> 3) & 0x1f) << 11;
+    // u_int16_t b = (ARGBPixel[3] >> 3) & 0x1f;
+    // u_int16_t g = ((ARGBPixel[2] >> 2) & 0x3f) << 5;
+    // u_int16_t r = ((ARGBPixel[1] >> 3) & 0x1f) << 11;
 
-    return (u_int16_t) (r | g | b);
+    // return (u_int16_t) (r | g | b);
+    return (u_int16_t) ((u_int16_t)(((ARGBPixel[1] >> 3) & 0x1f) << 11) | (u_int16_t)(((ARGBPixel[2] >> 2) & 0x3f) << 5) | (u_int16_t)((ARGBPixel[3] >> 3) & 0x1f));
 }
 
 u_int32_t ARGB_to_GRAY(u_int8_t *ARGBPixel) {
