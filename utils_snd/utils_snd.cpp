@@ -50,6 +50,18 @@ void *st_Preset_Snd(void *_sound_struct){
             sound_struct->use_clk_ext = 1;
         }
     }
+    if (cpu_type >= 40 && computer_type == 0x03){
+        if(Gpio(1,0) & 0x1l == 1L && milanblaster_present){
+            printf("DEBUG: V4sa/Falcon mode - clock_value = 24576000 ");
+            clock_value = 24576000;
+            sound_struct->use_clk_ext = 2;
+        }
+        if(Gpio(1,0) & 0x1l == 0L && milanblaster_present){
+            printf("DEBUG: V4sa/Falcon mode - clock_value = 22579200 ");
+            clock_value = 22579200;
+            sound_struct->use_clk_ext = 1;
+        }        
+    }
     sound_struct->prescale = (((clock_value >> 8 ) / sound_struct->wanted_samplerate - 1) ) ;
 
     // printf("\n###\tst_Preset_Snd %d Wanted sample rate %luHz\n", sound_struct->prescale, sound_struct->wanted_samplerate);
@@ -72,6 +84,7 @@ void *st_Preset_Snd(void *_sound_struct){
         break;
     case 2:
         sound_struct->effective_samplerate = 32779;
+        sound_struct->use_clk_ext = 0;
         break;
     case 3:
         switch (sound_struct->use_clk_ext)
@@ -89,9 +102,11 @@ void *st_Preset_Snd(void *_sound_struct){
         break;
     case 4:
         sound_struct->effective_samplerate = 19667;
+        sound_struct->use_clk_ext = 0;
         break;
     case 5:
         sound_struct->effective_samplerate = 16389;
+        sound_struct->use_clk_ext = 0;
         break;       
     case 6:
         switch (sound_struct->use_clk_ext)
@@ -109,9 +124,11 @@ void *st_Preset_Snd(void *_sound_struct){
         break;
     case 7:
         sound_struct->effective_samplerate = 9833;
+        sound_struct->use_clk_ext = 0;
         break;
     case 8:
         sound_struct->effective_samplerate = 8194;
+        sound_struct->use_clk_ext = 0;
         break;                                     
     default:
         printf("ERROR: Can not determine samplerate prescale %lu\n", sound_struct->wanted_samplerate);
@@ -136,6 +153,8 @@ void *st_Sound_Buffer_Alloc(void *_sound_struct){
     /* SURPLUS PKT */
     sound_struct->surplus_buffer = (u_int8_t*)mem_alloc(sound_struct->bufferSize);
     sound_struct->surplus_buffer_size = 0;
+    // printf("sound_struct->effective_samplerate (%d) * sound_struct->effective_channels (%d) * sound_struct->effective_bytes_per_samples (%d)", sound_struct->effective_samplerate, sound_struct->effective_channels, sound_struct->effective_bytes_per_samples);
+    // printf("sound_struct->bufferSize << 1 = %ld\n",(sound_struct->bufferSize << 1));
     return NULL;
 }
 
@@ -186,6 +205,9 @@ void *st_Sound_Feed(void *_sound_struct)
     struct_snd *sound_struct = (struct_snd*)_sound_struct;
     int16_t this_win_handle = sound_struct->win_handle;
     struct_window *this_win = detect_window(this_win_handle);
+    // if(sound_struct->flip_play_action || loadNewSample){
+    //     printf("flip_play_action = %d - loadNewSample %d\n", sound_struct->flip_play_action, loadNewSample);
+    // }
     if(sound_struct->flip_play_action){
         // printf("sound_struct->flip_play_action %d - sound_struct->play %d \n", sound_struct->flip_play_action, sound_struct->play);
         if(sound_struct->play){

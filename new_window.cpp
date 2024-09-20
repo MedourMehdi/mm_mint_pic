@@ -48,7 +48,12 @@ bool new_win_img(const char *new_file){
 	const char *file_extension;
 	while(i < MAX_WINDOWS){
 		if(win_struct_array[i].wi_handle == 0){
+
 			win_struct_array[i].wi_style = WIN_STYLE_IMG;
+			if(check_ext(get_filename_ext(new_file), "WAV")){
+				win_struct_array[i].wi_style = WIN_STYLE_VID;
+			}
+			
 			if(win_struct_array[i].wi_data == NULL){
 				/* Init wi_data structure */
 				win_struct_array[i].wi_data = (struct_metadata *)mem_alloc(sizeof(struct_metadata));
@@ -228,7 +233,7 @@ bool new_win_img(const char *new_file){
 				} else if(win_struct_array[i].wi_data->video_media){
 					st_Init_WinVideo_Control_Bar((void*)&win_struct_array[i]);
 /* VIDEO FFMPEG */					
-					if(win_struct_array[i].wi_ffmpeg != NULL){
+					if(win_struct_array[i].wi_ffmpeg != NULL || win_struct_array[i].wi_snd != NULL){
 						win_struct_array[i].wi_data->play_on = FALSE;
 						win_struct_array[i].wi_control_bar->control_bar_h = CONTROLBAR_H;
 					}
