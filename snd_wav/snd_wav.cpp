@@ -113,15 +113,12 @@ void _st_Load_WAV(int16_t this_win_handle){
         this_win->wi_to_display_mfdb = this_win->wi_to_work_in_mfdb;   
         if(this_win->wi_to_display_mfdb != NULL){
             if(this_win->wi_to_display_mfdb->fd_addr != NULL){
-                printf("###\t--->\tst_Control_Bar_Refresh_MFDB\n");
                 st_Control_Bar_Refresh_MFDB(this_win->wi_control_bar, this_win->wi_to_display_mfdb, this_win->current_pos_x, this_win->current_pos_y, this_win->work_area.g_w, this_win->work_area.g_h);
             }
         } 
-        // send_message(this_win_handle, WM_REDRAW);  
+        update_struct_window(this_win); 
         send_message(this_win_handle, WM_SIZED);
-
         _st_Read_WAV(this_win_handle, this_win->prefers_file_instead_mem);
-
         this_win->wi_data->stop_original_data_load = TRUE;	
 	}
 }
@@ -168,13 +165,13 @@ void _st_Read_WAV(int16_t this_win_handle, boolean file_process){
                 &channels,
                 &sample_rate,
                 &bits_per_sample, &data_length);
-                printf("--> bits_per_sample %d\n", bits_per_sample);
+    // printf("--> bits_per_sample %d\n", bits_per_sample);
 
     this_win->wi_snd->effective_bytes_per_samples = bits_per_sample >> 3;
     this_win->wi_snd->original_channels = channels;
     this_win->wi_snd->original_samplerate = sample_rate;
 
-    printf("this_win->wi_snd->effective_bytes_per_samples %d, this_win->wi_snd->original_channels %d, this_win->wi_snd->original_samplerate %d\n", this_win->wi_snd->effective_bytes_per_samples, this_win->wi_snd->original_channels, this_win->wi_snd->original_samplerate);
+    // printf("this_win->wi_snd->effective_bytes_per_samples %d, this_win->wi_snd->original_channels %d, this_win->wi_snd->original_samplerate %d\n", this_win->wi_snd->effective_bytes_per_samples, this_win->wi_snd->original_channels, this_win->wi_snd->original_samplerate);
 
     this_win->wi_snd->wanted_samplerate = this_win->wi_snd->original_samplerate;
     this_win->wi_snd->effective_channels = 2;

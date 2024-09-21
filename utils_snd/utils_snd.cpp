@@ -40,31 +40,31 @@ void *st_Preset_Snd(void *_sound_struct){
     sound_struct->use_clk_ext = 0;
     if(computer_type == 0x04 ){
         if(Gpio(1,0) & 0x1l == 1L && milanblaster_present){
-            printf("DEBUG: clock_value = 24576000 ");
+            printf("DEBUG: clock_value = 24576000 \n");
             clock_value = 24576000;
             sound_struct->use_clk_ext = 2;
         }
         if(Gpio(1,0) & 0x1l == 0L && milanblaster_present){
-            printf("DEBUG: clock_value = 22579200 ");
+            printf("DEBUG: clock_value = 22579200 \n");
             clock_value = 22579200;
             sound_struct->use_clk_ext = 1;
         }
     }
     if (cpu_type >= 40 && computer_type == 0x03){
         if(Gpio(1,0) & 0x1l == 1L && milanblaster_present){
-            printf("DEBUG: V4sa/Falcon mode - clock_value = 24576000 ");
+            printf("DEBUG: V4sa/Falcon mode - clock_value = 24576000 \n");
             clock_value = 24576000;
             sound_struct->use_clk_ext = 2;
         }
         if(Gpio(1,0) & 0x1l == 0L && milanblaster_present){
-            printf("DEBUG: V4sa/Falcon mode - clock_value = 22579200 ");
+            printf("DEBUG: V4sa/Falcon mode - clock_value = 22579200 \n");
             clock_value = 22579200;
             sound_struct->use_clk_ext = 1;
         }        
     }
     sound_struct->prescale = (((clock_value >> 8 ) / sound_struct->wanted_samplerate - 1) ) ;
 
-    // printf("\n###\tst_Preset_Snd %d Wanted sample rate %luHz\n", sound_struct->prescale, sound_struct->wanted_samplerate);
+    printf("\n###\tst_Preset_Snd %d Wanted sample rate %luHz\n", sound_struct->prescale, sound_struct->wanted_samplerate);
 
     switch (sound_struct->prescale)
     {
@@ -138,7 +138,7 @@ void *st_Preset_Snd(void *_sound_struct){
         sound_struct->wanted_samplerate = sound_struct->effective_samplerate;
     }
 	
-    // printf("\n###\tst_Preset_Snd -> Playing at %luHz\n", sound_struct->effective_samplerate);
+    printf("\n###\tst_Preset_Snd -> Playing at %luHz\n", sound_struct->effective_samplerate);
 
     return NULL;
 }
