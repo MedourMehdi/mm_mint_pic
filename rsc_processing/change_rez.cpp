@@ -55,7 +55,16 @@ void st_Form_Init_Change_Resolution(int16_t this_win_form_handle){
 void st_Form_Events_Change_Resolution(int16_t this_win_handle) {
 
     struct_window* this_win_form = detect_window(this_win_handle);
+    if(this_win_form == NULL){
+        printf("Error: this_win_form == NULL\n ");
+    }
     struct_window* this_win_master = detect_window(this_win_form->wi_data->rsc.win_master_handle);
+    if(this_win_master == NULL){
+        printf("Error: this_win_master == NULL\n ");
+    }
+    if(this_win_form->wi_data->rsc.win_master_handle == this_win_form->wi_handle){
+        printf("Error: this_win_master == this_win_form\n ");
+    }
     OBJECT* tree = this_win_form->wi_data->rsc.tree;
 	const char* str1 = "0_~- ";
 
@@ -164,8 +173,9 @@ void st_Form_Events_Change_Resolution(int16_t this_win_handle) {
         this_win_master->wi_data->img.export_height = atoi(tree[DiagResize_FTEXTNewH].ob_spec.tedinfo->te_ptext);
         this_win_master->wi_data->fx_requested = TRUE;
         this_win_master->wi_data->resized = TRUE;
-		this_win_master->refresh_win(this_win_master->wi_handle);
-		send_message(this_win_master->wi_handle, WM_SIZED);
+		// this_win_master->refresh_win(this_win_master->wi_handle);
+        update_struct_window(this_win_master);
+        send_message(this_win_master->wi_handle, WM_SIZED);
         break;
     default:
         break;

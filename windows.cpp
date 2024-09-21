@@ -279,8 +279,11 @@ int16_t close_window( int16_t this_win_handle ){
 					rsrc_free();
 				}
 				this_win_master->wi_form = NULL;
+			} else {
+				if(this_win->wi_win_progress_bar != NULL){
+					mem_free(this_win->wi_win_progress_bar);
+				}
 			}
-
 /*THUMB*/
 			if(this_win->wi_data->thumbnail_master == TRUE) {
 				mem_free((char*)this_win->wi_data->path);

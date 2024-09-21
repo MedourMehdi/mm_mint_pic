@@ -69,7 +69,7 @@ void* new_progress_window(void* p_param){
 
 		this_win_form->wi_win_progress_bar = this_win_master->wi_win_progress_bar;
 		this_win_form->wi_win_progress_bar->win_form_handle = this_win_form->wi_handle;
-
+		// printf("this_win_form->wi_handle %d / this_win_form->wi_win_progress_bar->win_form_handle %d ", this_win_form->wi_win_progress_bar->win_form_handle, this_win_form->wi_handle);
 		this_win_form->wi_data->rsc.process_function = &process_progress_bar;
 		
 		this_win_form->refresh_win(this_win_form->wi_handle);
@@ -82,7 +82,14 @@ void* new_progress_window(void* p_param){
 void process_progress_bar(int16_t this_win_handle){
 
     struct_window* this_win_form = detect_window(this_win_handle);
-    struct_window* this_win_master = detect_window(this_win_form->wi_data->rsc.win_master_handle);
+
+	if(this_win_form == NULL){
+		printf("Error = process_progress_bar(%d) -> this_win_form is NULL!\n", this_win_handle);
+		return;
+	}
+
+	// printf("this_win_form->wi_data->rsc.win_master_handle = %d", this_win_form->wi_data->rsc.win_master_handle);
+    // struct_window* this_win_master = detect_window(this_win_form->wi_data->rsc.win_master_handle);
 
     OBJECT* tree = this_win_form->wi_data->rsc.tree;
 
@@ -120,10 +127,14 @@ void process_progress_bar(int16_t this_win_handle){
 }
 
 void st_Win_Progress_Bar_Update_Info_Line(struct_win_progress_bar* progress_bar, int16_t current_value, const char *progress_txt){
-	progress_bar->current_value = current_value;
-	progress_bar->info_line = (char*)progress_txt;
-	progress_bar->update_info_line = true;
-	process_progress_bar(progress_bar->win_form_handle);
+	if(progress_bar){
+		progress_bar->current_value = current_value;
+		progress_bar->info_line = (char*)progress_txt;
+		progress_bar->update_info_line = true;
+		process_progress_bar(progress_bar->win_form_handle);
+	} else {
+		printf("Error: struct_win_progress_bar is NULL!\n");
+	}
 }
 
 void st_Win_Progress_Bar_Update_Title(struct_win_progress_bar* progress_bar, const char *title){
@@ -141,11 +152,12 @@ void st_Win_Progress_Bar_Finish(int16_t this_win_handle){
 	int16_t this_win_form_handle = this_win_master->wi_win_progress_bar->win_form_handle;
 	this_win_master->wi_win_progress_bar->done = TRUE;
 	struct_win_progress_bar* tmp_ptr = this_win_master->wi_win_progress_bar;
+	// printf("close_window(this_win_form_handle %d)\n", this_win_form_handle );
 	close_window(this_win_form_handle);
 	win_progress_bar_counter -= 1;
-	// if(this_win_form_handle == this_win_handle){
-	st_Win_Progress_Bar_Destroy(tmp_ptr);
-	// }
+	if(this_win_form_handle == this_win_handle){
+		st_Win_Progress_Bar_Destroy(tmp_ptr);
+	}
 }
 
 void* st_Win_Progress_Init(int16_t this_win_master_handle, const char *title, int16_t current_value, const char *progress_txt ){
