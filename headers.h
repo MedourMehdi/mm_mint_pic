@@ -128,6 +128,8 @@ extern bool path_to_lnx;
 #define TRACE(x)
 #endif
 
+// #define WITH_URL 1
+
 // #define WITH_WAVLIB 1
 // #define WITH_XPDF 1
 // #define WITH_PSD 1

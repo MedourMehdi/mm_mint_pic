@@ -59,9 +59,12 @@ void dbg_printf(const char *fmt, ...);
 char* GetNextVaStartFileName(char* start_pos, char* filename);
 
 void st_Get_Current_Dir(char* dst_char);
-
 void st_Get_App_Dir(char* dst_char, char* src_path);
-
+#ifdef WITH_URL
+bool st_Is_URL(char* path);
+bool st_Get_Tmp_Dir(char *tmp_dir);
+void st_Gen_Random_Char(char* dst_char, u_int16_t char_len);
+#endif
 // float ReverseFloat( const float inFloat );
 
 #endif

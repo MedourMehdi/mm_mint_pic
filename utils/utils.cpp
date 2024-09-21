@@ -196,6 +196,8 @@ int16_t st_Dgetdrv(){
 	return rez;
 }
 
+#ifdef WITH_URL
+
 void st_Gen_Random_Char(char* dst_char, u_int16_t char_len){
     for (size_t i = 0; i < char_len - 1; i++) {
         dst_char[i] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[rand() %26];
@@ -226,6 +228,18 @@ bool st_Get_Tmp_Dir(char *tmp_dir){
         return TRUE;
     }
 }
+
+bool st_Is_URL(char* path){
+    char protocol[4] = {'\0'};
+    strncpy(protocol, path, 3);
+    if( check_ext(protocol, "htt") || check_ext(protocol,"ftp")){
+        return TRUE;
+    }else{
+        return FALSE;
+    }
+}
+
+#endif
 
 /**
  * Function to check whether a directory exists or not.
@@ -568,16 +582,6 @@ unsigned char reverse(unsigned char b) {
    return b;
 }
 
-bool st_Is_URL(char* path){
-    char protocol[4] = {'\0'};
-    strncpy(protocol, path, 3);
-    if( check_ext(protocol, "htt") || check_ext(protocol,"ftp")){
-        return TRUE;
-    }else{
-        return FALSE;
-    }
-}
-
 char* GetNextVaStartFileName(char* start_pos, char* filename) {
 /*
 MIT License
@@ -722,16 +726,16 @@ void st_Path_to_Linux(const char* st_path){
 //    return retVal;
 // }
 
-bool st_Build_SquareTable(u_int32_t *s_SquareTable){
-    if(s_SquareTable == NULL){
-        return false;
-    }
-    /* build square table */
-	for (int16_t i = 0; i < 256; i++){
-		s_SquareTable[i] = (u_int32_t)(i * i);	
-	}
-    return true;
-}
+// bool st_Build_SquareTable(u_int32_t *s_SquareTable){
+//     if(s_SquareTable == NULL){
+//         return false;
+//     }
+//     /* build square table */
+// 	for (int16_t i = 0; i < 256; i++){
+// 		s_SquareTable[i] = (u_int32_t)(i * i);	
+// 	}
+//     return true;
+// }
 
 const char *get_filename_ext(const char *filename){
     const char *dot = strrchr(filename, '.');

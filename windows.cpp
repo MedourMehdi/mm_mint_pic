@@ -651,6 +651,9 @@ void st_Init_Default_Win(struct_window *this_win){
 
 /* Default is to set everything to FALSE */
     this_win->x_unit = 10; this_win->y_unit = 10;
+	#ifdef WITH_URL
+	this_win->wi_data->is_url = FALSE;
+	#endif
 	this_win->wi_data->sound_media = FALSE;	
 	this_win->wi_data->video_media = FALSE;
     this_win->wi_data->image_media = FALSE;

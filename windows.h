@@ -192,6 +192,9 @@ typedef struct {
 	char *path;
 	char *extension;    
 	int8_t *original_buffer;
+	#ifdef WITH_URL
+	boolean is_url;
+	#endif
 	boolean crop_requested;
 	boolean fx_on;
 	boolean fx_requested;

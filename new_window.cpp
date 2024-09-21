@@ -59,6 +59,9 @@ bool new_win_img(const char *new_file){
 				win_struct_array[i].wi_data = (struct_metadata *)mem_alloc(sizeof(struct_metadata));
 				win_struct_array[i].wi_data->path = NULL;
 				/* Fill window title structure */
+				#ifdef WITH_URL
+				win_struct_array[i].wi_data->is_url = st_Is_URL((char *)new_file);
+				#endif
 				char* file = basename(new_file);
 				win_struct_array[i].wi_name = (char *)mem_alloc(sizeof(file) + 8);
 				strcpy(win_struct_array[i].wi_name, file);

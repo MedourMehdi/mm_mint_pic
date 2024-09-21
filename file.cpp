@@ -1,4 +1,5 @@
 #include "file.h"
+#include "utils/url.h"
 
 int fileno __P ((FILE *__stream));
 
@@ -8,8 +9,29 @@ const char *get_filename_ext(const char *filename);
 boolean open_file(struct_window *this_win, const char *my_path){
 	if(this_win->wi_data != NULL){
 		if(this_win->wi_data->path == NULL){
-			this_win->wi_data->path = (char*)mem_alloc(strlen(my_path) + 1);
-			strcpy((char*)this_win->wi_data->path, my_path);
+#ifdef WITH_URL
+			if(this_win->wi_data->is_url){
+				char *tmp_dir = NULL;
+				if(!st_Get_Tmp_Dir(tmp_dir) || tmp_dir == NULL ){
+					sprintf(alert_message,"Sorry, please Setenv TMPDIR!");
+				}
+				/* generate tmp path */
+				st_Path_to_Linux(tmp_dir);
+				char tmp_file[9] = {'\0'};
+				st_Gen_Random_Char(tmp_file, 9);
+				char tmp_path[strlen(tmp_dir) + 2 + 9] = {'\0'};
+				sprintf(tmp_path, "%s/%s", tmp_dir, tmp_file);
+				download_file((char*)my_path, tmp_path);
+				this_win->wi_data->path = (char*)mem_alloc(strlen(tmp_path) + 1);
+				strcpy((char*)this_win->wi_data->path, tmp_path);				
+			} else {
+				this_win->wi_data->path = (char*)mem_alloc(strlen(my_path) + 1);
+				strcpy((char*)this_win->wi_data->path, my_path);
+			}
+#else
+		this_win->wi_data->path = (char*)mem_alloc(strlen(my_path) + 1);
+		strcpy((char*)this_win->wi_data->path, my_path);
+#endif			
 		}
 		this_win->wi_data->file_lock = fopen(this_win->wi_data->path,READ_ONLY_BINARY);
 		if(!this_win->wi_data->file_lock){
