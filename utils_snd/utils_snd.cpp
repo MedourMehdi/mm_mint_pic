@@ -68,13 +68,14 @@ void *st_Preset_Snd(void *_sound_struct){
             }
             printf("\t###\tNew Gpio(1,0) = %#08x\n", Gpio(1,0));
         }
-        printf("###\t%#08x & 0x1L = %#08x\n",Gpio(1,0) ,(Gpio(1,0) & 0x1L));
-        if(Gpio(1,0) & 0x1L == 1L){
+        gpio_data = Gpio(1,0);
+        printf("###\t%#08x & 0x1L = %#08x\n",gpio_data ,(gpio_data & 0x1L));
+        if(gpio_data & 0x00000001){
             printf("DEBUG: V4sa mode - clock_value = 24576000 \n");
             clock_value = 24576000;
             sound_struct->use_clk_ext = 2;
         }
-        if(Gpio(1,0) & 0x1L == 0L){
+        else {
             printf("DEBUG: V4sa mode - clock_value = 22579200 \n");
             clock_value = 22579200;
             sound_struct->use_clk_ext = 1;
@@ -204,12 +205,14 @@ void *st_Init_Sound(void *_sound_struct){
         Setmode( MODE_STEREO16 );
     }
     if(sound_struct->use_clk_ext){
+        printf("DEBUG: Using CLKEXT -> Devconnect( DMAPLAY, DAC, CLKEXT, sound_struct->prescale = %d, NO_SHAKE );", sound_struct->prescale);
         Devconnect( DMAPLAY, DAC, CLKEXT, sound_struct->prescale, NO_SHAKE );
     } else {
+        printf("DEBUG: Using CLK25M -> Devconnect( DMAPLAY, DAC, CLK25M, sound_struct->prescale = %d, NO_SHAKE );", sound_struct->prescale);        
         Devconnect( DMAPLAY, DAC, CLK25M, sound_struct->prescale, NO_SHAKE );
     }
    
-    Devconnect( DMAPLAY, DAC, CLK25M, sound_struct->prescale, NO_SHAKE );
+    // Devconnect( DMAPLAY, DAC, CLK25M, sound_struct->prescale, NO_SHAKE );
 	Setinterrupt( SI_TIMERA, SI_PLAY );
 	Xbtimer( XB_TIMERA, 1<<3, 1, timerA );
 	Supexec(enableTimerASei);    
