@@ -52,8 +52,23 @@ void *st_Preset_Snd(void *_sound_struct){
     }
     printf("###\tcomputer_type == %#04x\n",computer_type);
     if (computer_type == 0x06){
-        printf("###\tGpio(1,0) = %#08x\n", Gpio(1,0));
-        printf("###\tGpio(1,0) & 0x1L = %#08x\n", (Gpio(1,0) & 0x1L));
+        u_int32_t gpio_data = Gpio(1,0);
+        printf("###\tGpio(1,0) = %#08x\n", gpio_data);
+        printf("###\tSetting Gpio -->\n");
+        if(sound_struct->wanted_samplerate % 11025 == 0){
+            gpio_data = Gpio(1,0) & ~7;
+            if(Gpio(2, gpio_data) < 0){
+                printf("Gpio error\n");
+            }
+            printf("\t###\tNew Gpio(1,0) = %#08x\n", Gpio(1,0));
+        }else{
+            gpio_data = (Gpio(1,0) & ~7) + 1;
+            if(Gpio(2, gpio_data) < 0){
+                printf("Gpio error\n");
+            }
+            printf("\t###\tNew Gpio(1,0) = %#08x\n", Gpio(1,0));
+        }
+        printf("###\t%#08x & 0x1L = %#08x\n",Gpio(1,0) ,(Gpio(1,0) & 0x1L));
         if(Gpio(1,0) & 0x1L == 1L){
             printf("DEBUG: V4sa mode - clock_value = 24576000 \n");
             clock_value = 24576000;
