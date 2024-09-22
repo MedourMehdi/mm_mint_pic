@@ -51,12 +51,12 @@ void *st_Preset_Snd(void *_sound_struct){
         }
     }
     if (cpu_type >= 40 && computer_type == 0x03){
-        if(Gpio(1,0) & 0x1l == 1L && milanblaster_present){
+        if(Gpio(1,0) & 0x1l == 1L){
             printf("DEBUG: V4sa/Falcon mode - clock_value = 24576000 \n");
             clock_value = 24576000;
             sound_struct->use_clk_ext = 2;
         }
-        if(Gpio(1,0) & 0x1l == 0L && milanblaster_present){
+        if(Gpio(1,0) & 0x1l == 0L){
             printf("DEBUG: V4sa/Falcon mode - clock_value = 22579200 \n");
             clock_value = 22579200;
             sound_struct->use_clk_ext = 1;
