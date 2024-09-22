@@ -53,12 +53,13 @@ void *st_Preset_Snd(void *_sound_struct){
     printf("###\tcomputer_type == %#04x\n",computer_type);
     if (computer_type == 0x06){
         printf("###\tGpio(1,0) = %#08x\n", Gpio(1,0));
-        if(Gpio(1,0) & 0x1l == 1L){
+        printf("###\tGpio(1,0) & 0x1L = %#08x\n", (Gpio(1,0) & 0x1L));
+        if(Gpio(1,0) & 0x1L == 1L){
             printf("DEBUG: V4sa mode - clock_value = 24576000 \n");
             clock_value = 24576000;
             sound_struct->use_clk_ext = 2;
         }
-        if(Gpio(1,0) & 0x1l == 0L){
+        if(Gpio(1,0) & 0x1L == 0L){
             printf("DEBUG: V4sa mode - clock_value = 22579200 \n");
             clock_value = 22579200;
             sound_struct->use_clk_ext = 1;
