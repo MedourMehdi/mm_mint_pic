@@ -365,7 +365,7 @@ int16_t mfdb_update_bpp( MFDB* new_mfdb, int8_t* buffer, int16_t width, int16_t 
     new_mfdb->fd_h = height;
     new_mfdb->fd_wdwidth = MFDB_STRIDE(width) >> 4;
 	new_mfdb->fd_stand = 0;
-    new_mfdb->fd_r2 = 0;    
+    new_mfdb->fd_r2 = 0;
     new_mfdb->fd_r3 = 0;
 	return width_stride;
 }

@@ -110,13 +110,8 @@ void _st_Load_WAV(int16_t this_win_handle){
         st_MFDB_Fill(&this_win->wi_original_mfdb,GREY_COLOR);
         st_Win_Set_Ready(this_win, width, height);
         this_win->wi_to_work_in_mfdb = &this_win->wi_original_mfdb;  
-        this_win->wi_to_display_mfdb = this_win->wi_to_work_in_mfdb;   
-        if(this_win->wi_to_display_mfdb != NULL){
-            if(this_win->wi_to_display_mfdb->fd_addr != NULL){
-                st_Control_Bar_Refresh_MFDB(this_win->wi_control_bar, this_win->wi_to_display_mfdb, this_win->current_pos_x, this_win->current_pos_y, this_win->work_area.g_w, this_win->work_area.g_h);
-            }
-        } 
-        update_struct_window(this_win); 
+        this_win->wi_to_display_mfdb = this_win->wi_to_work_in_mfdb;
+        update_struct_window(this_win);
         send_message(this_win_handle, WM_SIZED);
         _st_Read_WAV(this_win_handle, this_win->prefers_file_instead_mem);
         this_win->wi_data->stop_original_data_load = TRUE;	
