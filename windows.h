@@ -64,6 +64,10 @@ typedef struct
     u_int16_t effective_sampleformat;	
 	u_int16_t effective_bytes_per_samples;
 	float duration_s;
+	float time_start;
+	float time_end;
+	float time_total;
+	u_int32_t data_played;
     int8_t* pBuffer;
     int8_t* pPhysical;
     int8_t* pLogical;

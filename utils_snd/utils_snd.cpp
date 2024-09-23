@@ -61,12 +61,14 @@ void *st_Preset_Snd(void *_sound_struct){
                 printf("Gpio error\n");
             }
             printf("\t###\tNew Gpio(1,0) = %#08x\n", Gpio(1,0));
-        }else{
+        }else if(sound_struct->wanted_samplerate % 12000 == 0){
             gpio_data = (Gpio(1,0) & ~7) + 1;
             if(Gpio(2, gpio_data) < 0){
                 printf("Gpio error\n");
             }
             printf("\t###\tNew Gpio(1,0) = %#08x\n", Gpio(1,0));
+        } else {
+            sound_struct->use_clk_ext = 0;
         }
         gpio_data = Gpio(1,0);
         printf("###\t%#08x & 0x1L = %#08x\n",gpio_data ,(gpio_data & 0x1L));
@@ -172,8 +174,8 @@ void *st_Sound_Buffer_Alloc(void *_sound_struct){
     /* SURPLUS PKT */
     sound_struct->surplus_buffer = (u_int8_t*)mem_alloc(sound_struct->bufferSize);
     sound_struct->surplus_buffer_size = 0;
-    // printf("sound_struct->effective_samplerate (%d) * sound_struct->effective_channels (%d) * sound_struct->effective_bytes_per_samples (%d)", sound_struct->effective_samplerate, sound_struct->effective_channels, sound_struct->effective_bytes_per_samples);
-    // printf("sound_struct->bufferSize << 1 = %ld\n",(sound_struct->bufferSize << 1));
+    printf("\n-->DEBUG: %d * %d * %d", sound_struct->effective_samplerate, sound_struct->effective_channels, sound_struct->effective_bytes_per_samples);
+    printf("-->DEBUG: sound_struct->bufferSize x 2 = %ld\n",(sound_struct->bufferSize << 1));
     return NULL;
 }
 
@@ -204,11 +206,12 @@ void *st_Init_Sound(void *_sound_struct){
     } else {
         Setmode( MODE_STEREO16 );
     }
+    
     if(sound_struct->use_clk_ext){
-        printf("DEBUG: Using CLKEXT -> Devconnect( DMAPLAY, DAC, CLKEXT, sound_struct->prescale = %d, NO_SHAKE );", sound_struct->prescale);
+        printf("DEBUG: Using CLKEXT -> Devconnect( DMAPLAY, DAC, CLKEXT, sound_struct->prescale = %d, NO_SHAKE );\n", sound_struct->prescale);
         Devconnect( DMAPLAY, DAC, CLKEXT, sound_struct->prescale, NO_SHAKE );
     } else {
-        printf("DEBUG: Using CLK25M -> Devconnect( DMAPLAY, DAC, CLK25M, sound_struct->prescale = %d, NO_SHAKE );", sound_struct->prescale);        
+        printf("DEBUG: Using CLK25M -> Devconnect( DMAPLAY, DAC, CLK25M, sound_struct->prescale = %d, NO_SHAKE );\n", sound_struct->prescale);        
         Devconnect( DMAPLAY, DAC, CLK25M, sound_struct->prescale, NO_SHAKE );
     }
    
@@ -237,6 +240,8 @@ void *st_Sound_Feed(void *_sound_struct)
             Buffoper( SB_PLA_ENA | SB_PLA_RPT );
             sound_struct->flip_play_action = false;
             loadNewSample = true;
+            sound_struct->time_start = clock();
+            sound_struct->data_played = 0;
         } else {
             Buffoper( 0x00 );	// disable playback
             Jdisint( MFP_TIMERA );
@@ -249,7 +254,20 @@ void *st_Sound_Feed(void *_sound_struct)
         st_Sound_Load_And_Swap_Buffer(_sound_struct);
         /* set physical buffer for the next frame */
         Setbuffer( SR_PLAY, sound_struct->pPhysical, sound_struct->pPhysical + sound_struct->bufferSize );
-        loadNewSample = 0;		
+        sound_struct->time_end = clock();
+        loadNewSample = 0;
+        if(sound_struct->play){
+            
+            sound_struct->time_total = 5 * (sound_struct->time_end - sound_struct->time_start);
+            sound_struct->data_played += sound_struct->time_total > 0 ? sound_struct->bufferSize : 0;
+            
+            #ifdef PRINT_REAL_HZ
+            if(sound_struct->data_played && sound_struct->time_total){
+                printf("Computed frequency %fhz\n", 
+                (float)(sound_struct->data_played * 1000) / (this_win->wi_snd->effective_channels * this_win->wi_snd->effective_bytes_per_samples * this_win->wi_snd->time_total));
+            }
+            #endif
+        }
 	} 
     return NULL;
 }
@@ -315,7 +333,12 @@ int32_t st_Sound_Get_Playback_Position(void *_sound_struct){
 struct_snd *st_Init_Sound_Struct(){
     struct_snd * wi_snd = (struct_snd *)mem_alloc(sizeof(struct_snd));
     wi_snd->bufferSize = 0;
+    wi_snd->processedSize = 0;
     wi_snd->duration_s = 0;
+    wi_snd->time_start = 0;
+    wi_snd->time_end = 0;
+    wi_snd->time_total = 0;
+    wi_snd->data_played = 0;
     wi_snd->effective_channels = 0;
     wi_snd->effective_samplerate = 0;
     wi_snd->wanted_samplerate = 0;

@@ -138,11 +138,16 @@ void* st_Process_Audio_WAV(void* _this_win_handle){
             memcpy(&this_win->wi_snd->pLogical[i], &pcm_tmp, sizeof(u_int16_t));
         }
 
-        this_win->wi_snd->processedSize +=  this_win->wi_snd->bufferSize;
+        this_win->wi_snd->processedSize +=  data_read;
+        if(data_read < this_win->wi_snd->bufferSize){
+            memset((unsigned char *)&this_win->wi_snd->pLogical[data_read], 0x00, this_win->wi_snd->bufferSize - data_read);
+        }
     }
     else{
         wav_read_close(this_win->wi_snd->user_data);
         this_win->wi_snd->user_data = (void*)wav_read_open(this_win->wi_data->path);
+        this_win->wi_snd->processedSize = this_win->wi_snd->data_played = 0;
+        this_win->wi_snd->time_start = this_win->wi_snd->time_end;
     }
     // printf("End st_Process_Audio_WAV\n");
     return NULL;
