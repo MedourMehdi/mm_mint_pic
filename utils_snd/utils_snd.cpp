@@ -24,68 +24,68 @@ void *st_Preset_Snd(void *_sound_struct){
         manage_samplerate = true;
         sound_struct->wanted_samplerate = sound_struct->original_samplerate;
     }
-/*	Atari platforms frequencies
-*	12584,25169,50352,0	; TT freq + delay = 0
-*	12929,24585,49170,0	; Falcon freq + delay = 0
-*	12300,24594,49165,0	; Aranym freq + delay = 0
-*	12273,25335,50667,0	; Vampire SAGA
-*/
-/*
-	   For MilanBlaster the external clock is
- 	   24.576 MHz when gpio(1,0) & 0x1l == 1l
- 	   and 22.5792 MHz when gpio(1,0) &
- 	   0x1l == 0l
-*/
+    /*	Atari platforms frequencies
+    *	12584,25169,50352,0	; TT freq + delay = 0
+    *	12929,24585,49170,0	; Falcon freq + delay = 0
+    *	12300,24594,49165,0	; Aranym freq + delay = 0
+    *	12273,25335,50667,0	; Vampire SAGA
+    */
+
+    /*
+        For MilanBlaster the external clock is
+        24.576 MHz when gpio(1,0) & 0x1l == 1l
+        and 22.5792 MHz when gpio(1,0) &
+        0x1l == 0l
+    */
+   
+    Locksnd();
+    sound_struct->left_lvl = (short)Soundcmd( LTATTEN, SND_INQUIRE );
+    sound_struct->right_lvl = (short)Soundcmd( RTATTEN, SND_INQUIRE );   
+    Sndstatus( SND_RESET );
+
     int clock_value = 25175000;
     sound_struct->use_clk_ext = 0;
     if(computer_type == 0x04 ){
-        if(Gpio(1,0) & 0x1l == 1L && milanblaster_present){
-            printf("DEBUG: clock_value = 24576000 \n");
+        if((Gpio(1,0) & 0x1L) == 1L && milanblaster_present){
+            /* 48khz */
             clock_value = 24576000;
             sound_struct->use_clk_ext = 2;
         }
-        if(Gpio(1,0) & 0x1l == 0L && milanblaster_present){
-            printf("DEBUG: clock_value = 22579200 \n");
+        if((Gpio(1,0) & 0x1L) == 0L && milanblaster_present){
+            /* 44.1khz */
             clock_value = 22579200;
             sound_struct->use_clk_ext = 1;
         }
     }
-    printf("###\tcomputer_type == %#04x\n",computer_type);
+
     if (computer_type == 0x06){
         u_int32_t gpio_data = Gpio(1,0);
-        printf("###\tGpio(1,0) = %#08x\n", gpio_data);
-        printf("###\tSetting Gpio -->\n");
         if(sound_struct->wanted_samplerate % 11025 == 0){
-            gpio_data = Gpio(1,0) & ~7;
+            gpio_data = (Gpio(1,0) & ~7);
             if(Gpio(2, gpio_data) < 0){
                 printf("Gpio error\n");
             }
-            printf("\t###\tNew Gpio(1,0) = %#08x\n", Gpio(1,0));
-        }else if(sound_struct->wanted_samplerate % 12000 == 0){
+        } else if (sound_struct->wanted_samplerate % 12000 == 0){
             gpio_data = (Gpio(1,0) & ~7) + 1;
             if(Gpio(2, gpio_data) < 0){
                 printf("Gpio error\n");
             }
-            printf("\t###\tNew Gpio(1,0) = %#08x\n", Gpio(1,0));
         } else {
             sound_struct->use_clk_ext = 0;
         }
         gpio_data = Gpio(1,0);
-        printf("###\t%#08x & 0x1L = %#08x\n",gpio_data ,(gpio_data & 0x1L));
-        if(gpio_data & 0x00000001){
-            printf("DEBUG: V4sa mode - clock_value = 24576000 \n");
+        if( (gpio_data & 1L) ){
+            /* 48khz */
             clock_value = 24576000;
             sound_struct->use_clk_ext = 2;
-        }
-        else {
-            printf("DEBUG: V4sa mode - clock_value = 22579200 \n");
+        } else {
+            /* 44.1khz */
             clock_value = 22579200;
             sound_struct->use_clk_ext = 1;
         }
     }
-    sound_struct->prescale = (((clock_value >> 8 ) / sound_struct->wanted_samplerate - 1) ) ;
 
-    printf("\n###\tst_Preset_Snd %d Wanted sample rate %luHz\n", sound_struct->prescale, sound_struct->wanted_samplerate);
+    sound_struct->prescale = ( ((clock_value >> 8 ) / sound_struct->wanted_samplerate - 1) ) ;
 
     switch (sound_struct->prescale)
     {
@@ -152,14 +152,13 @@ void *st_Preset_Snd(void *_sound_struct){
         sound_struct->use_clk_ext = 0;
         break;                                     
     default:
-        printf("ERROR: Can not determine samplerate prescale %lu\n", sound_struct->wanted_samplerate);
+        printf("ERROR: Can not determine samplerate prescale for frequency %luHz\n", sound_struct->wanted_samplerate);
         break;
     }
+    printf("\n###\tst_Preset_Snd(%d) -> Wanted %luHz -> Playing at %luHz\n", sound_struct->prescale, sound_struct->wanted_samplerate, sound_struct->effective_samplerate);
     if(manage_samplerate){
         sound_struct->wanted_samplerate = sound_struct->effective_samplerate;
     }
-	
-    printf("\n###\tst_Preset_Snd -> Playing at %luHz\n", sound_struct->effective_samplerate);
 
     return NULL;
 }
@@ -174,7 +173,7 @@ void *st_Sound_Buffer_Alloc(void *_sound_struct){
     /* SURPLUS PKT */
     sound_struct->surplus_buffer = (u_int8_t*)mem_alloc(sound_struct->bufferSize);
     sound_struct->surplus_buffer_size = 0;
-    printf("\n-->DEBUG: %d * %d * %d", sound_struct->effective_samplerate, sound_struct->effective_channels, sound_struct->effective_bytes_per_samples);
+    printf("-->DEBUG: Buffer size %d * %d * %d\n", sound_struct->effective_samplerate, sound_struct->effective_channels, sound_struct->effective_bytes_per_samples);
     printf("-->DEBUG: sound_struct->bufferSize x 2 = %ld\n",(sound_struct->bufferSize << 1));
     return NULL;
 }
@@ -185,10 +184,6 @@ void *st_Init_Sound(void *_sound_struct){
     st_Sound_Load_And_Swap_Buffer(_sound_struct);
     st_Sound_Load_And_Swap_Buffer(_sound_struct);
 
-    Locksnd();
-    sound_struct->left_lvl = (short)Soundcmd( LTATTEN, SND_INQUIRE );
-    sound_struct->right_lvl = (short)Soundcmd( RTATTEN, SND_INQUIRE );   
-    Sndstatus( SND_RESET );
     int32_t curadder = Soundcmd(ADDERIN, SND_INQUIRE); /* on recupère la source hardware actuelle */
     int32_t curadc = Soundcmd(ADCINPUT, SND_INQUIRE);    
     Soundcmd(ADCINPUT, 0);
@@ -240,8 +235,11 @@ void *st_Sound_Feed(void *_sound_struct)
             Buffoper( SB_PLA_ENA | SB_PLA_RPT );
             sound_struct->flip_play_action = false;
             loadNewSample = true;
+            #ifdef PRINT_REAL_HZ
             sound_struct->time_start = clock();
+            // sound_struct->time_start = st_Supexec(get200hz);
             sound_struct->data_played = 0;
+            #endif
         } else {
             Buffoper( 0x00 );	// disable playback
             Jdisint( MFP_TIMERA );
@@ -254,20 +252,24 @@ void *st_Sound_Feed(void *_sound_struct)
         st_Sound_Load_And_Swap_Buffer(_sound_struct);
         /* set physical buffer for the next frame */
         Setbuffer( SR_PLAY, sound_struct->pPhysical, sound_struct->pPhysical + sound_struct->bufferSize );
-        sound_struct->time_end = clock();
         loadNewSample = 0;
+        #ifdef PRINT_REAL_HZ
+        sound_struct->time_end = clock();
+        // sound_struct->time_end = st_Supexec(get200hz);
+        
+
         if(sound_struct->play){
             
             sound_struct->time_total = 5 * (sound_struct->time_end - sound_struct->time_start);
             sound_struct->data_played += sound_struct->time_total > 0 ? sound_struct->bufferSize : 0;
             
-            #ifdef PRINT_REAL_HZ
             if(sound_struct->data_played && sound_struct->time_total){
                 printf("Computed frequency %fhz\n", 
                 (float)(sound_struct->data_played * 1000) / (this_win->wi_snd->effective_channels * this_win->wi_snd->effective_bytes_per_samples * this_win->wi_snd->time_total));
             }
-            #endif
+
         }
+        #endif
 	} 
     return NULL;
 }
