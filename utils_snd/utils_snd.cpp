@@ -65,23 +65,22 @@ void *st_Preset_Snd(void *_sound_struct){
             if(Gpio(2, gpio_data) < 0){
                 printf("Gpio error\n");
             }
+            /* 44.1khz */
+            clock_value = 22579200;
+            sound_struct->use_clk_ext = 1;            
         } else if (sound_struct->wanted_samplerate % 12000 == 0){
             gpio_data = (Gpio(1,0) & ~7) + 1;
             if(Gpio(2, gpio_data) < 0){
                 printf("Gpio error\n");
             }
+            gpio_data = Gpio(1,0);
+            if( (gpio_data & 1L) ){
+                /* 48khz */
+                clock_value = 24576000;
+                sound_struct->use_clk_ext = 2;
+            }            
         } else {
             sound_struct->use_clk_ext = 0;
-        }
-        gpio_data = Gpio(1,0);
-        if( (gpio_data & 1L) ){
-            /* 48khz */
-            clock_value = 24576000;
-            sound_struct->use_clk_ext = 2;
-        } else {
-            /* 44.1khz */
-            clock_value = 22579200;
-            sound_struct->use_clk_ext = 1;
         }
     }
 
