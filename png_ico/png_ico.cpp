@@ -396,8 +396,8 @@ void st_Control_Bar_Refresh_MFDB(struct_st_control_bar *control_bar,  MFDB *back
 	}
 	int16_t xy[8];
 	/* Source MFDB */
-	xy[0] = MAX(elevator_posx , 0); xy[1] = MAX(elevator_posy , 0) + win_work_area_height - control_bar_height;
-	xy[2] = xy[0] + win_work_area_width; xy[3] = xy[1] + control_bar_height;
+	xy[0] = MAX(elevator_posx , 0); xy[1] = MAX(elevator_posy , 0) + win_work_area_height - control_bar_height - 2;
+	xy[2] = xy[0] + win_work_area_width; xy[3] = xy[1] + control_bar_height - 1;
 	/* Destination MFDB */
 	xy[4] = 0; xy[5] = 0; 
 	xy[6] = win_work_area_width; xy[7] = control_bar_height;
@@ -405,14 +405,15 @@ void st_Control_Bar_Refresh_MFDB(struct_st_control_bar *control_bar,  MFDB *back
 	// if(control_bar->st_control_bar_mfdb.fd_addr == NULL){
 	// 	printf("Error: control_bar->st_control_bar_mfdb.fd_addr is NULL\n");
 	// }
+	void* ptr = control_bar->st_control_bar_mfdb.fd_addr;
 	mfdb_update_bpp(&control_bar->st_control_bar_mfdb, (int8_t *)control_bar->st_control_bar_mfdb.fd_addr, win_work_area_width, control_bar_height, background_mfdb->fd_nplanes); 
-	if(control_bar->st_control_bar_mfdb.fd_addr != NULL){
-		mem_free(control_bar->st_control_bar_mfdb.fd_addr);
+	control_bar->st_control_bar_mfdb.fd_addr = mem_alloc(MFDB_STRIDE( control_bar->st_control_bar_mfdb.fd_w ) * control_bar->st_control_bar_mfdb.fd_h * MAX(1,control_bar->st_control_bar_mfdb.fd_nplanes >> 3 ));
+	if(ptr){
+		mem_free(ptr);
 	}
-	control_bar->st_control_bar_mfdb.fd_addr = mem_alloc(MFDB_STRIDE( control_bar->st_control_bar_mfdb.fd_w ) * control_bar->st_control_bar_mfdb.fd_h * MIN(1,control_bar->st_control_bar_mfdb.fd_nplanes >> 3));
-	// if(control_bar->st_control_bar_mfdb.fd_addr == NULL){
-	// 	printf("control_bar->st_control_bar_mfdb.fd_addr is NULL!\n");
-	// }
+	if(control_bar->st_control_bar_mfdb.fd_addr == NULL){
+		printf("control_bar->st_control_bar_mfdb.fd_addr is NULL!\n");
+	}
 	// printf("MFDB_STRIDE( control_bar->st_control_bar_mfdb.fd_w ) %d\n", MFDB_STRIDE( control_bar->st_control_bar_mfdb.fd_w ));
 	// printf("control_bar->st_control_bar_mfdb.fd_h %d\n", control_bar->st_control_bar_mfdb.fd_h);
 	// printf("control_bar->st_control_bar_mfdb.fd_nplanes >> 3 %d\n", control_bar->st_control_bar_mfdb.fd_nplanes >> 3);
