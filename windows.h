@@ -50,6 +50,18 @@ typedef struct {
 	int16_t	pxy_crop_array[4];
 } struct_crop;
 
+typedef struct circular_buffer
+{
+    u_int8_t        *buffer;
+    u_int32_t       bytes_to_consume_size;
+    bool            buffer_available;
+    u_int16_t       buffer_index;
+    u_int16_t       max_buffer_index;
+	u_int32_t		max_buffer_size;
+    circular_buffer *next_buffer;
+	circular_buffer *last_buffer;
+} circular_buffer;
+
 typedef struct
 {
     u_int16_t prescale;
@@ -71,6 +83,8 @@ typedef struct
     int8_t* pBuffer;
     int8_t* pPhysical;
     int8_t* pLogical;
+	circular_buffer *global_circular_buffer;
+	circular_buffer *effective_circular_buffer;	
     void* (*sound_feed)(void*);
     int16_t win_handle;
 	void* user_data;

@@ -39,7 +39,6 @@ void st_Win_Video_WAV(int16_t this_win_handle){
     }
 }
 
-
 void* st_Callback_Audio_WAV(void* _this_win_handle){
     int16_t this_win_handle = *(int16_t*)_this_win_handle;    
     struct_window *this_win = detect_window(this_win_handle);     
@@ -72,14 +71,27 @@ void *st_Win_Play_WAV(void *_this_win_handle){
     this_win = detect_window(this_win_handle);
 
     pthread_t thread_audio;
+#ifdef USE_CIRCULAR_BUFFER
+    pthread_t thread_unpack_data;
+#endif
 
     st_Preset_Snd((void*)this_win->wi_snd);
     st_Sound_Buffer_Alloc((void*)this_win->wi_snd);
     st_Init_Sound((void*)this_win->wi_snd);
 
+#ifdef USE_CIRCULAR_BUFFER
+    this_win->wi_snd->bufferSize = this_win->wi_snd->effective_samplerate * this_win->wi_snd->effective_channels * this_win->wi_snd->effective_bytes_per_samples;
+    this_win->wi_snd->global_circular_buffer = st_Sound_Build_Circular_Buffer(8, this_win->wi_snd->bufferSize);
+    pthread_create( &thread_unpack_data, NULL, this_win->wi_snd->sound_feed, _this_win_handle);      
+#endif
+
     pthread_create( &thread_audio, NULL, st_Callback_Audio_WAV, _this_win_handle);
 
     pthread_join( thread_audio, NULL);
+
+#ifdef USE_CIRCULAR_BUFFER
+    pthread_join( thread_unpack_data, NULL);
+#endif
 
     // printf("st_Close_WAV(_this_win_handle);\n");
     st_Close_WAV(_this_win_handle);
@@ -150,6 +162,53 @@ void* st_Process_Audio_WAV(void* _this_win_handle){
     return NULL;
 }
 
+#ifdef USE_CIRCULAR_BUFFER
+/* Circular Buffer */
+void* st_Process_Audio_WAV_Circular_Buffer(void* _this_win_handle){
+
+    int16_t this_win_handle = *(int16_t*)_this_win_handle;    
+    struct_window *this_win = detect_window(this_win_handle);
+	u_int16_t pcm_tmp;
+	u_int32_t i;
+    u_int32_t data_read = 0;
+    circular_buffer *this_circular_buffer = this_win->wi_snd->global_circular_buffer;
+
+    while(this_win->wi_data->wi_pth != NULL){
+        if(this_circular_buffer->buffer_available && this_circular_buffer->next_buffer->buffer_available ){
+            
+            data_read = wav_read_data(this_win->wi_snd->user_data, (unsigned char *)&this_circular_buffer->buffer[0], this_win->wi_snd->bufferSize);
+            // printf("Buffer %d available - BufferSize asked = %lubits, Data read = %lu\n", this_circular_buffer->buffer_index, this_win->wi_snd->bufferSize, data_read);
+            if(data_read){
+                // printf("Unpack Index %d\n", this_circular_buffer->buffer_index);
+                for(i = 0; i <  data_read; i += 2){
+                    pcm_tmp = (this_circular_buffer->buffer[i + 1]) << 8 | ((u_int16_t)this_circular_buffer->buffer[i] >> 8);
+                    memcpy(&this_circular_buffer->buffer[i], &pcm_tmp, sizeof(u_int16_t));
+                }
+
+                this_win->wi_snd->processedSize +=  data_read;
+                this_circular_buffer->bytes_to_consume_size = data_read;
+                if(data_read < this_win->wi_snd->bufferSize){
+                    memset((unsigned char *)&this_circular_buffer->buffer[data_read], 0x00, this_win->wi_snd->bufferSize - data_read);
+                }
+                
+                this_circular_buffer->buffer_available = FALSE;
+
+                // printf("this_circular_buffer->buffer_available = %d\n", this_circular_buffer->buffer_available);
+            }
+            else{
+                wav_read_close(this_win->wi_snd->user_data);
+                this_win->wi_snd->user_data = (void*)wav_read_open(this_win->wi_data->path);
+            }
+        }
+        this_circular_buffer = this_circular_buffer->next_buffer;
+        pthread_yield_np();
+    }
+
+    return NULL;
+}
+/* End Circular Buffer */
+#endif
+
 void _st_Read_WAV(int16_t this_win_handle, boolean file_process){
 
     struct_window *this_win = detect_window(this_win_handle);
@@ -177,8 +236,10 @@ void _st_Read_WAV(int16_t this_win_handle, boolean file_process){
 
     this_win->wi_snd->wanted_samplerate = this_win->wi_snd->original_samplerate;
     this_win->wi_snd->effective_channels = 2;
-
+#ifdef USE_CIRCULAR_BUFFER
+    this_win->wi_snd->sound_feed = st_Process_Audio_WAV_Circular_Buffer;
+#else
     this_win->wi_snd->sound_feed = st_Process_Audio_WAV;
+#endif
     this_win->wi_snd->win_handle = this_win->wi_handle;
 }
-

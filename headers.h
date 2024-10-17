@@ -128,6 +128,8 @@ extern bool path_to_lnx;
 #define TRACE(x)
 #endif
 
+#define USE_CIRCULAR_BUFFER 1
+
 // #define PRINT_REAL_HZ 1
 
 // #define WITH_URL 1

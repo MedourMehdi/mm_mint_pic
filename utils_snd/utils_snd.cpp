@@ -11,7 +11,6 @@ void __attribute__((interrupt)) timerA( void )
 	*( (volatile unsigned char*)0xFFFFFA0FL ) &= ~( 1<<5 );	//	clear in service bit
 }
 
-
 void enableTimerASei( void )
 {
 	*( (volatile unsigned char*)0xFFFFFA17L ) |= ( 1<<3 );	//	software end-of-interrupt mode
@@ -180,8 +179,10 @@ void *st_Sound_Buffer_Alloc(void *_sound_struct){
 void *st_Init_Sound(void *_sound_struct){
     struct_snd *sound_struct = (struct_snd*)_sound_struct;
 
-    st_Sound_Load_And_Swap_Buffer(_sound_struct);
-    st_Sound_Load_And_Swap_Buffer(_sound_struct);
+#ifndef USE_CIRCULAR_BUFFER
+        st_Sound_Load_And_Swap_Buffer(_sound_struct);
+        st_Sound_Load_And_Swap_Buffer(_sound_struct);
+#endif
 
     int32_t curadder = Soundcmd(ADDERIN, SND_INQUIRE); /* on recupère la source hardware actuelle */
     int32_t curadc = Soundcmd(ADCINPUT, SND_INQUIRE);    
@@ -229,7 +230,14 @@ void *st_Sound_Feed(void *_sound_struct)
     if(sound_struct->flip_play_action){
         // printf("sound_struct->flip_play_action %d - sound_struct->play %d \n", sound_struct->flip_play_action, sound_struct->play);
         if(sound_struct->play){
-            Setbuffer( SR_PLAY, sound_struct->pPhysical, sound_struct->pPhysical + sound_struct->bufferSize );
+#ifdef USE_CIRCULAR_BUFFER
+                if(!sound_struct->effective_circular_buffer){
+                    sound_struct->effective_circular_buffer = sound_struct->global_circular_buffer;
+                }
+                Setbuffer( SR_PLAY, sound_struct->effective_circular_buffer->buffer , sound_struct->effective_circular_buffer->buffer + sound_struct->effective_circular_buffer->bytes_to_consume_size );
+#else
+                Setbuffer( SR_PLAY, sound_struct->pPhysical, sound_struct->pPhysical + sound_struct->bufferSize );
+#endif
             Jenabint( MFP_TIMERA );
             Buffoper( SB_PLA_ENA | SB_PLA_RPT );
             sound_struct->flip_play_action = false;
@@ -247,28 +255,44 @@ void *st_Sound_Feed(void *_sound_struct)
         }
     }
 	if( loadNewSample )
-	{ 
-        st_Sound_Load_And_Swap_Buffer(_sound_struct);
-        /* set physical buffer for the next frame */
-        Setbuffer( SR_PLAY, sound_struct->pPhysical, sound_struct->pPhysical + sound_struct->bufferSize );
-        loadNewSample = 0;
-        #ifdef PRINT_REAL_HZ
-        sound_struct->time_end = clock();
-        // sound_struct->time_end = st_Supexec(get200hz);
-        
+	{
+#ifdef USE_CIRCULAR_BUFFER
+            circular_buffer * old_cb = sound_struct->effective_circular_buffer;
+            circular_buffer * new_cb = sound_struct->effective_circular_buffer->next_buffer;
+            
+            /* set physical buffer for the next frame */
+            Setbuffer( SR_PLAY, new_cb->buffer , 
+                        new_cb->buffer + new_cb->bytes_to_consume_size );
+            // printf("Playing Index %d\n", new_cb->buffer_index);
+            sound_struct->effective_circular_buffer = new_cb;
+            
+            loadNewSample = 0;
+            // memset(old_cb->buffer, 0x00, old_cb->bytes_to_consume_size);
+            // old_cb->bytes_to_consume_size = 0;
+            old_cb->buffer_available = TRUE;
+#else
+            st_Sound_Load_And_Swap_Buffer(_sound_struct);
+            /* set physical buffer for the next frame */
+            Setbuffer( SR_PLAY, sound_struct->pPhysical, sound_struct->pPhysical + sound_struct->bufferSize );
+            loadNewSample = 0;
+            #ifdef PRINT_REAL_HZ
+            sound_struct->time_end = clock();
+            // sound_struct->time_end = st_Supexec(get200hz);
+            
 
-        if(sound_struct->play){
-            
-            sound_struct->time_total = 5 * (sound_struct->time_end - sound_struct->time_start);
-            sound_struct->data_played += sound_struct->time_total > 0 ? sound_struct->bufferSize : 0;
-            
-            if(sound_struct->data_played && sound_struct->time_total){
-                printf("Computed frequency %fhz\n", 
-                (float)(sound_struct->data_played * 1000) / (this_win->wi_snd->effective_channels * this_win->wi_snd->effective_bytes_per_samples * this_win->wi_snd->time_total));
+            if(sound_struct->play){
+                
+                sound_struct->time_total = 5 * (sound_struct->time_end - sound_struct->time_start);
+                sound_struct->data_played += sound_struct->time_total > 0 ? sound_struct->bufferSize : 0;
+                
+                if(sound_struct->data_played && sound_struct->time_total){
+                    printf("Computed frequency %fhz\n", 
+                    (float)(sound_struct->data_played * 1000) / (this_win->wi_snd->effective_channels * this_win->wi_snd->effective_bytes_per_samples * this_win->wi_snd->time_total));
+                }
+
             }
-
-        }
-        #endif
+            #endif
+#endif
 	} 
     return NULL;
 }
@@ -290,8 +314,12 @@ void *st_Sound_Close(void *_sound_struct){
     Buffoper( 0x00 );	// disable playback
     Jdisint( MFP_TIMERA );
     Unlocksnd();
-    mem_free(sound_struct->pBuffer);
-    mem_free(sound_struct->surplus_buffer);
+#ifdef USE_CIRCULAR_BUFFER
+        st_Free_Circular_Buffer(sound_struct->global_circular_buffer);
+#else
+        mem_free(sound_struct->pBuffer);
+        mem_free(sound_struct->surplus_buffer);
+#endif
     return NULL;
 }
 
@@ -348,6 +376,8 @@ struct_snd *st_Init_Sound_Struct(){
     wi_snd->pBuffer = NULL;
     wi_snd->pLogical = NULL;
     wi_snd->pPhysical = NULL;
+    wi_snd->global_circular_buffer = NULL;
+    wi_snd->effective_circular_buffer = NULL;    
     wi_snd->prescale = 0;
     wi_snd->original_sampleformat = 0;
     wi_snd->effective_sampleformat = 0;
