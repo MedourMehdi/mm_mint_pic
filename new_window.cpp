@@ -190,18 +190,8 @@ bool new_win_img(const char *new_file){
 				#endif
 				#ifdef WITH_WAVLIB
 				else if (check_ext(file_extension, "WAV")){
-					if(win_master_thumb == NULL && screen_workstation_bits_per_pixel > 8){
-						win_struct_array[i].wi_data->video_media = TRUE;
-						video_function = st_Win_Play_WAV;
-					}else{
-						if(st_form_alert_choice(FORM_QUESTION, (char*)"Video support only for >=16bpp", (char*)"Cancel", (char*)"Continue") == 1){
-							close_window(win_struct_array[i].wi_handle);
-							return false;
-						}else{
-							win_struct_array[i].wi_data->video_media = TRUE;
-							video_function = st_Win_Play_WAV;							
-						}
-					}
+					win_struct_array[i].wi_data->video_media = TRUE;
+					video_function = st_Win_Play_WAV;
 					st_Init_WAV(&win_struct_array[i]);
 				} 
 				#endif

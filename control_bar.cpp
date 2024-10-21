@@ -116,7 +116,7 @@ void st_Init_Default_Values_Control_Bar(struct_window *this_win){
 	this_win->wi_control_bar->vdi_handle = &st_vdi_handle;
 	/* Screen MFDB - You may obtained it with a declaration like MFDB screen_mfdb = {0}; */
 	this_win->wi_control_bar->virtual_screen_mfdb = &screen_mfdb;
-	/* We want hide the control bar with the right click */
+	/* If we want hide or not the control bar with the right click */
 	this_win->wi_control_bar->force_unhide = FALSE;
 }
 
@@ -217,6 +217,9 @@ void* st_Img_Play(void* p_param){
 	if(this_win->wi_snd != NULL){
 		this_win->wi_snd->flip_play_action = TRUE;
 		this_win->wi_snd->play = this_win->wi_snd->play == TRUE ? FALSE : TRUE;
+	}
+	if(use_cached_icons){
+		this_win->wi_control_bar->need_to_reload_control_bar = TRUE;
 	}
 	// printf("Timer %ld\n", event_timer_used);
 	// printf("this_win->wi_snd->flip_play_action %d\n", this_win->wi_snd->flip_play_action);

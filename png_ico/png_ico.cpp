@@ -3,12 +3,16 @@
 #include "../utils/utils.h"
 #include "../utils_gfx/pix_convert.h"
 
+#include "../utils/cache.h"
+
 char ico_path[256] = {'\0'};
 
 bool st_PNG_Decompress(const char *file_name, MFDB *foreground_mfdb);/**/
 void st_Ico32_PNG_Load(struct_st_control_bar* this_control_bar, struct_st_ico_png *ico);/**/
 void st_Ico_PNG_Update(struct_st_ico_png_list *ico_list_array, int16_t new_pos_x, int16_t new_pos_y);/**/
-
+#ifdef WITH_CACHE
+void st_Ico_Cache_Load(struct_st_control_bar* this_control_bar, struct_st_ico_png *ico);
+#endif
 void st_Control_Bar_PNG_Handle(int16_t mouse_x, int16_t mouse_y, int16_t mouse_button, struct_st_control_bar *st_control_bar, void* param){
 	u_int16_t i = 0;
 	struct_st_ico_png *ico_ptr;
@@ -42,13 +46,19 @@ void st_Control_Bar_PNG_Handle(int16_t mouse_x, int16_t mouse_y, int16_t mouse_b
 				}
 				if(st_control_bar->st_control_bar_mfdb.fd_nplanes > 8){
 					st_Ico32_PNG_Load( st_control_bar, ico_ptr );
-				}
+				} 
+#ifdef WITH_CACHE                
+                else {
+                    st_Ico_Cache_Load( st_control_bar, ico_ptr );
+                }
+#endif
 				i++;
 			}
 		}
 	}
 }
 
+/* st_Ico_PNG_Init unpack png icons array (32bpp) into their respective MFDB */
 bool st_Ico_PNG_Init(struct_st_ico_png_list *ico_list_array){
 	u_int16_t i = 0;
 	int16_t ico_path_len = strlen(ico_path);
@@ -123,6 +133,7 @@ bool st_PNG_Decompress(const char *file_name, MFDB *foreground_mfdb)
 	if (png_sig_cmp((png_const_bytep)header, 0, BYTES_TO_CHECK)){
 		sprintf(alert_message, "Not recognized as PNG\n%s", file_name);
         st_form_alert(FORM_STOP, alert_message);
+        fclose(fp);
 		return false;		
 	}
 
@@ -130,12 +141,14 @@ bool st_PNG_Decompress(const char *file_name, MFDB *foreground_mfdb)
 	if (!png_ptr){
 		sprintf(alert_message, "Error: png_create_read_struct\n%s", file_name);
         st_form_alert(FORM_STOP, alert_message);
+        fclose(fp);
 		return false;
 	}
 	info_ptr = png_create_info_struct(png_ptr);
 	if (!info_ptr){
 		sprintf(alert_message, "Error: png_create_info_struct\n%s", file_name);
         st_form_alert(FORM_STOP, alert_message);
+        fclose(fp);
 		return false;
 	}
 
@@ -176,10 +189,30 @@ bool st_PNG_Decompress(const char *file_name, MFDB *foreground_mfdb)
 
 	width = png_get_image_width(png_ptr, info_ptr);
 	height = png_get_image_height(png_ptr, info_ptr);
+#ifdef WITH_CACHE
+    if( use_cached_icons ){
+        if(st_Check_Cached((char*)file_name)){
+            MFDB * cache_ico = mfdb_alloc_bpp(NULL, width, height, screen_workstation_bits_per_pixel);
+            st_Load_MFDB_Cache((char*)file_name, cache_ico);
+            mfdb_update_bpp(foreground_mfdb, (int8_t*)cache_ico->fd_addr, cache_ico->fd_w, cache_ico->fd_h, screen_workstation_bits_per_pixel);
+            png_read_end(png_ptr, info_ptr);
+            png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+            fclose(fp);
+            return true;
+        }
+    }
+#endif
 	color_type = png_get_color_type(png_ptr, info_ptr);
 	bit_depth = png_get_bit_depth(png_ptr, info_ptr);
 	channels = png_get_channels( png_ptr, info_ptr);
-
+    if(channels != 4){
+        sprintf(alert_message, "Error: # of channels != 4\n%s", file_name);
+        st_form_alert(FORM_STOP, alert_message);
+        png_read_end(png_ptr, info_ptr);
+        png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+        fclose(fp);
+        return false;
+    }
 	row_pointers = (png_bytep *)mem_alloc(sizeof(png_bytep) * height);
 	for (y=0; y<height; y++)
 				row_pointers[y] = (png_byte *)mem_alloc(png_get_rowbytes(png_ptr,info_ptr));
@@ -189,35 +222,47 @@ bool st_PNG_Decompress(const char *file_name, MFDB *foreground_mfdb)
 	int16_t i, j, k, l;
 
 	u_int16_t a, red, green, blue, iWidth;
-	u_int8_t *destination_buffer = (u_int8_t*)st_ScreenBuffer_Alloc_bpp(width, height, channels << 3);
+	u_int8_t *destination_buffer = (u_int8_t*)st_ScreenBuffer_Alloc_bpp(width, height, 32);
 	int16_t width_stride = mfdb_update_bpp(foreground_mfdb, (int8_t*)destination_buffer, width, height, channels << 3);	
 	iWidth = MFDB_STRIDE(width);
-	if(channels == 4){
-		for (y = (height - 1); y != -1; y--)
-		{
-			l =  y << 2;
-			for (x = 0; x < width; x++)
-			{
-				j = x << 2;
-				i = j + (l * iWidth);
-				red = row_pointers[y][j++];
-				green = row_pointers[y][j++];
-				blue = row_pointers[y][j++];
-				a = row_pointers[y][j++];
-
-				destination_buffer[i++] = a;
-				destination_buffer[i++] = red;
-				destination_buffer[i++] = green;
-				destination_buffer[i++] = blue;
-			}
-			for(k = width_stride; k > 0; k--){
-				destination_buffer[i++] = 0x00;
-				destination_buffer[i++] = 0xFF;
-				destination_buffer[i++] = 0xFF;
-				destination_buffer[i++] = 0xFF;
-			}
-		}
-	}
+	
+    for (y = (height - 1); y != -1; y--)
+    {
+        l =  y << 2;
+        for (x = 0; x < width; x++)
+        {
+            j = x << 2;
+            i = j + (l * iWidth);
+            red = row_pointers[y][j++];
+            green = row_pointers[y][j++];
+            blue = row_pointers[y][j++];
+            a = row_pointers[y][j++];
+            if(!use_cached_icons){
+                destination_buffer[i++] = a;
+                destination_buffer[i++] = red;
+                destination_buffer[i++] = green;
+                destination_buffer[i++] = blue;
+            } else {
+                if (a == 0){
+                    destination_buffer[i++] = a;
+                    destination_buffer[i++] = 0xFF;
+                    destination_buffer[i++] = 0xFF;
+                    destination_buffer[i++] = 0xFF;                    
+                } else {
+                    destination_buffer[i++] = a;
+                    destination_buffer[i++] = red;
+                    destination_buffer[i++] = green;
+                    destination_buffer[i++] = blue;                    
+                }
+            }           
+        }
+        for(k = width_stride; k > 0; k--){
+            destination_buffer[i++] = 0x00;
+            destination_buffer[i++] = 0xFF;
+            destination_buffer[i++] = 0xFF;
+            destination_buffer[i++] = 0xFF;
+        }
+    }
 	
     png_read_end(png_ptr, info_ptr);
     png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
@@ -227,6 +272,27 @@ bool st_PNG_Decompress(const char *file_name, MFDB *foreground_mfdb)
 		mem_free(row_pointers[y]);
 	}
 	mem_free(row_pointers);
+#ifdef WITH_CACHE
+    if(use_cached_icons){
+        MFDB* dst_mfdb = NULL;
+        switch (screen_workstation_bits_per_pixel)
+        {
+            case 1:
+                dst_mfdb = st_MFDB32_To_MFDB1bpp(foreground_mfdb);
+                break;
+            case 4:
+                dst_mfdb = st_MFDB32_To_MFDB4bpp_Gray(foreground_mfdb);
+                break;				
+            case 8:
+                dst_mfdb = st_MFDB32_To_MFDB8bpp(foreground_mfdb);
+                break;
+        }
+        st_Build_MFDB_Cache((char*)file_name, dst_mfdb);
+        void* old_ptr = foreground_mfdb->fd_addr;
+        mfdb_update_bpp(foreground_mfdb, (int8_t*)dst_mfdb->fd_addr, dst_mfdb->fd_w, dst_mfdb->fd_h, screen_workstation_bits_per_pixel);
+        mem_free(old_ptr);
+    }
+#endif
 	return true;
 }
 
@@ -306,6 +372,22 @@ void st_Ico32_PNG_Load(struct_st_control_bar* this_control_bar, struct_st_ico_pn
 		}
 	}
 }
+
+#ifdef WITH_CACHE
+void st_Ico_Cache_Load(struct_st_control_bar* this_control_bar, struct_st_ico_png *ico){
+    if(ico->st_ico_mfdb.fd_nplanes == this_control_bar->st_control_bar_mfdb.fd_nplanes){
+        MFDB* 		dest_mfdb = &this_control_bar->st_control_bar_mfdb;
+        MFDB*       source_mfdb = &ico->st_ico_mfdb;
+
+        int16_t xy[8];
+
+        xy[0] = 0; xy[1] = 0; xy[2] = ico->st_ico_mfdb.fd_w; xy[3] = ico->st_ico_mfdb.fd_h - 1;
+        xy[4] = ico->x; xy[5] = ico->y; xy[6] = xy[4] + xy[2]; xy[7] = xy[5] + xy[3];
+
+        vro_cpyfm(*this_control_bar->vdi_handle, S_ONLY, xy, source_mfdb, dest_mfdb);
+    }
+}
+#endif
 
 void st_Ico_PNG_Update(struct_st_ico_png_list *ico_list_array, int16_t new_pos_x, int16_t new_pos_y){
 
@@ -396,17 +478,17 @@ void st_Control_Bar_Refresh_MFDB(struct_st_control_bar *control_bar,  MFDB *back
 	}
 	int16_t xy[8];
 	/* Source MFDB */
-	xy[0] = MAX(elevator_posx , 0); xy[1] = MAX(elevator_posy , 0) + win_work_area_height - control_bar_height - 2;
-	xy[2] = xy[0] + win_work_area_width; xy[3] = xy[1] + control_bar_height - 1;
+	xy[0] = MAX(elevator_posx , 0); xy[1] = MAX(elevator_posy , 0) + win_work_area_height - control_bar_height;
+	xy[2] = xy[0] + win_work_area_width; xy[3] = xy[1] + control_bar_height - 2;
 	/* Destination MFDB */
 	xy[4] = 0; xy[5] = 0; 
-	xy[6] = win_work_area_width; xy[7] = control_bar_height;
+	xy[6] = win_work_area_width; xy[7] = control_bar_height - 2;
 
 	// if(control_bar->st_control_bar_mfdb.fd_addr == NULL){
 	// 	printf("Error: control_bar->st_control_bar_mfdb.fd_addr is NULL\n");
 	// }
 	void* ptr = control_bar->st_control_bar_mfdb.fd_addr;
-	mfdb_update_bpp(&control_bar->st_control_bar_mfdb, (int8_t *)control_bar->st_control_bar_mfdb.fd_addr, win_work_area_width, control_bar_height, background_mfdb->fd_nplanes); 
+	mfdb_update_bpp(&control_bar->st_control_bar_mfdb, (int8_t *)control_bar->st_control_bar_mfdb.fd_addr, win_work_area_width, control_bar_height + 2, background_mfdb->fd_nplanes); 
 	control_bar->st_control_bar_mfdb.fd_addr = mem_alloc(MFDB_STRIDE( control_bar->st_control_bar_mfdb.fd_w ) * control_bar->st_control_bar_mfdb.fd_h * MAX(1,control_bar->st_control_bar_mfdb.fd_nplanes >> 3 ));
 	if(ptr){
 		mem_free(ptr);
@@ -470,58 +552,74 @@ void st_Control_Bar_Refresh_Classic(struct_st_control_bar *control_bar, int16_t 
 			fill_color = 0xFFFFFFFF;
 		}
 		MFDB* dst_mfdb = NULL;
-		u_int8_t* dst_buffer = st_ScreenBuffer_Alloc_bpp(control_bar_requested_width, CONTROLBAR_H, 32);
+		u_int8_t* dst_buffer = NULL;
+  
+        u_int16_t bpp_wanted = 32;
+        if(use_cached_icons){
+            bpp_wanted = bpp;
+        }
+
+        dst_buffer = st_ScreenBuffer_Alloc_bpp(control_bar_requested_width, CONTROLBAR_H, bpp_wanted);
+
 		if(dst_buffer == NULL){
-			sprintf(alert_message,"Error\nOut of memory");
-			st_form_alert(FORM_STOP, alert_message);
+            sprintf(alert_message,"Error\nOut of memory");
+            st_form_alert(FORM_STOP, alert_message);
 		}
 
 		void* old_ptr = control_bar->st_control_bar_mfdb.fd_addr;
 		MFDB* MFDB32;
-		if(bpp != 32){
-			MFDB32 = mfdb_alloc_bpp((int8_t *)dst_buffer, control_bar_requested_width, CONTROLBAR_H, 32);
-			st_MFDB_Fill(MFDB32, fill_color);
-		}else{
+
+		if(bpp == 32){
 			memset(dst_buffer, 0x80, (control_bar_requested_width * CONTROLBAR_H) << 2);
+		} else {
+            if(use_cached_icons){
+                memset(dst_buffer, 0x00, (control_bar_requested_width * CONTROLBAR_H) / (8 / bpp));
+            }else{
+                MFDB32 = mfdb_alloc_bpp((int8_t *)dst_buffer, control_bar_requested_width, CONTROLBAR_H, bpp_wanted);
+                st_MFDB_Fill(MFDB32, fill_color);
+            }
 		}
-		mfdb_update_bpp(&control_bar->st_control_bar_mfdb, (int8_t *)dst_buffer, control_bar_requested_width, CONTROLBAR_H, 32); 
-		st_Control_Bar_PNG_Handle(0, 0, 0, control_bar, NULL);
-		
-		switch (bpp)
-		{
-		case 1:
-            dst_mfdb = st_MFDB32_To_MFDB1bpp(MFDB32);
-			mfdb_update_bpp(&control_bar->st_control_bar_mfdb, (int8_t*)dst_mfdb->fd_addr, dst_mfdb->fd_w, dst_mfdb->fd_h, bpp );
-			mfdb_free(MFDB32);
-			break;
-		case 4:
-            dst_mfdb = st_MFDB32_To_MFDB4bpp_Gray(MFDB32);
-			mfdb_update_bpp(&control_bar->st_control_bar_mfdb, (int8_t*)dst_mfdb->fd_addr, dst_mfdb->fd_w, dst_mfdb->fd_h, bpp );
-			mfdb_free(MFDB32);
-			break;				
-		case 8:
-            dst_mfdb = st_MFDB32_To_MFDB8bpp(MFDB32);
-			mfdb_update_bpp(&control_bar->st_control_bar_mfdb, (int8_t*)dst_mfdb->fd_addr, dst_mfdb->fd_w, dst_mfdb->fd_h, bpp);
-			mfdb_free(MFDB32);
-			break;
-        case 32: /* 32 bits per pixels */
-			// mem_free(MFDB32);
-            break;
-        case 24: /* 24 bits per pixels */
-            dst_mfdb = st_MFDB32_To_MFDB24(MFDB32);
-			control_bar->st_control_bar_mfdb.fd_addr = dst_mfdb->fd_addr;
-			control_bar->st_control_bar_mfdb.fd_nplanes = dst_mfdb->fd_nplanes;	
-			mfdb_free(MFDB32);
-            break;
-        case 16: /* 16 bits per pixels */
-            dst_mfdb = st_MFDB32_To_MFDB16(MFDB32);
-			control_bar->st_control_bar_mfdb.fd_addr = dst_mfdb->fd_addr;
-			control_bar->st_control_bar_mfdb.fd_nplanes = dst_mfdb->fd_nplanes;	
-			mfdb_free(MFDB32);
-            break;
-		default:
-			break;
-		}
+
+        mfdb_update_bpp(&control_bar->st_control_bar_mfdb, (int8_t *)dst_buffer, control_bar_requested_width, CONTROLBAR_H, bpp_wanted); 
+        st_Control_Bar_PNG_Handle(0, 0, 0, control_bar, NULL);
+        if(!use_cached_icons){
+            switch (bpp)
+            {
+            case 1:
+                dst_mfdb = st_MFDB32_To_MFDB1bpp(MFDB32);
+                mfdb_update_bpp(&control_bar->st_control_bar_mfdb, (int8_t*)dst_mfdb->fd_addr, dst_mfdb->fd_w, dst_mfdb->fd_h, bpp );
+                mfdb_free(MFDB32);
+                break;
+            case 4:
+                dst_mfdb = st_MFDB32_To_MFDB4bpp_Gray(MFDB32);
+                mfdb_update_bpp(&control_bar->st_control_bar_mfdb, (int8_t*)dst_mfdb->fd_addr, dst_mfdb->fd_w, dst_mfdb->fd_h, bpp );
+                mfdb_free(MFDB32);
+                break;				
+            case 8:
+                dst_mfdb = st_MFDB32_To_MFDB8bpp(MFDB32);
+                mfdb_update_bpp(&control_bar->st_control_bar_mfdb, (int8_t*)dst_mfdb->fd_addr, dst_mfdb->fd_w, dst_mfdb->fd_h, bpp);
+                mfdb_free(MFDB32);
+                break;
+            case 32: /* 32 bits per pixels */
+                // mem_free(MFDB32);
+                break;
+            case 24: /* 24 bits per pixels */
+                dst_mfdb = st_MFDB32_To_MFDB24(MFDB32);
+                control_bar->st_control_bar_mfdb.fd_addr = dst_mfdb->fd_addr;
+                control_bar->st_control_bar_mfdb.fd_nplanes = dst_mfdb->fd_nplanes;	
+                mfdb_free(MFDB32);
+                break;
+            case 16: /* 16 bits per pixels */
+                dst_mfdb = st_MFDB32_To_MFDB16(MFDB32);
+                control_bar->st_control_bar_mfdb.fd_addr = dst_mfdb->fd_addr;
+                control_bar->st_control_bar_mfdb.fd_nplanes = dst_mfdb->fd_nplanes;	
+                mfdb_free(MFDB32);
+                break;
+            default:
+                break;
+            }
+        }
+
 		if(old_ptr != NULL){mem_free(old_ptr);}
 		control_bar->need_to_reload_control_bar = FALSE;
 	}

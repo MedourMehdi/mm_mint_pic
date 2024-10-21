@@ -3,6 +3,7 @@ _CC = m68k-atari-mint-gcc
 _AS = vasmm68k_mot
 _ASFLAGS = -m68020 -Faout -quiet
 
+# recoil recommends at least 256kb for stack size
 # STACK_SIZE := 524288
 STACK_SIZE := 262144
 
@@ -25,6 +26,7 @@ WITH_RECOIL := YES
 WITH_XBRZ := YES
 WITH_VASM := NO
 WITH_CURL := NO
+WITH_CACHE := YES
 
 ifeq ($(WITH_XBRZ), YES)
 DEFINES += -DWITH_XBRZ=1
@@ -32,6 +34,10 @@ endif
 
 ifeq ($(WITH_RECOIL), YES)
 DEFINES += -DWITH_RECOIL=1
+endif
+
+ifeq ($(WITH_CACHE), YES)
+DEFINES += -DWITH_CACHE=1
 endif
 
 ifeq ($(WITH_CURL), YES)
@@ -80,6 +86,7 @@ SRC := $(wildcard $(SRC_DIR)/*.cpp) \
   $(wildcard $(SRC_DIR)/*/qdbmp/*.cpp) \
   $(wildcard $(SRC_DIR)/*/rgb2lab/*.cpp) \
   $(wildcard $(SRC_DIR)/*/tgafunc/*.cpp) \
+  $(wildcard $(SRC_DIR)/*/md5/*.cpp) \
   $(wildcard $(SRC_DIR)/*/flic/*.cpp) 
 
 ifeq ($(WITH_VASM), YES)
@@ -92,6 +99,10 @@ endif
 
 ifeq ($(WITH_RECOIL), YES)
 SRC_C := $(wildcard $(SRC_DIR)/*/recoil/*.c)
+endif
+
+ifeq ($(WITH_CACHE), YES)
+SRC_C += $(wildcard $(SRC_DIR)/*/md5/*.c)
 endif
 
 ifeq ($(WITH_XBRZ), YES)
@@ -113,7 +124,11 @@ endif
 
 _CPPFLAGS := -I./ -I/opt/cross-mint/m68k-atari-mint/include/freetype2
 
-_CFLAGS   := -m68020-60 -fomit-frame-pointer -fno-strict-aliasing -O2 $(DEFINES)
+_CPU	:= -m68020-60
+
+# _CPU	:= -m68020 -m68881
+
+_CFLAGS   :=  $(_CPU) -fomit-frame-pointer -fno-strict-aliasing -O2 $(DEFINES)
 
 _LDFLAGS  :=
 
@@ -146,6 +161,8 @@ $(BIN): $(ALL_OBJ) | $(BIN_DIR)
 	$(_CXX) $(_LDFLAGS) $^ $(_LDLIBS) -o $@
 	m68k-atari-mint-strip $(BIN)
 	m68k-atari-mint-stack --fix=$(STACK_SIZE) $(BIN)
+	m68k-atari-mint-flags -S $(BIN)
+	# tar -cvJf $(BIN).tar.xz $(BIN)
 
 ifeq ($(WITH_VASM), YES)
 $(OBJ_DIR_S)/%.o: $(SRC_DIR)/%.s | $(OBJ_DIR_S)

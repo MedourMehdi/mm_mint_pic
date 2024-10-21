@@ -94,6 +94,8 @@ bool path_to_lnx = TRUE;
 bool path_to_lnx = FALSE;
 #endif
 
+bool use_cached_icons = FALSE;
+
 void *event_loop( void *result);
 void* exec_eventloop(void* p_param);
 bool init_app();
@@ -230,8 +232,12 @@ bool init_app(){
 	if(mint_version < 0x0100){
 		if(st_form_alert_choice(FORM_EXCLAM, (char*)"This app requiers Mint > 1", (char*)"Cancel", (char*)"Continue") == 1){
 			ret = false;
-		}		
-	}	
+		}
+	}
+	// printf("MINT VERS. VALUE %04X\n", mint_version);
+	// if(mint_version < 0x010D){
+	// 	event_timer_video = 8L;
+	// }
 	Getcookie(*(long *) "EdDI", &cookie_eddi);
 	if( !cookie_eddi ){
 		edDi_present = false;
@@ -266,6 +272,12 @@ bool init_app(){
 	} 
 
 	// st_Get_Current_Dir(current_path);
+
+#ifdef WITH_CACHE
+if(screen_workstation_bits_per_pixel <= 8 && (screen_workstation_format < 1 || screen_workstation_bits_per_pixel < 8) ){
+	use_cached_icons = TRUE;
+}
+#endif
 
     st_Set_Mouse( FALSE );
 	graf_mouse(ARROW,0L);

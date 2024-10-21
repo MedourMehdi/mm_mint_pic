@@ -344,6 +344,9 @@ int16_t st_form_alert_choice(int16_t this_form_icon, char* this_form_message, ch
 
 MFDB* mfdb_alloc_bpp( int8_t* buffer, int16_t width, int16_t height, int16_t bpp){
     MFDB* new_mfdb = (MFDB*)mem_alloc(sizeof(MFDB));
+    if(buffer == NULL){
+        buffer = (int8_t*)st_ScreenBuffer_Alloc_bpp(width, height, bpp);
+    }
 	int16_t width_stride = MFDB_STRIDE(width) - width;
     new_mfdb->fd_addr = buffer;
     new_mfdb->fd_nplanes = bpp;

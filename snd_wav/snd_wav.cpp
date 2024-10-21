@@ -19,10 +19,14 @@ void st_Init_WAV(struct_window *this_win){
     this_win->wi_snd = st_Init_Sound_Struct();
     this_win->wi_data->img.img_id = 0;
     this_win->wi_data->img.img_index = 1;
-    if(!st_Set_Renderer(this_win)){
-        sprintf(alert_message, "screen_format: %d\nscreen_bits_per_pixel: %d", screen_workstation_format, screen_workstation_bits_per_pixel);
-        st_form_alert(FORM_STOP, alert_message);
-        return;
+    if(use_cached_icons){
+        this_win->render_win = NULL;
+    } else {
+        if(!st_Set_Renderer(this_win)){
+            sprintf(alert_message, "screen_format: %d\nscreen_bits_per_pixel: %d", screen_workstation_format, screen_workstation_bits_per_pixel);
+            st_form_alert(FORM_STOP, alert_message);
+            return;
+        }
     }
 }
 
@@ -34,8 +38,20 @@ void st_Win_Video_WAV(int16_t this_win_handle){
         this_win->wi_to_work_in_mfdb = &this_win->wi_original_mfdb;     
     }
 
-    if( st_Img32b_To_Window(this_win) == false ){
-        st_form_alert(FORM_STOP, alert_message);
+    if(use_cached_icons){
+        st_Start_Window_Process(this_win);
+        this_win->wi_to_work_in_mfdb = &this_win->wi_original_mfdb;
+        this_win->wi_to_display_mfdb = this_win->wi_to_work_in_mfdb;
+        this_win->total_length_w = this_win->wi_to_display_mfdb->fd_w;
+        this_win->total_length_h = this_win->wi_to_display_mfdb->fd_h;
+
+        if(!this_win->wi_data->autoscale){st_Limit_Work_Area(this_win);}
+        this_win->wi_data->remap_displayed_mfdb = FALSE;        
+        st_End_Window_Process(this_win);
+    } else {
+        if( st_Img32b_To_Window(this_win) == false ){
+            st_form_alert(FORM_STOP, alert_message);
+        }    
     }
 }
 
@@ -110,15 +126,21 @@ void _st_Load_WAV(int16_t this_win_handle){
     if(this_win->wi_data->stop_original_data_load == FALSE){
 		u_int16_t width = 120;
 		u_int16_t height = CONTROLBAR_H;
-        u_int8_t* destination_buffer = st_ScreenBuffer_Alloc_bpp(width, height, 32);
+        u_int16_t bpp_wanted = 32;
+
+        if(this_win->wi_data->control_bar_media && use_cached_icons){
+            bpp_wanted = screen_workstation_bits_per_pixel;
+        }
+
+        u_int8_t* destination_buffer = st_ScreenBuffer_Alloc_bpp(width, height, bpp_wanted);
         if(destination_buffer == NULL){
-            sprintf(alert_message, "Out Of Mem Error\nAsked for %doctets", width * height * 4);
+            sprintf(alert_message, "Out Of Mem Error\nAsked for %doctets", use_cached_icons ? (width * height * (bpp_wanted >> 2)) : (width * height) / (8 / bpp_wanted ) );
             st_form_alert(FORM_EXCLAM, alert_message);
         }
         if(this_win->wi_original_mfdb.fd_addr != NULL){
             mem_free(this_win->wi_original_mfdb.fd_addr);
         }
-		mfdb_update_bpp(&this_win->wi_original_mfdb, (int8_t *)destination_buffer, width, height, 32);
+		mfdb_update_bpp(&this_win->wi_original_mfdb, (int8_t *)destination_buffer, width, height, bpp_wanted);
         st_MFDB_Fill(&this_win->wi_original_mfdb,GREY_COLOR);
         st_Win_Set_Ready(this_win, width, height);
         this_win->wi_to_work_in_mfdb = &this_win->wi_original_mfdb;  

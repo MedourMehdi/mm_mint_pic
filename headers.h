@@ -108,6 +108,8 @@ extern bool milanblaster_present;
 extern char current_path[256];
 
 extern bool path_to_lnx;
+extern bool use_cached_icons;
+
 
 #define GREY_COLOR 0x7AC0C0C0
 
@@ -129,7 +131,7 @@ extern bool path_to_lnx;
 #endif
 
 #define USE_CIRCULAR_BUFFER 1
-
+// #define WITH_CACHE 1
 // #define PRINT_REAL_HZ 1
 
 // #define WITH_URL 1
