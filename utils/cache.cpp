@@ -42,7 +42,7 @@ bool st_Build_MFDB_Cache(char* filepath, MFDB *data){
 
     char cachepath[256] = {'\0'};
     sprintf(cachepath, "%s/%d/%s", "cachedir", screen_workstation_bits_per_pixel, basename(filepath));
-    printf("... Building cache in %s\n", cachepath);
+    // printf("... Building cache in %s\n", cachepath);
 
     dst_file = fopen(cachepath, "wb+");
     src_file = fopen(filepath, "rb");
