@@ -201,7 +201,8 @@ void st_Reload_Control_Bar(struct_window *this_win, struct_st_control_bar* contr
 void* st_Img_Play(void* p_param){
 	struct_window *this_win = (struct_window*)p_param;
 	this_win->wi_data->play_on = this_win->wi_data->play_on == TRUE ? FALSE : TRUE;
-	if(this_win->wi_data->play_on){
+	if(this_win->wi_data->play_on && mint_version > 0x0108){
+		// printf("set event_timer_video\n");
 		event_timer_used = event_timer_video;
 	} else {
 		if( !win_is_playing_media() ){
