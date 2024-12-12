@@ -66,6 +66,7 @@ void _st_Read_Dummy(int16_t this_win_handle, boolean file_process){
             sprintf(alert_message, "Out Of Mem Error\nAsked for %doctets", use_cached_icons ? (width * height * (bpp_wanted >> 2)) : (width * height) / (8 / bpp_wanted ) );
             st_form_alert(FORM_EXCLAM, alert_message);
         }
+
         if(this_win->wi_original_mfdb.fd_addr != NULL){
             mem_free(this_win->wi_original_mfdb.fd_addr);
         }

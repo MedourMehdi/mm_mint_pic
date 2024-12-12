@@ -132,19 +132,15 @@ void st_Win_Progress_Bar_Update_Info_Line(struct_win_progress_bar* progress_bar,
 		progress_bar->info_line = (char*)progress_txt;
 		progress_bar->update_info_line = true;
 		process_progress_bar(progress_bar->win_form_handle);
-	} else {
-		printf("Error: struct_win_progress_bar is NULL!\n");
 	}
 }
 
 void st_Win_Progress_Bar_Update_Title(struct_win_progress_bar* progress_bar, const char *title){
-
-	progress_bar->title = (char*)title;
-
-	progress_bar->update_title = true;
-
-	process_progress_bar(progress_bar->win_form_handle);
-
+	if(progress_bar){
+		progress_bar->title = (char*)title;
+		progress_bar->update_title = true;
+		process_progress_bar(progress_bar->win_form_handle);
+	}
 }
 
 void st_Win_Progress_Bar_Finish(int16_t this_win_handle){

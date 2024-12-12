@@ -110,7 +110,6 @@ extern char current_path[256];
 extern bool path_to_lnx;
 extern bool use_cached_icons;
 
-
 #define GREY_COLOR 0x7AC0C0C0
 
 #define FORM_EXCLAM     1

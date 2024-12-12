@@ -1,4 +1,5 @@
 #include "cache.h"
+#ifdef WITH_CACHE
 #include "utils.h"
 
 #include "../external/md5/md5.h"
@@ -19,8 +20,12 @@ void rek_mkdir(char *path) {
         rek_mkdir(path);
         *sep = '/';
     }
-    if(mkdir(path, 0777) && errno != EEXIST)
+    if(mkdir(path, 0777) && errno != EEXIST){
         fprintf(stderr, "error while trying to create '%s'\n%m\n", path); 
+    }
+    // if(errno){
+    //     printf("errno %d\n", errno);
+    // }
 }
 
 FILE *fopen_mkdir(char *path, char *mode) {
@@ -129,3 +134,4 @@ bool st_Check_Cached(char* filepath){
     }
     return false;
 }
+#endif

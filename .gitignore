@@ -103,3 +103,7 @@ todo.txt
 build/utils_snd/utils_snd_cb.o
 build/external/md5/md5.o
 build/utils/cache.o
+release/*
+mm_pic.tar.xz
+build/utils_gfx/best_dither.o
+mm_pic.tar.xz.gz

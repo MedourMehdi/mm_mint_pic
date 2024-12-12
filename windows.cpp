@@ -139,6 +139,7 @@ void open_window(struct_window *this_win, int16_t *this_win_position){
 	}else{
 		x_win = (number_of_opened_windows << 4) + (wdesk >> 2);
 		y_win = (number_of_opened_windows << 4) + (hdesk >> 2); /* height of desk divided by 4 */
+		y_win = number_of_opened_windows == 0 ? MAX((y_win - 40), 40) : y_win;
 	}
 
 	if(this_win->wi_data->rsc_media == TRUE){

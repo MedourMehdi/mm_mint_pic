@@ -148,6 +148,9 @@ int main(int argc, char *argv[]){
 			mem_free(va_file);
 		} while ( pfile ) ;
 	} 
+	// else {
+	// 	st_Open_Thread(&new_win_start_threaded, NULL);
+	// }
 	/* Uncomment if you don't want the drag and drop main bar */
 	/* Don't forget to comment on the calls above */
 	/*
