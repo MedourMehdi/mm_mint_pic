@@ -281,7 +281,7 @@ bool st_PNG_Decompress(const char *file_name, MFDB *foreground_mfdb)
                 dst_mfdb = st_MFDB32_To_MFDB1bpp(foreground_mfdb);
                 break;
             case 4:
-                dst_mfdb = st_MFDB32_To_MFDB4bpp_Gray(foreground_mfdb);
+                dst_mfdb = st_MFDB32_To_MFDB4bpp(foreground_mfdb);
                 break;				
             case 8:
                 dst_mfdb = st_MFDB32_To_MFDB8bpp(foreground_mfdb);
@@ -548,6 +548,20 @@ void st_Control_Bar_Refresh_Classic(struct_st_control_bar *control_bar, int16_t 
 
 	if(control_bar->need_to_reload_control_bar){
 		u_int32_t fill_color = 0xFFB7ADAD;
+		/*
+		switch (bpp)
+		{
+		case 4:
+			fill_color = 0x00001111;
+			break;
+		case 8:
+		case 2:
+		case 1:
+			fill_color = 0xFFFFFFFF;
+		default:
+			break;
+		}		
+		*/
 		if(bpp < 8){
 			fill_color = 0xFFFFFFFF;
 		}

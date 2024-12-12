@@ -18,9 +18,10 @@ typedef	u_int32_t pixel;
 #define	SIERRA_LITE_COEF( v, err )	((( (err) * ((v) << 8)) >> 2) >> 8)
 #define	SIERRA_COEF( v, err )	((( (err) * ((v) << 8)) >> 5) >> 8)
 
+#ifndef CLAMP
 #define		CLAMP( x, xmin, xmax )		(x)	= MAX( (xmin), (x) );	\
 										(x)	= MIN( (xmax), (x) )
-
+#endif
 const u_int8_t	VALUES_6BPP[]	= {	0,  85, 170, 255	};
 
 #define	f7_16	112		//const long	f7	= (7 << 8) / 16;

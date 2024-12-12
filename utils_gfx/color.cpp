@@ -19,7 +19,7 @@
 
 /* Classic color distance declaration */
 inline u_int32_t distance_rgb( u_int16_t* RGB1, u_int16_t* RGB2 );
-inline u_int16_t get_closest_value(u_int8_t* RGB_ptr, int16_t max_colors);
+inline u_int16_t get_closest_value(u_int8_t* RGB_ptr, int16_t max_colors, int16_t ncomponents);
 
 /* RGB2LAB declarations */
 double main_vdi_palette_lab[256][3];
@@ -64,7 +64,7 @@ inline u_int32_t distance_rgb( u_int16_t* RGB1, u_int16_t* RGB2 ) {
     return rez;
 }
 
-inline u_int16_t get_closest_value(u_int8_t* RGB_ptr, int16_t max_colors) {
+inline u_int16_t get_closest_value(u_int8_t* RGB_ptr, int16_t max_colors, int16_t ncomponents) {
     u_int16_t i = 0;
     u_int32_t j = 0, best_idx = 0;
 
@@ -74,9 +74,16 @@ inline u_int16_t get_closest_value(u_int8_t* RGB_ptr, int16_t max_colors) {
 
     u_int16_t RGB[3];
 
-    RGB[0] = RGB_ptr[0];
-    RGB[1] = RGB_ptr[1];
-    RGB[2] = RGB_ptr[2];    
+    if(ncomponents == 4){
+        RGB[0] = RGB_ptr[1];
+        RGB[1] = RGB_ptr[2];
+        RGB[2] = RGB_ptr[3];
+    }else{
+        RGB[0] = RGB_ptr[0];
+        RGB[1] = RGB_ptr[1];
+        RGB[2] = RGB_ptr[2];   
+    }
+ 
 
 	while(i < max_colors ) {
 
@@ -110,8 +117,17 @@ void classic_RGB_to_8bits_Indexed(u_int8_t* src_ptr, u_int8_t* dst_ptr, int16_t 
     u_int32_t totalPixels = mul_3_fast(MFDB_STRIDE(width) * height);
     u_int32_t i = 0;
     while(i < totalPixels){
-        *dst_ptr++ = (u_int8_t)get_closest_value(&src_ptr[i], max_colors);
+        *dst_ptr++ = (u_int8_t)get_closest_value(&src_ptr[i], max_colors, 3);
         i += 3;
+    }
+}
+
+void classic_ARGB_to_8bits_Indexed(u_int8_t* src_ptr, u_int8_t* dst_ptr, int16_t width, int16_t height, int16_t max_colors){
+    u_int32_t totalPixels = (MFDB_STRIDE(width) * height) << 2;
+    u_int32_t i = 0;
+    while(i < totalPixels){
+        *dst_ptr++ = (u_int8_t)get_closest_value(&src_ptr[i], max_colors, 4);
+        i += 4;
     }
 }
 
