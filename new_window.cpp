@@ -24,6 +24,7 @@
 #include "vid_ffmpeg/vid_ffmpeg.h"
 
 #include "snd_wav/snd_wav.h"
+#include "snd_mp3/snd_mp3.h"
 
 #include "img_dummy/img_dummy.h"
 
@@ -50,7 +51,7 @@ bool new_win_img(const char *new_file){
 		if(win_struct_array[i].wi_handle == 0){
 
 			win_struct_array[i].wi_style = WIN_STYLE_IMG;
-			if(check_ext(get_filename_ext(new_file), "WAV")){
+			if(check_ext(get_filename_ext(new_file), "WAV") || check_ext(get_filename_ext(new_file), "MP3")){
 				win_struct_array[i].wi_style = WIN_STYLE_VID;
 			}
 			
@@ -195,6 +196,14 @@ bool new_win_img(const char *new_file){
 					st_Init_WAV(&win_struct_array[i]);
 				} 
 				#endif
+				#ifdef WITH_MP3LIB
+				else if (check_ext(file_extension, "MP3")){
+					win_struct_array[i].wi_data->video_media = TRUE;
+					video_function = st_Win_Play_MP3;
+					// printf("st_Init_MP3\n");
+					st_Init_MP3(&win_struct_array[i]);
+				} 
+				#endif				
 				else {
 					form_alert(1, "[1][Wrong file extension][Okay]");
 					close_window(win_struct_array[i].wi_handle);

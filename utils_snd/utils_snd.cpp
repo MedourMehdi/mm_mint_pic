@@ -153,7 +153,7 @@ void *st_Preset_Snd(void *_sound_struct){
         printf("ERROR: Can not determine samplerate prescale for frequency %luHz\n", sound_struct->wanted_samplerate);
         break;
     }
-    printf("\n###\tst_Preset_Snd(%d) -> Wanted %luHz -> Playing at %luHz\n", sound_struct->prescale, sound_struct->wanted_samplerate, sound_struct->effective_samplerate);
+    // printf("\n###\tst_Preset_Snd(%d) -> Wanted %luHz -> Playing at %luHz\n", sound_struct->prescale, sound_struct->wanted_samplerate, sound_struct->effective_samplerate);
     if(manage_samplerate){
         sound_struct->wanted_samplerate = sound_struct->effective_samplerate;
     }
@@ -171,8 +171,8 @@ void *st_Sound_Buffer_Alloc(void *_sound_struct){
     /* SURPLUS PKT */
     sound_struct->surplus_buffer = (u_int8_t*)mem_alloc(sound_struct->bufferSize);
     sound_struct->surplus_buffer_size = 0;
-    printf("-->DEBUG: Buffer size %d * %d * %d\n", sound_struct->effective_samplerate, sound_struct->effective_channels, sound_struct->effective_bytes_per_samples);
-    printf("-->DEBUG: sound_struct->bufferSize x 2 = %ld\n",(sound_struct->bufferSize << 1));
+    // printf("-->DEBUG: Buffer size %d * %d * %d\n", sound_struct->effective_samplerate, sound_struct->effective_channels, sound_struct->effective_bytes_per_samples);
+    // printf("-->DEBUG: sound_struct->bufferSize x 2 = %ld\n",(sound_struct->bufferSize << 1));
     return NULL;
 }
 
@@ -203,10 +203,10 @@ void *st_Init_Sound(void *_sound_struct){
     }
     
     if(sound_struct->use_clk_ext){
-        printf("DEBUG: Using CLKEXT -> Devconnect( DMAPLAY, DAC, CLKEXT, sound_struct->prescale = %d, NO_SHAKE );\n", sound_struct->prescale);
+        // printf("DEBUG: Using CLKEXT -> Devconnect( DMAPLAY, DAC, CLKEXT, sound_struct->prescale = %d, NO_SHAKE );\n", sound_struct->prescale);
         Devconnect( DMAPLAY, DAC, CLKEXT, sound_struct->prescale, NO_SHAKE );
     } else {
-        printf("DEBUG: Using CLK25M -> Devconnect( DMAPLAY, DAC, CLK25M, sound_struct->prescale = %d, NO_SHAKE );\n", sound_struct->prescale);        
+        // printf("DEBUG: Using CLK25M -> Devconnect( DMAPLAY, DAC, CLK25M, sound_struct->prescale = %d, NO_SHAKE );\n", sound_struct->prescale);        
         Devconnect( DMAPLAY, DAC, CLK25M, sound_struct->prescale, NO_SHAKE );
     }
    
@@ -377,7 +377,8 @@ struct_snd *st_Init_Sound_Struct(){
     wi_snd->pLogical = NULL;
     wi_snd->pPhysical = NULL;
     wi_snd->global_circular_buffer = NULL;
-    wi_snd->effective_circular_buffer = NULL;    
+    wi_snd->effective_circular_buffer = NULL;
+    wi_snd->user_data = NULL;  
     wi_snd->prescale = 0;
     wi_snd->original_sampleformat = 0;
     wi_snd->effective_sampleformat = 0;
