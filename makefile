@@ -14,19 +14,35 @@ OBJ_DIR_S := ./build
 BIN_DIR := ./bin
 
 DEFINES :=
-WITH_URL := NO
+
+# Sound libraries
 WITH_WAVLIB := YES
+WITH_MP3LIB := YES
+
 WITH_FFMPEG := NO
 WITH_FFMPEG_SOUND := NO
 # WITH_FFMPEG := YES
 # WITH_FFMPEG_SOUND := YES
+
 WITH_PSD := YES
 WITH_XPDF := YES
 WITH_RECOIL := YES
 WITH_XBRZ := YES
+
+# This will not work if used with Coldfire
+# For now only 4bpp C2P can use ASM
 WITH_VASM := NO
+
+# Not yet finished. Purpose is to handle URL files
 WITH_CURL := NO
+WITH_URL := NO
+
+# Cached icons for screens <= 8bpp
 WITH_CACHE := YES
+
+# SVG libraries, choose only one!
+WITH_NANOSVG := NO
+WITH_LUNASVG := YES
 
 ifeq ($(WITH_XBRZ), YES)
 DEFINES += -DWITH_XBRZ=1
@@ -60,6 +76,19 @@ ifeq ($(WITH_WAVLIB), YES)
 DEFINES += -DWITH_WAVLIB=1
 endif
 
+ifeq ($(WITH_MP3LIB), YES)
+DEFINES += -DWITH_MP3LIB=1
+endif
+
+ifeq ($(WITH_NANOSVG), YES)
+DEFINES += -DWITH_NANOSVG=1
+endif
+
+ifeq ($(WITH_LUNASVG), YES)
+DEFINES += -DWITH_LUNASVG=1
+endif
+
+
 ifeq ($(WITH_FFMPEG), YES)
 DEFINES += -DWITH_FFMPEG=1 -DUSE_LNX_PATH=1
 ifeq ($(WITH_FFMPEG_SOUND), YES)
@@ -69,6 +98,7 @@ endif
 
 DEFINES += -DSTACK_SIZE=$(STACK_SIZE)
 
+LIB_PLUTOSVG := -llunasvg -lplutovg
 LIB_SSL := -lssl -lcrypto -lz
 LIB_FFMPEG := -lavformat -lavcodec -lavutil -lswscale -lswresample -lfribidi -llcms2 -lxml2 -liconv -lssl -lcrypto -lfreetype -lbz2 -lpng16 -lm -lz -lpthread -lwebp -lvpx -llzma -lx264 -lx265 -lstdc++ -ltheora -lopus -lwebpdemux -lwebpmux -lwebpdecoder -lvorbisenc -lvorbis -logg -lmp3lame -laacplus -laom -lfdk-aac
 LIB_XPDF := -lxpdf -lfofi -lgoo -lsplash 
@@ -82,7 +112,6 @@ SRC := $(wildcard $(SRC_DIR)/*.cpp) \
   $(wildcard $(SRC_DIR)/*/*.cpp) \
   $(wildcard $(SRC_DIR)/*/zview/*.cpp) \
   $(wildcard $(SRC_DIR)/*/dither/*.cpp) \
-  $(wildcard $(SRC_DIR)/*/nanosvg/*.cpp) \
   $(wildcard $(SRC_DIR)/*/qdbmp/*.cpp) \
   $(wildcard $(SRC_DIR)/*/rgb2lab/*.cpp) \
   $(wildcard $(SRC_DIR)/*/tgafunc/*.cpp) \
@@ -93,8 +122,16 @@ ifeq ($(WITH_VASM), YES)
 SRC_S := $(wildcard $(SRC_DIR)/*/asm/*.s)
 endif
 
+ifeq ($(WITH_NANOSVG), YES)
+SRC += $(wildcard $(SRC_DIR)/*/nanosvg/*.cpp)
+endif
+
 ifeq ($(WITH_WAVLIB), YES)
 SRC += $(wildcard $(SRC_DIR)/*/wav_lib/*.cpp)
+endif
+
+ifeq ($(WITH_MP3LIB), YES)
+SRC += $(wildcard $(SRC_DIR)/*/minimp3/*.cpp)
 endif
 
 ifeq ($(WITH_RECOIL), YES)
@@ -133,6 +170,10 @@ _CFLAGS   :=  $(_CPU) -fomit-frame-pointer -fno-strict-aliasing -O2 $(DEFINES)
 _LDFLAGS  :=
 
 _LDLIBS   := -lgem -lpng -lz -lyuv -lheif -lwebp -lwebpdemux -ljpeg $(LIB_TIFF) -lde265 -lx265 -lpthread -lgif
+
+ifeq ($(WITH_LUNASVG), YES)
+_LDLIBS += $(LIB_PLUTOSVG)
+endif
 
 ifeq ($(WITH_XPDF), YES)
 _LDLIBS += $(LIB_XPDF)
