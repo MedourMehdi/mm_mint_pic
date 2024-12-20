@@ -167,9 +167,16 @@ bool new_win_img(const char *new_file){
 					st_Init_Vid_WEBP(&win_struct_array[i]);
 				}
 				#ifdef WITH_RECOIL 
+				// else if (RECOIL_IsOurFile(file)){
+				// 	st_Init_Recoil(&win_struct_array[i]);
+				// }
+			#ifndef USE_CUSTOM_RECOIL_CHECK
 				else if (RECOIL_IsOurFile(file)){
+			#else
+				else if (st_Check_Recoil_Ext(file_extension)){
+			#endif
 					st_Init_Recoil(&win_struct_array[i]);
-				}
+				}				
 				#endif
 
 				#ifdef WITH_FFMPEG

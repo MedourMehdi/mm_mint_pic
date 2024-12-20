@@ -141,5 +141,7 @@ extern bool use_cached_icons;
 
 // #define WITH_FFMPEG 1
 // #define WITH_FFMPEG_SOUND 1
+// #define WITH_MP3LIB 1
+// #define WITH_LUNASVG 1
 extern void *event_loop( void *result);
 #endif

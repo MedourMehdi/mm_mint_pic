@@ -107,3 +107,12 @@ release/*
 mm_pic.tar.xz
 build/utils_gfx/best_dither.o
 mm_pic.tar.xz.gz
+bin/mm_picnc.prg
+build/img_svg/img_nanosvg.o
+build/img_svg/img_plutosvg.o
+build/snd_mp3/snd_mp3.o
+mm_pic_020.tar.xz
+mm_pic_020.tar.xz.gz
+mm_pic_cf.tar.xz
+mm_pic_cf.tar.xz.gz
+build/img_svg/img_lunasvg.o

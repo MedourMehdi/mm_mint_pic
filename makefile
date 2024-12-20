@@ -50,6 +50,7 @@ endif
 
 ifeq ($(WITH_RECOIL), YES)
 DEFINES += -DWITH_RECOIL=1
+# DEFINES += -DUSE_CUSTOM_RECOIL_CHECK=1
 endif
 
 ifeq ($(WITH_CACHE), YES)
