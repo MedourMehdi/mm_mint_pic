@@ -161,7 +161,7 @@ void st_Write_Degas(u_int8_t* src_buffer, int width, int height, const char* fil
         MFDB32->fd_r2 = img_bpp;
         img_mfdb = st_MFDB32_To_MFDB4bpp(MFDB32);
     }else if(width == 640 && height == 480){
-        output_size = 153634;
+        output_size = 153634; // -> palette == 16 word
         destination_buffer = (u_int8_t*)mem_alloc(output_size);
         img_bpp = 4;
         img_resolution = 0x0004;
@@ -170,6 +170,15 @@ void st_Write_Degas(u_int8_t* src_buffer, int width, int height, const char* fil
         memcpy(img_palette, palette_ori, 32 );
         MFDB32->fd_r2 = img_bpp;
         img_mfdb = st_MFDB32_To_MFDB4bpp(MFDB32);
+    }else if(width == 320 && height == 480){
+        output_size = 154114; // -> palette == 256 word
+        destination_buffer = (u_int8_t*)mem_alloc(output_size);
+        img_bpp = 8;
+        img_resolution = 0x0007;
+        img_palette = (u_int16_t*)mem_alloc(512);
+        st_Save_Pal((int16_t*)img_palette, 256);
+        MFDB32->fd_r2 = img_bpp;
+        img_mfdb = st_MFDB32_To_MFDB8bpp(MFDB32);
     }else{
         sprintf(alert_message, "Format error\nW%dxH%d", width, height);
         st_form_alert(FORM_STOP, alert_message);

@@ -131,11 +131,21 @@ void* st_Image_Export_To_Degas(void* p_param){
         height = 200;
         bpp = 4;
         nb_colors = 16;
+    }else if(strcasecmp( my_export->export_extension, ".pi3") == 0){
+        width = 640;
+        height = 400;
+        bpp = 4;
+        nb_colors = 1;
     }else if(strcasecmp( my_export->export_extension, ".pi5") == 0){
-        width = 320;
-        height = 200;
+        width = 640;
+        height = 480;
         bpp = 4;
         nb_colors = 16;
+    }else if(strcasecmp( my_export->export_extension, ".pi4") == 0){
+        width = 320;
+        height = 480;
+        bpp = 4;
+        nb_colors = 256;
     }else{
         width = 640;
         height = 400;
