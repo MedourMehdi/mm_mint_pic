@@ -161,8 +161,6 @@ void* st_Process_Audio_MP3(void* _this_win_handle){
     struct_window *this_win = detect_window(this_win_handle);
 
     u_int32_t data_read = 0;
-    u_int32_t done = 0;
-    u_int16_t* this_ptr = NULL;
 
     u_int32_t done = 0;
     u_int16_t* this_ptr = NULL;
