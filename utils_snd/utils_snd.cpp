@@ -192,15 +192,51 @@ void *st_Init_Sound(void *_sound_struct){
     MODE_STEREO16 1 16-bit Stereo Mode
     MODE_MONO 2 8-bit Mono Mode
     */ 
-    if(sound_struct->effective_bytes_per_samples < 2){
-        if(sound_struct->effective_channels < 2){
-            Setmode( MODE_MONO );
-        } else {
+    switch (sound_struct->effective_channels)
+    {
+    case 2:
+        switch (sound_struct->effective_bytes_per_samples)
+        {
+        case 2:
+            Setmode( MODE_STEREO16 );
+            printf("\t--> MODE_STEREO16\n");
+            break;
+        
+        default:
             Setmode( MODE_STEREO8 );
+            printf("\t--> MODE_STEREO8\n");        
+            break;
         }
-    } else {
-        Setmode( MODE_STEREO16 );
+    break;
+
+    default:
+        switch (sound_struct->effective_bytes_per_samples)
+        {
+        case 2:
+            Setmode( MODE_STEREO8 );
+            printf("\t--> MODE_STEREO8\n");
+            break;
+        
+        default:
+            Setmode( MODE_MONO );
+            printf("\t--> MODE_MONO\n");    
+            break;
+        }
+    break;
     }
+    
+    // if(sound_struct->effective_bytes_per_samples < 2){
+    //     if(sound_struct->effective_channels < 2){
+    //         Setmode( MODE_MONO );
+    //         printf("\t--> MODE_MONO\n");
+    //     } else {
+    //         Setmode( MODE_STEREO8 );
+    //         printf("\t--> MODE_STEREO8\n");
+    //     }
+    // } else {
+    //     Setmode( MODE_STEREO16 );
+    //     printf("\t--> MODE_STEREO16\n");
+    // }
     
     if(sound_struct->use_clk_ext){
         // printf("DEBUG: Using CLKEXT -> Devconnect( DMAPLAY, DAC, CLKEXT, sound_struct->prescale = %d, NO_SHAKE );\n", sound_struct->prescale);

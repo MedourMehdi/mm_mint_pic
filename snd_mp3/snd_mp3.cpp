@@ -273,13 +273,13 @@ void _st_Read_MP3(int16_t this_win_handle, boolean file_process){
 	channels = mp3d->info.channels;
 
 	data_length = mp3d->detected_samples >> 1;
-    printf("--> data_length %d\n", data_length);
+    // printf("--> data_length %d\n", data_length);
 
     this_win->wi_snd->effective_bytes_per_samples = 2;
     this_win->wi_snd->original_channels = channels;
     this_win->wi_snd->original_samplerate = sample_rate;
 
-    printf("this_win->wi_snd->effective_bytes_per_samples %d\nthis_win->wi_snd->original_channels %d\nthis_win->wi_snd->original_samplerate %d\n", this_win->wi_snd->effective_bytes_per_samples, this_win->wi_snd->original_channels, this_win->wi_snd->original_samplerate);
+    // printf("this_win->wi_snd->effective_bytes_per_samples %d\nthis_win->wi_snd->original_channels %d\nthis_win->wi_snd->original_samplerate %d\n", this_win->wi_snd->effective_bytes_per_samples, this_win->wi_snd->original_channels, this_win->wi_snd->original_samplerate);
 
     this_win->wi_snd->wanted_samplerate = this_win->wi_snd->original_samplerate;
     this_win->wi_snd->effective_channels = 2;

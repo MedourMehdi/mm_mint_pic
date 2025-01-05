@@ -257,7 +257,7 @@ void _st_Read_WAV(int16_t this_win_handle, boolean file_process){
     // printf("this_win->wi_snd->effective_bytes_per_samples %d, this_win->wi_snd->original_channels %d, this_win->wi_snd->original_samplerate %d\n", this_win->wi_snd->effective_bytes_per_samples, this_win->wi_snd->original_channels, this_win->wi_snd->original_samplerate);
 
     this_win->wi_snd->wanted_samplerate = this_win->wi_snd->original_samplerate;
-    this_win->wi_snd->effective_channels = 2;
+    this_win->wi_snd->effective_channels = MIN(2, channels);
 #ifdef USE_CIRCULAR_BUFFER
     this_win->wi_snd->sound_feed = st_Process_Audio_WAV_Circular_Buffer;
 #else
