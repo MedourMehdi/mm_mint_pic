@@ -102,8 +102,8 @@ void st_Init_Default_Values_Control_Bar(struct_window *this_win){
 	/* When control_bar_h is equal to zero the control bar was hidden - this value represent the height of the control bar */
 	this_win->wi_control_bar->control_bar_h = 0;
 	/* If you want some transparency filter set transparency to TRUE */
-	// this_win->wi_control_bar->transparency = FALSE;
-	this_win->wi_control_bar->transparency = TRUE;
+	this_win->wi_control_bar->transparency = FALSE;
+	// this_win->wi_control_bar->transparency = TRUE;
 	if(cpu_type < 40 || computer_type < 5){
 		this_win->wi_control_bar->transparency = FALSE;
 		/* Disabling transparency computing on ST */
