@@ -69,7 +69,7 @@ extern int16_t screen_workstation_bits_per_pixel;
 extern bool reverse_bits;
 extern int16_t st_vdi_handle;
 extern int16_t msg_buffer[8];
-
+extern int16_t wbox, hbox;
 extern int16_t  butdown; /* button state tested for UP/DOWN */
 extern GRECT r1, r2;
 extern int16_t  r1_flags;

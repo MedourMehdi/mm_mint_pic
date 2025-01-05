@@ -329,7 +329,7 @@ void _st_Handle_Thumbs_GIF(int16_t this_win_handle, boolean file_process){
             strcpy(font_path, current_path);
             strcat(font_path, TTF_DEFAULT_PATH);
             sprintf(thumb_txt,"%d", thumb_ptr->thumb_index );
-            print_ft_simple((thumb_original_mfdb->fd_w >> 1) - 4, thumb_original_mfdb->fd_h - 4, thumb_original_mfdb, font_path, 14, thumb_txt);
+            print_TTF((thumb_original_mfdb->fd_w >> 1) - 4, thumb_original_mfdb->fd_h - 4, thumb_original_mfdb, font_path, 14, thumb_txt);
 
 
             if(screen_workstation_bits_per_pixel != 32){

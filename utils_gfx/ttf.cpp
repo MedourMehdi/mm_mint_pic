@@ -191,7 +191,7 @@ void st_TTF_Set_Pixel(MFDB *this_mfdb, int x, int y, BYTE r, BYTE g, BYTE b){
 
 }
 
-void print_ft_simple(int init_x, int init_y, MFDB* this_mfdb, char* ttf_file, int font_size, char* this_string){
+void print_TTF(int init_x, int init_y, MFDB* this_mfdb, char* ttf_file, int font_size, char* this_string){
 
     static const UTF32 utf32_space[2] = {' ', 0};
 

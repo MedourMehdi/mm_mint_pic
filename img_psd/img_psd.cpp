@@ -761,7 +761,7 @@ void _st_Handle_Thumbs_PSD(int16_t this_win_handle, boolean file_process){
                 // strcpy(font_path, current_path);
                 // strcat(font_path, TTF_DEFAULT_PATH);                
             //     sprintf(thumb_txt,"Not Available" );
-            //     print_ft_simple(((thumb_original_mfdb->fd_w) >> 1 ) - 40, ((thumb_original_mfdb->fd_h) >> 1 ), thumb_original_mfdb, font_path, 14, thumb_txt);
+            //     print_TTF(((thumb_original_mfdb->fd_w) >> 1 ) - 40, ((thumb_original_mfdb->fd_h) >> 1 ), thumb_original_mfdb, font_path, 14, thumb_txt);
             // }
             
             // if(strlen((const char*)&layer->name) > 1){
@@ -769,7 +769,7 @@ void _st_Handle_Thumbs_PSD(int16_t this_win_handle, boolean file_process){
             // strcpy(font_path, current_path);
             // strcat(font_path, TTF_DEFAULT_PATH);                
             //     sprintf(thumb_txt,"%s", &layer->name );
-            //     print_ft_simple(2, thumb_original_mfdb->fd_h - 2, thumb_original_mfdb, font_path, 14, thumb_txt);
+            //     print_TTF(2, thumb_original_mfdb->fd_h - 2, thumb_original_mfdb, font_path, 14, thumb_txt);
             // }
 
             if(screen_workstation_bits_per_pixel != 32){

@@ -14,5 +14,5 @@
 #define TTF_DEFAULT_PATH "\\fonts\\arial.ttf"
 #endif
 
-void print_ft_simple(int init_x, int init_y, MFDB* this_mfdb, char* ttf_file, int font_size, char* this_string);
+void print_TTF(int init_x, int init_y, MFDB* this_mfdb, char* ttf_file, int font_size, char* this_string);
 #endif

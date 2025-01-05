@@ -853,7 +853,7 @@ void* st_Win_FF_Info(void *_this_win_handle){
         }
 
         for(j = 0; j < i; j++){
-            print_ft_simple(pos_x_txt, pos_y_txt, 
+            print_TTF(pos_x_txt, pos_y_txt, 
                             &this_win->wi_original_mfdb, 
                             font_path, font_size, output_txt[j] );
             pos_y_txt += char_box_y;

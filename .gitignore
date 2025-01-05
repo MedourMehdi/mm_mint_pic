@@ -116,3 +116,4 @@ mm_pic_020.tar.xz.gz
 mm_pic_cf.tar.xz
 mm_pic_cf.tar.xz.gz
 build/img_svg/img_lunasvg.o
+build/utils_gfx/text.o
