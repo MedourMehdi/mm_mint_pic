@@ -291,6 +291,7 @@ int16_t close_window( int16_t this_win_handle ){
 				mem_free((char*)this_win->wi_data->extension);
 				
 				this_win->wi_thumb->thumb_clean_func(this_win->wi_thumb);
+				this_win->wi_to_display_mfdb = NULL;
 			}
 
 			if(this_win->wi_data->thumbnail_slave == TRUE){
