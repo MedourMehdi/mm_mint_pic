@@ -624,7 +624,7 @@ fo_bnxtobj	New current object, or 0 if the next object has the status HIDDEN or 
 
                 st_Update_Comments(this_win_form_handle, (void*)&this_export, &obj_gui_ftext_info, 32, "PNG");
 
-            } else if(strcasecmp(this_export.export_extension, ".heif") == 0 || strcasecmp(this_export.export_extension, ".hei") == 0){
+            } else if(strcasecmp(this_export.export_extension, ".heif") == 0 || strcasecmp(this_export.export_extension, ".hei") == 0 || strcasecmp(this_export.export_extension, ".heic") == 0){
                 form_button(tree, DiagExport_chk_heif, 1, 0);
                 st_Set_Export(&st_Image_Export_To_HEIF, ".heif", &obj_gui_ftext_filepath);
                 st_Update_Comments(this_win_form_handle, (void*)&this_export, &obj_gui_ftext_info, 24, "HEIF");
