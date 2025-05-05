@@ -249,6 +249,58 @@ void* st_Process_Audio_MP3_Circular_Buffer(void* _this_win_handle){
     return NULL;
 }
 /* End Circular Buffer */
+
+void* st_Process_Audio_MP3_Circular_Buffer_8bit(void* _this_win_handle){
+
+    int16_t this_win_handle = *(int16_t*)_this_win_handle;    
+    struct_window *this_win = detect_window(this_win_handle);
+	u_int16_t pcm_tmp;
+	u_int32_t i;
+    u_int32_t data_read = 0;
+    circular_buffer *this_circular_buffer = this_win->wi_snd->global_circular_buffer;
+
+    while(this_win->wi_data->wi_pth != NULL){
+        if(this_circular_buffer->buffer_available && this_circular_buffer->next_buffer->buffer_available ){
+
+            u_int32_t done = 0;
+            u_int8_t* this_ptr = NULL;
+            mp3dec_ex_t *mp3d = (mp3dec_ex_t *)this_win->wi_snd->user_data;
+            
+            unsigned char* pData[MINIMP3_MAX_SAMPLES_PER_FRAME * sizeof(mp3d_sample_t)] = {0};
+            
+            data_read = (mp3dec_ex_read(mp3d, (mp3d_sample_t*)pData, MINIMP3_MAX_SAMPLES_PER_FRAME)) << 1;
+
+            while( (done < this_win->wi_snd->bufferSize) && data_read) {
+                this_ptr = (u_int8_t*)&this_circular_buffer->buffer[done];
+                for (int16_t i = 0; i < data_read ; i++) {
+                    *this_ptr++ = ( ((u_int8_t*) pData)[i] );
+                    i++;
+                }
+
+                done += data_read >> 1;
+                data_read = (mp3dec_ex_read(mp3d, (mp3d_sample_t*)pData, MINIMP3_MAX_SAMPLES_PER_FRAME)) << 1;
+            }
+
+            if(done){
+                this_win->wi_snd->processedSize +=  done;
+                this_circular_buffer->bytes_to_consume_size = done;
+                if(done < this_win->wi_snd->bufferSize){
+                    memset((unsigned char *)&this_circular_buffer->buffer[done], 0x00, this_win->wi_snd->bufferSize - done);
+                }
+                this_circular_buffer->buffer_available = FALSE;
+            }
+            else{
+                mp3dec_ex_seek(mp3d, 0);
+            }
+        }
+        this_circular_buffer = this_circular_buffer->next_buffer;
+        pthread_yield_np();
+    }
+
+    return NULL;
+}
+
+
 #endif
 
 void _st_Read_MP3(int16_t this_win_handle, boolean file_process){
@@ -274,8 +326,12 @@ void _st_Read_MP3(int16_t this_win_handle, boolean file_process){
 
 	data_length = mp3d->detected_samples >> 1;
     // printf("--> data_length %d\n", data_length);
-
+if(computer_type < 3){
+    this_win->wi_snd->effective_bytes_per_samples = 1;
+} else {
     this_win->wi_snd->effective_bytes_per_samples = 2;
+}
+
     this_win->wi_snd->original_channels = channels;
     this_win->wi_snd->original_samplerate = sample_rate;
 
@@ -284,7 +340,12 @@ void _st_Read_MP3(int16_t this_win_handle, boolean file_process){
     this_win->wi_snd->wanted_samplerate = this_win->wi_snd->original_samplerate;
     this_win->wi_snd->effective_channels = 2;
 #ifdef USE_CIRCULAR_BUFFER
+if(computer_type < 3){
+    this_win->wi_snd->sound_feed = st_Process_Audio_MP3_Circular_Buffer_8bit;
+}else{
     this_win->wi_snd->sound_feed = st_Process_Audio_MP3_Circular_Buffer;
+}
+
 #else
     this_win->wi_snd->sound_feed = st_Process_Audio_MP3;
 #endif
