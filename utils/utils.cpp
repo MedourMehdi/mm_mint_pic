@@ -499,14 +499,13 @@ void mfdb_free(MFDB* my_mfdb){
 void st_Save_Pal(int16_t* paletteBuffer, int16_t max_colors)
 {
     int i;
-    if(screen_workstation_bits_per_pixel > 8){
-        memcpy(paletteBuffer, palette_256, 512);
-    }else{
+    if(max_colors < 256 && max_colors > 0){
         for(i = 0; i < max_colors; i++) {
             paletteBuffer[i] = Setcolor(i, -1);
-        }
+        }        
+    }else{
+        memcpy(paletteBuffer, palette_256, 512);
     }
-
 }
 
 // void st_Save_Pal_to_File(int16_t* paletteBuffer, int16_t max_colors)

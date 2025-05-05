@@ -43,8 +43,8 @@ int16_t ks, kc; /* Key state/code */
 u_int32_t msg_timer = 0L;
 int16_t events; /* What events are valid ? */
 long event_timer_default = 200L;
-// long event_timer_video = 8L;
-long event_timer_video = 1L;
+long event_timer_video = 8L;
+// long event_timer_video = 1L;
 long event_timer_used = event_timer_default;
 // long event_timer_used = event_timer_video;
 // long event_timer_used = 0L;
@@ -112,24 +112,40 @@ void exit_app();
 /* Main */
 
 int main(int argc, char *argv[]){
+
+	struct_win_progress_bar* this_progress_bar = NULL;
+
 	char* this_file = (char*)mem_alloc(256);
+
 	memset(this_file, 0, 256);
 
 	void* func_param;
 
-    if(!init_app()){ goto quit;	}
-	
 	st_Get_App_Dir(current_path, argv[0]);
+
+    if(!init_app()){ goto quit;	}
+
+	this_progress_bar = (struct_win_progress_bar*)st_Win_Progress_Init(NIL, "Initializing application...", 10,  "Checking Gem & VDI values");
+
+	st_Win_Progress_Bar_Update_Info_Line(this_progress_bar, 30, "Caching Images Control Bar Icons");
 
 	if(!st_Ico_PNG_Init_Image()){ goto close_ico_image;	}
 
+	st_Win_Progress_Bar_Update_Info_Line(this_progress_bar, 50, "Caching Documents Control Bar Icons");
+
 	if(!st_Ico_PNG_Init_Document()){ goto close_ico_document; }
 
+	st_Win_Progress_Bar_Update_Info_Line(this_progress_bar, 70, "Caching Video Control Bar Icons");
+
 	if(!st_Ico_PNG_Init_Video()){ goto close_ico_video; }
+
+	st_Win_Progress_Bar_Update_Info_Line(this_progress_bar, 90, "Caching Main Control Bar Icons");
 
 	if(!st_Ico_PNG_Init_Main()){goto close_ico_main;}
 
 	st_Open_Thread(&new_win_start_threaded, NULL);
+
+	st_Win_Progress_Bar_Finish(this_progress_bar->win_form_handle);
 
 	// st_Open_Thread(&exec_eventloop, NULL); /* Work here if Timer event is used */
 
@@ -170,6 +186,7 @@ int main(int argc, char *argv[]){
 	st_Open_Thread(&exec_eventloop, NULL);
 
 	while(total_thread > 0){
+		pthread_yield_np();
 		st_Wait_For_Threads();
 	}
 
@@ -191,6 +208,7 @@ quit:
 bool init_app(){
 	bool ret = true;
 	TRACE(("appl_init()\n"))
+
     int app_id = appl_init();
 	
     st_vdi_handle = graf_handle(&wchar, &hchar, &wbox, &hbox);
@@ -216,14 +234,16 @@ bool init_app(){
 
 	if ( screen_workstation_bits_per_pixel < 1){
 		screen_workstation_bits_per_pixel = 1;
-	}else if(screen_workstation_bits_per_pixel < 16){
-		st_Save_Pal(palette_ori, 1 << screen_workstation_bits_per_pixel);
-		st_VDI_SavePalette_RGB(vdi_palette);
-	}else{
-		st_Save_Pal(palette_ori, 256);
+	// }else if(screen_workstation_bits_per_pixel < 16){
+	} else {
+		st_Save_Pal(palette_ori, MIN(1 << screen_workstation_bits_per_pixel, 256));
 		st_VDI_SavePalette_RGB(vdi_palette);
 	}
-	
+	// }else{
+	// 	st_Save_Pal(palette_ori, 256);
+	// 	st_VDI_SavePalette_RGB(vdi_palette);
+	// }
+
 	long cookie_mch, cookie_mint, cookie_cpu, cookie_eddi = 0, cookie_snd;
 	if(Getcookie(*(long *) "_MCH",&cookie_mch)){
 		computer_type = 0;
@@ -513,6 +533,7 @@ void *event_loop(void *result) {
 				if(selected_window->wi_to_display_mfdb != NULL){
 					if(selected_window->wi_data->thumbnail_master == TRUE){
 						st_Thumb_Desk_PXY_Update(selected_window->wi_thumb, selected_window->work_pxy);
+						// st_Thumb_Text_Refresh(msg_buffer[3]);
 					}else{
 						st_Control_Bar_PXY_Update(selected_window->wi_control_bar, &selected_window->work_area);
 					}

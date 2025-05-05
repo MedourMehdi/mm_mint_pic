@@ -565,7 +565,7 @@ MFDB* st_MFDB32_To_MFDB8bpp(MFDB* MFDB32){
     bool force_planar_mode = false;
     bool use_rgb2lab = false;
     bool disable_classic_dithering = false;
-    bool best_dither = true;
+    bool best_dither = false;
 
     if(edDi_present && screen_workstation_bits_per_pixel < 16 && !best_dither){
         use_zview_dithering = true;
@@ -626,7 +626,7 @@ MFDB* st_MFDB32_To_MFDB8bpp(MFDB* MFDB32){
 
                     st_Win_Progress_Bar_Update_Info_Line(this_progress_bar, 30, "Floyd dithering");
 
-                    st_Floyd_Dithering(MFDB24, bpp);
+                    st_Floyd_Dithering(MFDB24, 8);
                 }
                 if(use_rgb2lab) {  
 

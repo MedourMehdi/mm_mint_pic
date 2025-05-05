@@ -58,8 +58,8 @@ inline u_int32_t distance_rgb( u_int16_t* RGB1, u_int16_t* RGB2 ) {
 
     u_int32_t t = (RGB1[0] + RGB2[0]) >> 1;
 
-    // rez = sqrt((drp2 << 1) + (dgp2 << 2) + mul_3_fast(dbp2) + t * (drp2 - dbp2) >> 8);
-    rez = usqrt4((drp2 << 1) + (dgp2 << 2) + mul_3_fast(dbp2) + t * (drp2 - dbp2) >> 8);
+    rez = sqrt((drp2 << 1) + (dgp2 << 2) + mul_3_fast(dbp2) + t * (drp2 - dbp2) >> 8);
+    // rez = usqrt4((drp2 << 1) + (dgp2 << 2) + mul_3_fast(dbp2) + t * (drp2 - dbp2) >> 8);
 
     return rez;
 }
@@ -94,10 +94,25 @@ inline u_int16_t get_closest_value(u_int8_t* RGB_ptr, int16_t max_colors, int16_
             pal_value[1] = ((palette_ori[i] >> 4) & 0x0F ) << 5 ;
             pal_value[2] = ((palette_ori[i]) & 0x0F ) << 5 ;            
             break;
+        // case 1:
+        //     pal_value[0] =  ( ((palette_ori[i] >> 7) & 0x0E ) | ((palette_ori[i] >> 11) & 0x01 ) ) << 4;
+        //     pal_value[1] = ( ((palette_ori[i] >> 3) & 0x0E) | ((palette_ori[i] >> 7) & 0x01 ) ) << 4;
+        //     pal_value[2] = ( ((palette_ori[i]) & 0x07 ) << 1 | ((palette_ori[i] >> 3) & 0x01 ) ) << 4;
+        //     break;
         default:
             pal_value[0] =  ( ((palette_ori[i] >> 7) & 0x0E ) | ((palette_ori[i] >> 11) & 0x01 ) ) << 4;
             pal_value[1] = ( ((palette_ori[i] >> 3) & 0x0E) | ((palette_ori[i] >> 7) & 0x01 ) ) << 4;
             pal_value[2] = ( ((palette_ori[i]) & 0x07 ) << 1 | ((palette_ori[i] >> 3) & 0x01 ) ) << 4;
+            // pal_value[0] = (palette_ori[i] & 0xF800) >> 8;
+            // pal_value[1] = (palette_ori[i] & 0x07E0) >> 3;
+            // pal_value[2] = (palette_ori[i] & 0x1F) << 3; 
+
+// What about the following:
+
+// unsigned r = (hexValue & 0xF800) >> 8;       // rrrrr... ........ -> rrrrr000
+// unsigned g = (hexValue & 0x07E0) >> 3;       // .....ggg ggg..... -> gggggg00
+// unsigned b = (hexValue & 0x1F) << 3;         // ............bbbbb -> bbbbb000
+
             break;
         }
 
