@@ -13,6 +13,9 @@
 #ifndef TTF_DEFAULT_PATH
 #define TTF_DEFAULT_PATH "\\fonts\\arial.ttf"
 #endif
+#ifdef WITH_FREETYPE
 
 void print_TTF(int init_x, int init_y, MFDB* this_mfdb, char* ttf_file, int font_size, char* this_string);
+#endif
+
 #endif

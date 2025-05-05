@@ -510,7 +510,13 @@ void st_Thumb_List_Generic(struct_window *this_win,
             strcpy(font_path, current_path);
             strcat(font_path, TTF_DEFAULT_PATH);
             sprintf(thumb_txt,"%s %d", media_type, thumb_ptr->thumb_index );
+
+            #ifdef WITH_FREETYPE
             print_TTF(4, thumb_original_mfdb->fd_h - 4, thumb_original_mfdb, font_path, 14, thumb_txt);
+            #else
+            thumb_ptr->thumb_text = (char*)mem_alloc(sizeof(thumb_txt) + 1);
+            sprintf(thumb_ptr->thumb_text,"%s", thumb_txt );
+            #endif
             
             /* Comment to not render MFDB */
             if(screen_workstation_bits_per_pixel != 32){

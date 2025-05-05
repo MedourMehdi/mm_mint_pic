@@ -321,6 +321,7 @@ void* st_Image_Export_To_PNG(void* p_param){
 }
 
 void* st_Image_Export_To_TIFF(void* p_param){
+    #ifdef WITH_TIFF
     struct_export* my_export = (struct_export*)p_param;
 
     int16_t nb_components = my_export->export_components, nb_components_32bits = 4;
@@ -359,6 +360,9 @@ void* st_Image_Export_To_TIFF(void* p_param){
     if(rgb888_mfdb != NULL){
         mfdb_free(rgb888_mfdb);
     }
+    #else
+    form_alert(1, "[1][Built without TIFF support][Okay]");
+    #endif    
     return NULL;
 }
 

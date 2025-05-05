@@ -688,7 +688,9 @@ void _st_Handle_Thumbs_PSD(int16_t this_win_handle, boolean file_process){
         struct_st_thumbs_list* thumb_ptr = this_win->wi_thumb->thumbs_list_array;
         struct_st_thumbs_list* prev_thumb_ptr = NULL;
 
-        this_win->wi_thumb->thumbs_open_new_win = true;
+        this_win->wi_thumb->thumbs_open_new_win = TRUE;
+
+        st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, 0, "PSD: Extracting layers");
 
 /* Needed ?*/
         this_win->wi_thumb->thumbs_area_w = 0;
@@ -706,7 +708,7 @@ void _st_Handle_Thumbs_PSD(int16_t this_win_handle, boolean file_process){
             MFDB* temp_mfdb;
             Layer* layer;
 
-            sprintf(progess_bar_indication, "Thumbnail %d/%d", i, this_win->wi_thumb->thumbs_nb);
+            sprintf(progess_bar_indication, "PSD Layers processing: %d/%d", i, this_win->wi_thumb->thumbs_nb);
 
             st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, (mul_100_fast(i) / this_win->wi_thumb->thumbs_nb), progess_bar_indication);
 

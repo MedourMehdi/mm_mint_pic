@@ -353,7 +353,11 @@ void _st_Handle_Thumbs_PDF(int16_t this_win_handle, boolean file_process){
             struct_st_thumbs_list* prev_thumb_ptr = NULL;
 
             this_win->wi_thumb->thumbs_open_new_win = FALSE;
-            
+
+            #ifndef WITH_FREETYPE
+            this_win->wi_thumb->thumbs_use_gem_text = TRUE;
+            #endif
+
             this_win->wi_thumb->thumbs_area_w = 0;
             this_win->wi_thumb->thumbs_area_h = this_win->wi_thumb->pady;
             this_win->wi_thumb->thumbs_nb = this_win->wi_data->img.img_total;
@@ -374,7 +378,7 @@ void _st_Handle_Thumbs_PDF(int16_t this_win_handle, boolean file_process){
                 }
 
                 char progess_bar_indication[96];
-                sprintf(progess_bar_indication, "Thumbnail rendering for page %d/%d", i+1, this_win->wi_thumb->thumbs_nb, thumb_ptr->thumb_id);
+                sprintf(progess_bar_indication, "Pages index: %d/%d", i+1, this_win->wi_thumb->thumbs_nb, thumb_ptr->thumb_id);
 
                 st_Win_Progress_Bar_Update_Info_Line(this_win->wi_win_progress_bar, (mul_100_fast(i) / this_win->wi_thumb->thumbs_nb), progess_bar_indication);
 
@@ -442,8 +446,17 @@ void _st_Handle_Thumbs_PDF(int16_t this_win_handle, boolean file_process){
                 strcpy(font_path, current_path);
                 strcat(font_path, TTF_DEFAULT_PATH);            
                 sprintf(thumb_txt,"%d", thumb_ptr->thumb_index );
-                print_TTF((thumb_original_mfdb->fd_w >> 1) - 4, thumb_original_mfdb->fd_h - 4, thumb_original_mfdb, font_path, 14, thumb_txt);
-
+                // print_TTF((thumb_original_mfdb->fd_w >> 1) - 4, thumb_original_mfdb->fd_h - 4, thumb_original_mfdb, font_path, 14, thumb_txt);
+                if(this_win->wi_thumb->thumbs_use_gem_text){
+                    thumb_ptr->thumb_text = (char*)mem_alloc(sizeof(thumb_txt) + 1);
+                    sprintf(thumb_ptr->thumb_text,"%s", thumb_txt );
+                }
+                #ifdef WITH_FREETYPE
+                else{
+                    print_TTF((thumb_original_mfdb->fd_w >> 1) - 4, thumb_original_mfdb->fd_h - 4, thumb_original_mfdb, font_path, 14, thumb_txt);
+                }
+                #endif
+                
                 if(screen_workstation_bits_per_pixel != 32){
                     thumb_ptr->thumb_mfdb = this_win->render_win(thumb_final_mfdb);
                     mfdb_free(thumb_final_mfdb);

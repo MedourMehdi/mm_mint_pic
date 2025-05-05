@@ -1,4 +1,5 @@
 #include "ttf.h"
+#ifdef WITH_FREETYPE
 #include "../utils/utils.h"
 
 #include "../utils_gfx/pix_convert.h"
@@ -227,3 +228,4 @@ void print_TTF(int init_x, int init_y, MFDB* this_mfdb, char* ttf_file, int font
         done_ft (ft);
     }
 }
+#endif

@@ -1,5 +1,7 @@
 #include "img_tiff.h"
 
+#ifdef WITH_TIFF
+
 #include <tiffio.h>
 
 #include "../utils/utils.h"
@@ -316,3 +318,5 @@ void _st_Handle_Thumbs_TIFF(int16_t this_win_handle, boolean file_process){
     }
     TIFFClose(tiff_handler);
 }
+
+#endif

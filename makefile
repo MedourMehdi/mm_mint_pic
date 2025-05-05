@@ -18,6 +18,8 @@ DEFINES :=
 # Sound libraries
 WITH_WAVLIB := YES
 WITH_MP3LIB := YES
+# WITH_WAVLIB := NO
+# WITH_MP3LIB := NO
 
 WITH_FFMPEG := NO
 WITH_FFMPEG_SOUND := NO
@@ -25,7 +27,14 @@ WITH_FFMPEG_SOUND := NO
 # WITH_FFMPEG_SOUND := YES
 
 WITH_PSD := YES
+# WITH_PSD := NO
+
+WITH_TIFF := YES
+# WITH_TIFF := NO
+
 WITH_XPDF := YES
+# WITH_XPDF := NO
+
 WITH_RECOIL := YES
 WITH_XBRZ := YES
 
@@ -43,9 +52,21 @@ WITH_CACHE := YES
 # SVG libraries, choose only one!
 WITH_NANOSVG := NO
 WITH_LUNASVG := YES
+# WITH_NANOSVG := YES
+# WITH_LUNASVG := NO
+
+WITH_FREETYPE := NO
 
 ifeq ($(WITH_XBRZ), YES)
 DEFINES += -DWITH_XBRZ=1
+endif
+
+ifeq ($(WITH_FREETYPE), YES)
+DEFINES += -WITH_FREETYPE=1
+endif
+
+ifeq ($(WITH_TIFF), YES)
+DEFINES += -DWITH_TIFF=1
 endif
 
 ifeq ($(WITH_RECOIL), YES)
@@ -170,7 +191,11 @@ _CFLAGS   :=  $(_CPU) -fomit-frame-pointer -fno-strict-aliasing -O3 $(DEFINES)
 
 _LDFLAGS  :=
 
-_LDLIBS   := -lgem -lpng -lz -lyuv -lheif -lwebp -lwebpdemux -ljpeg $(LIB_TIFF) -lde265 -lx265 -lpthread -lgif
+_LDLIBS   := -lgem -lpng -lz -lyuv -lheif -lwebp -lwebpdemux -ljpeg -lde265 -lx265 -lpthread -lgif
+
+ifeq ($(WITH_TIFF), YES)
+_LDLIBS += $(LIB_TIFF)
+endif
 
 ifeq ($(WITH_LUNASVG), YES)
 _LDLIBS += $(LIB_PLUTOSVG)
@@ -178,9 +203,13 @@ endif
 
 ifeq ($(WITH_XPDF), YES)
 _LDLIBS += $(LIB_XPDF)
+WITH_FREETYPE := YES
+DEFINES += -WITH_FREETYPE=1
 endif
 
+ifeq ($(WITH_FREETYPE), YES)
 _LDLIBS += $(LIB_FREETYPE)
+endif
 
 ifeq ($(WITH_PSD), YES)
 _LDLIBS += $(LIB_PSD)
@@ -188,6 +217,8 @@ endif
 
 ifeq ($(WITH_FFMPEG), YES)
 _LDLIBS += $(LIB_FFMPEG)
+WITH_FREETYPE := YES
+DEFINES += -WITH_FREETYPE=1
 endif
 
 ifeq ($(WITH_CURL), YES)

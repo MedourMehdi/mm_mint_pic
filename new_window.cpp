@@ -113,9 +113,13 @@ bool new_win_img(const char *new_file){
 				#endif  				
 				else if (check_ext(file_extension, "JPG") || check_ext(file_extension, "JPEG") || check_ext(file_extension, "JPE")){
 					st_Init_JPEG(&win_struct_array[i]);
-				} else if (check_ext(file_extension, "TIF") || check_ext(file_extension, "TIFF")){
+				} 
+				#ifdef WITH_TIFF
+				else if (check_ext(file_extension, "TIF") || check_ext(file_extension, "TIFF")){
 					st_Init_TIFF(&win_struct_array[i]);
-				} else if (check_ext(file_extension, "BMP")){
+				}
+				#endif 
+				else if (check_ext(file_extension, "BMP")){
 					st_Init_BMP(&win_struct_array[i]);
 				} else if (check_ext(file_extension, "TGA")){
 					st_Init_TGA(&win_struct_array[i]);

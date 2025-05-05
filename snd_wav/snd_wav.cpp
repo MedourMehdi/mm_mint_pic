@@ -1,4 +1,5 @@
 #include "snd_wav.h"
+#ifdef WITH_WAVLIB
 #include "../img_handler.h"
 
 #include "../utils/utils.h"
@@ -265,3 +266,4 @@ void _st_Read_WAV(int16_t this_win_handle, boolean file_process){
 #endif
     this_win->wi_snd->win_handle = this_win->wi_handle;
 }
+#endif
