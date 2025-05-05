@@ -24,4 +24,9 @@ void st_Thumb_List_Generic(struct_window *this_win,
                             bool open_new_win);
 
 void st_Check_Thumbs_Chain(struct_st_thumbs_list* thumb_ptr);
+
+void st_Thumb_Refresh(int16_t win_thumb_handle);
+
+void st_Thumb_Text_Refresh(int16_t win_thumb_handle, int16_t* pxy_dest);
+
 #endif

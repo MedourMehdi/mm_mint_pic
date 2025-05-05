@@ -238,7 +238,8 @@ void _st_Handle_Thumbs_GIF(int16_t this_win_handle, boolean file_process){
         struct_st_thumbs_list* thumb_ptr = this_win->wi_thumb->thumbs_list_array;
         struct_st_thumbs_list* prev_thumb_ptr = NULL;
 
-        this_win->wi_thumb->thumbs_open_new_win = false;
+        this_win->wi_thumb->thumbs_open_new_win = FALSE;
+        this_win->wi_thumb->thumbs_use_gem_text = TRUE;
 
         this_win->wi_thumb->thumbs_area_w = 0;
         this_win->wi_thumb->thumbs_area_h = this_win->wi_thumb->pady;
@@ -329,9 +330,13 @@ void _st_Handle_Thumbs_GIF(int16_t this_win_handle, boolean file_process){
             strcpy(font_path, current_path);
             strcat(font_path, TTF_DEFAULT_PATH);
             sprintf(thumb_txt,"%d", thumb_ptr->thumb_index );
-            print_TTF((thumb_original_mfdb->fd_w >> 1) - 4, thumb_original_mfdb->fd_h - 4, thumb_original_mfdb, font_path, 14, thumb_txt);
 
-
+            if(this_win->wi_thumb->thumbs_use_gem_text){
+                thumb_ptr->thumb_text = (char*)mem_alloc(sizeof(thumb_txt) + 1);
+                sprintf(thumb_ptr->thumb_text,"%s", thumb_txt );
+            }else{
+                print_TTF((thumb_original_mfdb->fd_w >> 1) - 4, thumb_original_mfdb->fd_h - 4, thumb_original_mfdb, font_path, 14, thumb_txt);
+            }
             if(screen_workstation_bits_per_pixel != 32){
                 thumb_ptr->thumb_mfdb = this_win->render_win(thumb_original_mfdb);
                 mfdb_free(thumb_original_mfdb);

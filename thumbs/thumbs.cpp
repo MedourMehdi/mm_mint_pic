@@ -6,6 +6,8 @@
 
 #include "../rsc_processing/progress_bar.h"
 
+#include "../utils_gfx/text.h"
+
 #ifndef PRIMARY_IMAGE_ID
 #define PRIMARY_IMAGE_ID    -1
 #endif
@@ -91,7 +93,7 @@ struct_thumbs* st_Thumb_Alloc(int16_t thumbs_nb, int16_t slave_win_handle, int16
     this_win_thumb->thumb_selected_mfdb = st_Init_Outline_MFDB(this_win_thumb, this_win_thumb->thumb_selected_color);
 
     this_win_thumb->thumbs_open_new_win = TRUE; /* If set to TRUE then each images in thumbs win will open a new window */
-
+    this_win_thumb->thumbs_use_gem_text = FALSE; /* Do we use TTF Freetype fonts or not */
     this_win_thumb->thumbs_selected_nb = NIL;
 
     return this_win_thumb;
@@ -107,8 +109,14 @@ void* st_Thumb_Free(void* p_param){
     while (thumb_ptr != NULL)
     {
         struct_st_thumbs_list* thumb_ptr_next = thumb_ptr->next;
-
+        struct_window *this_win_slave = get_win_thumb_slave_by_image_id(this_win_thumb->master_win_handle, thumb_ptr->thumb_id);
+        if( this_win_slave ){
+            close_window(this_win_slave->wi_handle);
+        }
         mfdb_free(thumb_ptr->thumb_mfdb);
+        if(this_win_thumb->thumbs_use_gem_text){
+            mem_free(thumb_ptr->thumb_text);
+        }
         mem_free(thumb_ptr);
 
         thumb_ptr = thumb_ptr_next;
@@ -362,7 +370,7 @@ void* st_Thumb_MFDB_Update(void *p_param){
                         xy[4] = thumb_ptr->thumb_win_pxy[0]; 
                         xy[5] = thumb_ptr->thumb_win_pxy[1]; 
                         xy[6] = thumb_ptr->thumb_win_pxy[2] + this_win_thumb->padx; 
-                        xy[7] = thumb_ptr->thumb_win_pxy[3] + this_win_thumb->pady; 
+                        xy[7] = thumb_ptr->thumb_win_pxy[3] + this_win_thumb->pady;
                         vro_cpyfm(st_vdi_handle, S_ONLY, xy, thumb_mfdb, this_win_thumb->wi_original_thumbs_mfdb);
                         mfdb_free(thumb_mfdb);
                         thumb_ptr = thumb_ptr_next;
@@ -379,6 +387,34 @@ void* st_Thumb_MFDB_Update(void *p_param){
     return (void*)this_win_thumb->wi_original_thumbs_mfdb;
 }
 
+void st_Thumb_Text_Refresh(int16_t win_thumb_handle, int16_t* pxy_dest){
+	struct_window *this_win;
+	this_win = detect_window(win_thumb_handle);
+    if(this_win == NULL){
+        return;
+    }
+    struct_thumbs *this_win_thumb = this_win->wi_thumb;
+    if(this_win_thumb->thumbs_use_gem_text){
+        int16_t pos_x, pos_y;
+        struct_st_thumbs_list* thumb_ptr = this_win_thumb->thumbs_list_array;
+        st_Set_Clipping(CLIPPING_ON, pxy_dest);
+        while (thumb_ptr != NULL)
+        {
+            struct_st_thumbs_list* thumb_ptr_next = thumb_ptr->next;
+            pos_x = thumb_ptr->thumb_desk_pxy[0] + ((thumb_ptr->thumb_mfdb->fd_w >> 1) - 4);
+            pos_y = thumb_ptr->thumb_desk_pxy[1] + (thumb_ptr->thumb_mfdb->fd_h - 4) - this_win->current_pos_y;
+
+            if((pos_x >= pxy_dest[0] && pos_x <= pxy_dest[2]) && (pos_y >= (pxy_dest[1] - hbox) &&  pos_y <= (pxy_dest[3] + hbox))){
+                print_GEM(pos_x, pos_y , thumb_ptr->thumb_text);
+            }
+            thumb_ptr = thumb_ptr_next;
+        }
+        st_Set_Clipping(CLIPPING_OFF, pxy_dest);
+    }
+    
+	return;
+}
+
 void st_Thumb_Refresh(int16_t win_thumb_handle){
 	struct_window *this_win;
 	this_win = detect_window(win_thumb_handle);
@@ -392,8 +428,9 @@ void st_Thumb_Refresh(int16_t win_thumb_handle){
         this_win->wi_thumb->thumbs_area_h = this_win->work_area.g_h;
         this_win->wi_to_display_mfdb = (MFDB*)st_Thumb_MFDB_Update((void*)this_win->wi_thumb);
         this_win->total_length_w = this_win->wi_to_display_mfdb->fd_w;
-        this_win->total_length_h = this_win->wi_to_display_mfdb->fd_h;        
+        this_win->total_length_h = this_win->wi_to_display_mfdb->fd_h;
         st_Thumb_Desk_PXY_Update(this_win->wi_thumb, this_win->work_pxy);
+        // st_Thumb_Text_Refresh(this_win->wi_handle);
     st_End_Window_Process(this_win);
     
 	return;

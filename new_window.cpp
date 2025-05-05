@@ -405,7 +405,9 @@ int16_t new_win_thumbnails(const char* win_title, int16_t slave_win_handle){
 				win_struct_array[i].wi_thumb->master_win_handle = 0;
 				
 				win_struct_array[i].refresh_win = st_Thumb_Refresh;
-				
+				if(win_struct_array[i].wi_thumb->thumbs_use_gem_text){
+					win_struct_array[i].refresh_text = st_Thumb_Text_Refresh;
+				}
 				win_struct_array[i].wi_to_display_mfdb = (MFDB*)st_Thumb_MFDB_Update((void*)dest_win->wi_thumb);
 
 				win_struct_array[i].total_length_w = dest_win->wi_thumb->thumbs_area_w;

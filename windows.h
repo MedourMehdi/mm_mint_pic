@@ -101,6 +101,7 @@ typedef struct struct_st_thumbs_list{
     u_int32_t thumb_id;
 	u_int16_t thumb_index;
     char*   thumb_filename;
+	char*	thumb_text;
     boolean thumb_selected;
 	boolean thumb_selectable;	
 	boolean thumb_visible;
@@ -131,6 +132,7 @@ typedef struct {
 	int16_t		thumbs_selected_nb;
     boolean		thumbs_area_refresh;
 	boolean		thumbs_open_new_win;
+	boolean		thumbs_use_gem_text;
 	MFDB*		thumb_selected_mfdb;
     u_int32_t   thumb_selected_color;
 	MFDB*		thumb_background_mfdb;
@@ -304,6 +306,7 @@ typedef struct {
 	struct_st_control_bar	(*wi_control_bar);
 	struct_win_progress_bar	(*wi_win_progress_bar);
 	void (*refresh_win)(int16_t);
+	void (*refresh_text)(int16_t, int16_t*);
 	MFDB* (*render_win)(MFDB*);
 } struct_window;
 

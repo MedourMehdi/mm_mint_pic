@@ -38,12 +38,12 @@ void* new_progress_window(void* p_param){
 	strcpy(rsc_file_to_load, current_path);
 	strcat(rsc_file_to_load, this_rsc_file_to_load);	
 
-	const char*		window_form_title = "Action in progress";
+	const char*		window_form_title = "Please wait...";
 	int16_t			rsc_object_index = Progress;
 	int16_t 		this_win_form_pos[2];
 
-	this_win_form_pos[0] = ((1 + win_progress_bar_counter) * 40);
-	this_win_form_pos[1] = ((1 + win_progress_bar_counter) * 80);
+	this_win_form_pos[0] = 30 + ((win_progress_bar_counter) * 40);
+	this_win_form_pos[1] = 60 + ((win_progress_bar_counter) * 120);
 
 	int16_t this_win_form_handle = new_win_form_rsc(rsc_file_to_load, window_form_title , rsc_object_index, this_win_form_pos);
 
@@ -145,14 +145,16 @@ void st_Win_Progress_Bar_Update_Title(struct_win_progress_bar* progress_bar, con
 
 void st_Win_Progress_Bar_Finish(int16_t this_win_handle){
 	struct_window* this_win_master = detect_window(this_win_handle);
-	int16_t this_win_form_handle = this_win_master->wi_win_progress_bar->win_form_handle;
-	this_win_master->wi_win_progress_bar->done = TRUE;
-	struct_win_progress_bar* tmp_ptr = this_win_master->wi_win_progress_bar;
-	// printf("close_window(this_win_form_handle %d)\n", this_win_form_handle );
-	close_window(this_win_form_handle);
-	win_progress_bar_counter -= 1;
-	if(this_win_form_handle == this_win_handle){
-		st_Win_Progress_Bar_Destroy(tmp_ptr);
+	if(this_win_master){
+		int16_t this_win_form_handle = this_win_master->wi_win_progress_bar->win_form_handle;
+		this_win_master->wi_win_progress_bar->done = TRUE;
+		struct_win_progress_bar* tmp_ptr = this_win_master->wi_win_progress_bar;
+		// printf("close_window(this_win_form_handle %d)\n", this_win_form_handle );
+		close_window(this_win_form_handle);
+		win_progress_bar_counter -= 1;
+		if(this_win_form_handle == this_win_handle){
+			st_Win_Progress_Bar_Destroy(tmp_ptr);
+		}
 	}
 }
 

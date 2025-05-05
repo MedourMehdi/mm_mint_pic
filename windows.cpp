@@ -613,6 +613,10 @@ void redraw_window(int16_t my_win_handle){
 					objc_draw(this_win->wi_data->rsc.tree, 0, MAX_DEPTH, 
 						rect.g_x, rect.g_y, rect.g_w, rect.g_h);
 				}
+				if(this_win->refresh_text != NULL){
+					grect_to_array(&rect,pxy_dest);
+					this_win->refresh_text(my_win_handle, pxy_dest);
+				}
 			}
 			wind_get(my_win_handle,WF_NEXTXYWH,&rect.g_x, &rect.g_y, &rect.g_w, &rect.g_h);
 		}
@@ -680,6 +684,7 @@ void st_Init_Default_Win(struct_window *this_win){
 	this_win->wi_data->wi_pth = NULL;
 	this_win->rendering_time = FALSE;
 	this_win->refresh_win = NULL;
+	this_win->refresh_text = NULL;
     this_win->prefers_file_instead_mem = DO_WE_USE_FILE;
    
 	this_win->current_pos_x = 0; this_win->current_pos_y = 0;
