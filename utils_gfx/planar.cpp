@@ -189,3 +189,111 @@ inline void convert_4bpp_chunky32bpp(u_int8_t *src_buffer, u_int32_t *temp_buffe
         k += 8;
     }
 }
+
+/*
+#include <stdint.h>
+#include <stddef.h>
+#include <math.h>
+
+// Example indexed Atari palette (initialize with your specific colors)
+uint32_t atari_palette[256];
+
+// Function to calculate the distance between two colors
+static inline int colorDistance(uint32_t color1, uint32_t color2) {
+    // Extract RGB values from 32-bit color
+    uint8_t r1 = (color1 >> 16) & 0xFF;
+    uint8_t g1 = (color1 >> 8) & 0xFF;
+    uint8_t b1 = color1 & 0xFF;
+
+    uint8_t r2 = (color2 >> 16) & 0xFF;
+    uint8_t g2 = (color2 >> 8) & 0xFF;
+    uint8_t b2 = color2 & 0xFF;
+
+    // Calculate Euclidean distance in RGB space
+    return (r1 - r2) * (r1 - r2) + (g1 - g2) * (g1 - g2) + (b1 - b2) * (b1 - b2);
+}
+
+// Function to find the nearest color index in the palette
+static uint8_t findNearestColor(uint32_t pixel) {
+    int minDistance = INT32_MAX;
+    uint8_t closestIndex = 0;
+
+    for (uint8_t i = 0; i < 256; ++i) {
+        int distance = colorDistance(pixel & 0x00FFFFFF, atari_palette[i]);
+        if (distance < minDistance) {
+            minDistance = distance;
+            closestIndex = i;
+        }
+    }
+
+    return closestIndex;
+}
+
+// Function to convert a chunky 32bpp image to an 8bpp planar image using an indexed palette
+void chunkyToPlanar_Atari(uint32_t *chunky, uint8_t *planar, int width, int height, int chunkyPitch, int planarPitch) {
+    // Initialize planar output to zero
+    for (int i = 0; i < planarPitch * height / 8; ++i) {
+        planar[i] = 0;
+    }
+
+    // Loop through each pixel in the chunky buffer
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            // Calculate the pixel index in the chunky format
+            uint32_t pixel = chunky[y * chunkyPitch + x];
+
+            // Find the nearest color index in the palette
+            uint8_t index = findNearestColor(pixel);
+
+            // Write to the planar buffer (bitwise operations for a planar format)
+            int bit_position = 7 - (x % 8);
+            planar[(y * planarPitch) + (x / 8)] |= (index << bit_position); // Set the appropriate bit for the index
+        }
+    }
+}
+*/
+
+/*
+#include <stdio.h>
+#include <stdint.h>
+
+extern void chunkyToPlanar_Atari(uint32_t* chunky_image, uint8_t* planar_image, int width, int height);
+extern uint32_t atari_palette[256]; // Declare the Atari palette as an external array
+
+int main() {
+    // Example dimensions (can be modified based on actual image size)
+    int width = 320;
+    int height = 240;
+
+    // Allocate memory for the images
+    uint32_t* chunky_image = (uint32_t*)malloc(width * height * sizeof(uint32_t));
+    uint8_t* planar_image = (uint8_t*)malloc((width * height) / 8);
+
+    if (!chunky_image || !planar_image) {
+        fprintf(stderr, "Memory allocation failed\n");
+        return 1;
+    }
+
+    // Initialize the chunky_image with sample data (example)
+    // In practice, load your actual image data into chunky_image here.
+    for (int i = 0; i < width * height; ++i) {
+        chunky_image[i] = (255 << 24) | (rand() % 256 << 16) | (rand() % 256 << 8) | (rand() % 256); // ARGB format
+    }
+
+    // Convert chunky to planar
+    chunkyToPlanar_Atari(chunky_image, planar_image, width, height);
+
+    // Process planar_image as needed. 
+
+    // Cleanup
+    free(chunky_image);
+    free(planar_image);
+
+    return 0;
+}
+
+*/
+
+/*
+
+*/

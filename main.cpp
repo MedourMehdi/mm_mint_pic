@@ -72,6 +72,13 @@ High	Low	Type
 0x0003	0x0000	Atari-Falcon030
 0x0004	0x0000	Milan
 0x0005	0x0000	ARAnyM >=v0.8.5beta
+
+#define ATARI_ST 0x00000000
+#define MEDUSA_T40_WITHOUT_SCSI 0x00004D34
+#define MEDUSA_T40_WITH_SCSI 0x00004D34
+#define ATARI_STE 0x00010000
+#define ATARI_MEGA_STE 0x00010010
+
 */
 u_int8_t cpu_type;
 u_int16_t tos_version;

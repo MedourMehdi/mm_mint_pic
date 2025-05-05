@@ -52,7 +52,8 @@ typedef int boolean;
 #define mul_6_fast(x) ((x << 2) + (x << 1))
 #define mul_7_fast(x) ((x << 3) - x)
 #define mul_10_fast(x) ((x << 3) + (x << 1))
-#define mul_100_fast(x) ((mul_10_fast(i) << 3) + (mul_10_fast(i) << 1))
+#define mul_100_fast(x) ((mul_10_fast(x) << 3) + (mul_10_fast(x) << 1))
+#define mul_1000_fast(x) ((mul_100_fast(x) << 3) + (mul_100_fast(x) << 1))
 #define mul_255_fast(x) ((x << 8) - x)
 #define div_1000_fast(x) ((x >> 10) + (x >> 15) - (x >> 17) + (x >> 21) + (x >> 24) + (x >> 26) - (x >> 29));
 

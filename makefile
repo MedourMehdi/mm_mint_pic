@@ -166,7 +166,7 @@ _CPU	:= -m68020-60
 
 # _CPU	:= -m68020 -m68881
 
-_CFLAGS   :=  $(_CPU) -fomit-frame-pointer -fno-strict-aliasing -O2 $(DEFINES)
+_CFLAGS   :=  $(_CPU) -fomit-frame-pointer -fno-strict-aliasing -O3 $(DEFINES)
 
 _LDFLAGS  :=
 

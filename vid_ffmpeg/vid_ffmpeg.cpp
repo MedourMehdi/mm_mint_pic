@@ -580,7 +580,24 @@ void *st_Play_FF_Video(void *_this_win_handle){
                     this_win->wi_ffmpeg->duration = (double)5 * (double)(clock() - this_win->wi_ffmpeg->time_start);
                     pthread_yield_np();
                 }
-
+                // /* Audio sync */
+                // // Get current audio position
+                // int32_t audio_pos = st_Sound_Get_Playback_Position((void*)this_win->wi_snd);
+                // double audio_time = (double)audio_pos / this_win->wi_snd->effective_samplerate;
+                
+                // // Calculate video frame presentation time
+                // double video_pts = av_q2d(pFormatCtx->streams[this_win->wi_ffmpeg->videoStream]->time_base) * 
+                //                 pFrameVideo->pts;
+                
+                // // Calculate delay needed to sync with audio
+                // double delay = video_pts - audio_time;
+                
+                // // If video is ahead of audio, wait
+                // if(delay > 0.0) {
+                //     // Convert to milliseconds and sleep
+                //     // usleep((useconds_t)(delay * 1000000));
+                //      pthread_yield_np();
+                // }
                 st_Control_Bar_Refresh_MFDB(this_win->wi_control_bar, this_win->wi_to_display_mfdb, this_win->current_pos_x, this_win->current_pos_y, this_win->work_area.g_w, this_win->work_area.g_h);          
                 send_message(this_win_handle, WM_REDRAW);
             }
